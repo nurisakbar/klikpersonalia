@@ -6,6 +6,16 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\OvertimeController;
+use App\Http\Controllers\AttendanceCalendarController;
+use App\Http\Controllers\AttendanceReportController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\PerformanceController;
+use App\Http\Controllers\BenefitController;
+use App\Http\Controllers\TaxController;
+use App\Http\Controllers\BpjsController;
+use App\Http\Controllers\ExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,14 +62,124 @@ Route::middleware(['auth'])->group(function () {
     // Attendance
     Route::resource('attendance', AttendanceController::class);
     Route::get('/attendance-data', [AttendanceController::class, 'getData'])->name('attendance.data');
+    
+    // Check In/Out System
+    Route::get('/attendance/check-in-out', [AttendanceController::class, 'checkInOut'])->name('attendance.check-in-out');
+    Route::get('/attendance/current', [AttendanceController::class, 'current'])->name('attendance.current');
+    Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
+    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
+    Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
 
-    // Reports (placeholder routes)
-    Route::get('/reports', function () {
-        return view('reports.index');
-    })->name('reports.index');
+    // Leave Management
+    Route::resource('leaves', LeaveController::class);
+    Route::get('/leaves/approval', [LeaveController::class, 'approval'])->name('leaves.approval');
+    Route::get('/leaves/balance', [LeaveController::class, 'balance'])->name('leaves.balance');
+    Route::post('/leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+    Route::post('/leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
 
-    // Settings (placeholder routes)
-    Route::get('/settings', function () {
-        return view('settings.index');
-    })->name('settings.index');
+    // Overtime Management
+    Route::resource('overtimes', OvertimeController::class);
+    Route::get('/overtimes/approval', [OvertimeController::class, 'approval'])->name('overtimes.approval');
+    Route::get('/overtimes/statistics', [OvertimeController::class, 'statistics'])->name('overtimes.statistics');
+    Route::post('/overtimes/{id}/approve', [OvertimeController::class, 'approve'])->name('overtimes.approve');
+    Route::post('/overtimes/{id}/reject', [OvertimeController::class, 'reject'])->name('overtimes.reject');
+
+    // Attendance Calendar
+    Route::get('/attendance/calendar', [AttendanceCalendarController::class, 'index'])->name('attendance.calendar');
+    Route::get('/attendance/calendar/data', [AttendanceCalendarController::class, 'getCalendarData'])->name('attendance.calendar.data');
+
+    // Attendance Reports
+    Route::get('/reports', [AttendanceReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/individual', [AttendanceReportController::class, 'individual'])->name('reports.individual');
+    Route::get('/reports/team', [AttendanceReportController::class, 'team'])->name('reports.team');
+    Route::get('/reports/company', [AttendanceReportController::class, 'company'])->name('reports.company');
+    Route::post('/reports/export', [AttendanceReportController::class, 'export'])->name('reports.export');
+
+    // Payroll Management
+    Route::resource('payrolls', PayrollController::class);
+    Route::post('/payrolls/{id}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
+    Route::post('/payrolls/{id}/reject', [PayrollController::class, 'reject'])->name('payrolls.reject');
+    Route::post('/payrolls/generate-all', [PayrollController::class, 'generateAll'])->name('payrolls.generate-all');
+    Route::post('/payrolls/export', [PayrollController::class, 'export'])->name('payrolls.export');
+    Route::post('/payrolls/calculate', [PayrollController::class, 'calculate'])->name('payrolls.calculate');
+
+    // Settings & Configuration
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::get('/settings/company', [SettingsController::class, 'company'])->name('settings.company');
+    Route::post('/settings/company', [SettingsController::class, 'updateCompany'])->name('settings.update-company');
+    Route::get('/settings/payroll-policy', [SettingsController::class, 'payrollPolicy'])->name('settings.payroll-policy');
+    Route::post('/settings/payroll-policy', [SettingsController::class, 'updatePayrollPolicy'])->name('settings.update-payroll-policy');
+    Route::get('/settings/leave-policy', [SettingsController::class, 'leavePolicy'])->name('settings.leave-policy');
+    Route::post('/settings/leave-policy', [SettingsController::class, 'updateLeavePolicy'])->name('settings.update-leave-policy');
+    Route::get('/settings/profile', [SettingsController::class, 'profile'])->name('settings.profile');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
+    Route::get('/settings/password', [SettingsController::class, 'password'])->name('settings.password');
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.update-password');
+    Route::get('/settings/system', [SettingsController::class, 'system'])->name('settings.system');
+    Route::post('/settings/system', [SettingsController::class, 'updateSystem'])->name('settings.update-system');
+    Route::get('/settings/backup', [SettingsController::class, 'backup'])->name('settings.backup');
+    Route::post('/settings/backup', [SettingsController::class, 'createBackup'])->name('settings.create-backup');
+    Route::get('/settings/users', [SettingsController::class, 'users'])->name('settings.users');
+    Route::post('/settings/users', [SettingsController::class, 'createUser'])->name('settings.create-user');
+    Route::post('/settings/users/{id}', [SettingsController::class, 'updateUser'])->name('settings.update-user');
+    Route::delete('/settings/users/{id}', [SettingsController::class, 'deleteUser'])->name('settings.delete-user');
+
+    // Performance Management
+Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
+Route::get('/performance/kpi', [PerformanceController::class, 'kpi'])->name('performance.kpi');
+Route::post('/performance/kpi', [PerformanceController::class, 'storeKPI'])->name('performance.store-kpi');
+Route::post('/performance/kpi/{id}', [PerformanceController::class, 'updateKPI'])->name('performance.update-kpi');
+Route::get('/performance/appraisal', [PerformanceController::class, 'appraisal'])->name('performance.appraisal');
+Route::post('/performance/appraisal', [PerformanceController::class, 'createAppraisal'])->name('performance.create-appraisal');
+Route::get('/performance/bonus', [PerformanceController::class, 'bonus'])->name('performance.bonus');
+Route::post('/performance/bonus', [PerformanceController::class, 'calculateBonus'])->name('performance.calculate-bonus');
+Route::get('/performance/goals', [PerformanceController::class, 'goals'])->name('performance.goals');
+Route::post('/performance/goals', [PerformanceController::class, 'storeGoal'])->name('performance.store-goal');
+Route::post('/performance/goals/{id}', [PerformanceController::class, 'updateGoal'])->name('performance.update-goal');
+Route::get('/performance/reports', [PerformanceController::class, 'reports'])->name('performance.reports');
+
+// Benefits Management
+Route::get('/benefits', [BenefitController::class, 'index'])->name('benefits.index');
+Route::get('/benefits/list', [BenefitController::class, 'benefits'])->name('benefits.benefits');
+Route::get('/benefits/create', [BenefitController::class, 'create'])->name('benefits.create');
+Route::post('/benefits', [BenefitController::class, 'store'])->name('benefits.store');
+Route::get('/benefits/{id}/edit', [BenefitController::class, 'edit'])->name('benefits.edit');
+Route::put('/benefits/{id}', [BenefitController::class, 'update'])->name('benefits.update');
+Route::delete('/benefits/{id}', [BenefitController::class, 'destroy'])->name('benefits.destroy');
+Route::get('/benefits/assignments', [BenefitController::class, 'assignments'])->name('benefits.assignments');
+Route::post('/benefits/assign', [BenefitController::class, 'assignBenefit'])->name('benefits.assign');
+Route::put('/benefits/assignments/{id}', [BenefitController::class, 'updateAssignment'])->name('benefits.update-assignment');
+Route::delete('/benefits/assignments/{id}', [BenefitController::class, 'removeAssignment'])->name('benefits.remove-assignment');
+Route::get('/benefits/employee/{employeeId}', [BenefitController::class, 'employeeBenefits'])->name('benefits.employee-benefits');
+Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('benefits.reports');
+
+    // Tax Management
+    Route::resource('taxes', TaxController::class);
+    Route::post('/taxes/calculate-for-payroll', [TaxController::class, 'calculateForPayroll'])->name('taxes.calculate-for-payroll');
+    Route::get('/taxes/report', [TaxController::class, 'report'])->name('taxes.report');
+    Route::get('/taxes/export', [TaxController::class, 'export'])->name('taxes.export');
+    
+    // Tax Reports (Phase 4.4)
+    Route::get('/taxes/monthly-report', [TaxController::class, 'monthlyTaxReport'])->name('taxes.monthly-report');
+    Route::get('/taxes/annual-summary', [TaxController::class, 'annualTaxSummary'])->name('taxes.annual-summary');
+    Route::get('/taxes/payment-report', [TaxController::class, 'taxPaymentReport'])->name('taxes.payment-report');
+    Route::get('/taxes/certificate-report', [TaxController::class, 'taxCertificateReport'])->name('taxes.certificate-report');
+    Route::get('/taxes/compliance-report', [TaxController::class, 'taxComplianceReport'])->name('taxes.compliance-report');
+    Route::get('/taxes/audit-trail', [TaxController::class, 'taxAuditTrail'])->name('taxes.audit-trail');
+
+    // BPJS Management
+    Route::resource('bpjs', BpjsController::class);
+    Route::post('/bpjs/calculate-for-payroll', [BpjsController::class, 'calculateForPayroll'])->name('bpjs.calculate-for-payroll');
+    Route::get('/bpjs/report', [BpjsController::class, 'report'])->name('bpjs.report');
+    Route::get('/bpjs/export', [BpjsController::class, 'export'])->name('bpjs.export');
+
+    // Export Functionality
+    Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
+    Route::get('/exports/employees', [ExportController::class, 'exportEmployees'])->name('exports.employees');
+    Route::get('/exports/payrolls', [ExportController::class, 'exportPayrolls'])->name('exports.payrolls');
+    Route::get('/exports/attendance', [ExportController::class, 'exportAttendance'])->name('exports.attendance');
+    Route::get('/exports/leaves', [ExportController::class, 'exportLeaves'])->name('exports.leaves');
+    Route::get('/exports/taxes', [ExportController::class, 'exportTaxes'])->name('exports.taxes');
+    Route::get('/exports/bpjs', [ExportController::class, 'exportBpjs'])->name('exports.bpjs');
+    Route::post('/exports/all', [ExportController::class, 'exportAll'])->name('exports.all');
 });

@@ -22,10 +22,15 @@ class DatabaseSeeder extends Seeder
 
         // Call other seeders
         $this->call([
-                    UserSeeder::class,
-        EmployeeSeeder::class,
-        PayrollSeeder::class,
-        AttendanceSeeder::class,
+            CompanySeeder::class,
+            UserSeeder::class,
+            EmployeeSeeder::class,
+            PayrollSeeder::class,
+            AttendanceSeeder::class,
+            LeaveSeeder::class,
+            OvertimeSeeder::class,
+            TaxSeeder::class,
+            BpjsSeeder::class,
         ]);
     }
 }

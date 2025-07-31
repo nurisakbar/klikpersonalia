@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Traits\HasUuid;
 use Carbon\Carbon;
 
 class Company extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'name',

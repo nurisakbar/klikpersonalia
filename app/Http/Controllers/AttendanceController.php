@@ -20,6 +20,87 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Display check-in/out interface.
+     */
+    public function checkInOut()
+    {
+        return view('attendance.check-in-out');
+    }
+
+    /**
+     * Get current attendance status for the logged-in user.
+     */
+    public function current()
+    {
+        $user = auth()->user();
+        $today = Carbon::today();
+
+        // Find employee associated with the user
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found for this user.'
+            ]);
+        }
+
+        $attendance = Attendance::where('employee_id', $employee->id)
+            ->where('date', $today)
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'employee_id' => $employee->id,
+            'attendance' => $attendance ? [
+                'check_in' => $attendance->check_in ? Carbon::parse($attendance->check_in)->format('H:i') : null,
+                'check_out' => $attendance->check_out ? Carbon::parse($attendance->check_out)->format('H:i') : null,
+                'total_hours' => $attendance->total_hours ? number_format($attendance->total_hours, 2) : null,
+                'overtime_hours' => $attendance->overtime_hours ? number_format($attendance->overtime_hours, 2) : null,
+                'status' => $attendance->status
+            ] : null
+        ]);
+    }
+
+    /**
+     * Get attendance history for the logged-in user.
+     */
+    public function history()
+    {
+        $user = auth()->user();
+        
+        // Find employee associated with the user
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found for this user.'
+            ]);
+        }
+        
+        $attendance = Attendance::where('employee_id', $employee->id)
+            ->orderBy('date', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($attendance) {
+                return [
+                    'date' => $attendance->date->format('d/m/Y'),
+                    'check_in' => $attendance->check_in ? Carbon::parse($attendance->check_in)->format('H:i') : null,
+                    'check_out' => $attendance->check_out ? Carbon::parse($attendance->check_out)->format('H:i') : null,
+                    'total_hours' => $attendance->total_hours ? number_format($attendance->total_hours, 2) : null,
+                    'overtime_hours' => $attendance->overtime_hours ? number_format($attendance->overtime_hours, 2) : null,
+                    'status' => $attendance->status
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'attendance' => $attendance
+        ]);
+    }
+
+    /**
      * Get attendance data for DataTables.
      */
     public function getData()
@@ -251,7 +332,26 @@ class AttendanceController extends Controller
             'employee_id' => 'required|exists:employees,id',
         ]);
 
-        $employee = Employee::findOrFail($request->employee_id);
+        $user = auth()->user();
+        
+        // Find employee associated with the user
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found for this user.'
+            ]);
+        }
+
+        // Verify that the employee_id matches the logged-in user's employee record
+        if ($employee->id != $request->employee_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access.'
+            ]);
+        }
+
         $today = Carbon::today();
 
         // Check if already checked in today
@@ -274,17 +374,18 @@ class AttendanceController extends Controller
             $existingAttendance->update([
                 'check_in' => $checkInTime,
                 'status' => $status,
-                'check_in_location' => $request->location,
+                'check_in_location' => $request->location ?? 'Location not available',
                 'check_in_ip' => $request->ip(),
                 'check_in_device' => $request->user_agent(),
             ]);
         } else {
             Attendance::create([
                 'employee_id' => $employee->id,
+                'company_id' => $employee->company_id,
                 'date' => $today,
                 'check_in' => $checkInTime,
                 'status' => $status,
-                'check_in_location' => $request->location,
+                'check_in_location' => $request->location ?? 'Location not available',
                 'check_in_ip' => $request->ip(),
                 'check_in_device' => $request->user_agent(),
             ]);
@@ -305,7 +406,26 @@ class AttendanceController extends Controller
             'employee_id' => 'required|exists:employees,id',
         ]);
 
-        $employee = Employee::findOrFail($request->employee_id);
+        $user = auth()->user();
+        
+        // Find employee associated with the user
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found for this user.'
+            ]);
+        }
+
+        // Verify that the employee_id matches the logged-in user's employee record
+        if ($employee->id != $request->employee_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access.'
+            ]);
+        }
+
         $today = Carbon::today();
 
         $attendance = Attendance::where('employee_id', $employee->id)
@@ -330,7 +450,7 @@ class AttendanceController extends Controller
         
         $attendance->update([
             'check_out' => $checkOutTime,
-            'check_out_location' => $request->location,
+            'check_out_location' => $request->location ?? 'Location not available',
             'check_out_ip' => $request->ip(),
             'check_out_device' => $request->user_agent(),
         ]);

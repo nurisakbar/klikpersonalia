@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Traits\HasUuid;
 
 class Employee extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'employee_id',
@@ -19,6 +19,14 @@ class Employee extends Model
         'join_date',
         'department',
         'position',
+        'ptkp_status',
+        'tax_notes',
+        'bpjs_kesehatan_number',
+        'bpjs_ketenagakerjaan_number',
+        'bpjs_kesehatan_active',
+        'bpjs_ketenagakerjaan_active',
+        'bpjs_effective_date',
+        'bpjs_notes',
         'basic_salary',
         'status',
         'emergency_contact',
@@ -31,6 +39,9 @@ class Employee extends Model
     protected $casts = [
         'join_date' => 'date',
         'basic_salary' => 'decimal:2',
+        'bpjs_kesehatan_active' => 'boolean',
+        'bpjs_ketenagakerjaan_active' => 'boolean',
+        'bpjs_effective_date' => 'date',
     ];
 
     /**
@@ -71,6 +82,22 @@ class Employee extends Model
     public function leaves()
     {
         return $this->hasMany(Leave::class);
+    }
+
+    /**
+     * Get the taxes for the employee.
+     */
+    public function taxes()
+    {
+        return $this->hasMany(Tax::class);
+    }
+
+    /**
+     * Get the BPJS records for the employee.
+     */
+    public function bpjs()
+    {
+        return $this->hasMany(Bpjs::class);
     }
 
     /**

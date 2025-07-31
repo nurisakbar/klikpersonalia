@@ -38,7 +38,6 @@ return new class extends Migration
         // Update overtimes table
         Schema::table('overtimes', function (Blueprint $table) {
             $table->uuid('company_id')->after('id');
-            $table->dropUnique(['employee_id', 'date']);
             $table->unique(['company_id', 'employee_id', 'date']);
         });
     }
@@ -75,7 +74,6 @@ return new class extends Migration
         // Revert overtimes table
         Schema::table('overtimes', function (Blueprint $table) {
             $table->dropUnique(['company_id', 'employee_id', 'date']);
-            $table->unique(['employee_id', 'date']);
             $table->dropColumn('company_id');
         });
     }
