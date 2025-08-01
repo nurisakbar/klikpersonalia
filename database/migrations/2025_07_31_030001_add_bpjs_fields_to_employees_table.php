@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employees', function (Blueprint $table) {
-            $table->string('bpjs_kesehatan_number')->nullable()->after('tax_notes');
+            $table->string('bpjs_kesehatan_number')->nullable()->after('position');
             $table->string('bpjs_ketenagakerjaan_number')->nullable()->after('bpjs_kesehatan_number');
             $table->boolean('bpjs_kesehatan_active')->default(true)->after('bpjs_ketenagakerjaan_number');
             $table->boolean('bpjs_ketenagakerjaan_active')->default(true)->after('bpjs_kesehatan_active');
