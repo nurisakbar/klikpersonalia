@@ -5,45 +5,61 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasUuid;
-use Carbon\Carbon;
 
 class Performance extends Model
 {
     use HasFactory, HasUuid;
 
     protected $fillable = [
-        'employee_id',
         'company_id',
-        'reviewer_id',
-        'review_period',
-        'review_date',
-        'overall_rating',
-        'job_knowledge',
-        'quality_of_work',
-        'productivity',
-        'teamwork',
-        'communication',
-        'initiative',
-        'attendance',
-        'strengths',
-        'weaknesses',
-        'improvement_plan',
-        'comments',
+        'employee_id',
+        'performance_type',
+        'period_start',
+        'period_end',
+        'kpi_data',
+        'appraisal_data',
+        'goals_data',
+        'overall_score',
+        'rating',
+        'status',
+        'reviewed_by',
+        'reviewed_at',
+        'notes',
+        'next_review_date'
     ];
 
     protected $casts = [
-        'review_date' => 'date',
-        'overall_rating' => 'decimal:2',
-        'job_knowledge' => 'decimal:2',
-        'quality_of_work' => 'decimal:2',
-        'productivity' => 'decimal:2',
-        'teamwork' => 'decimal:2',
-        'communication' => 'decimal:2',
-        'initiative' => 'decimal:2',
-        'attendance' => 'decimal:2',
+        'period_start' => 'date',
+        'period_end' => 'date',
+        'kpi_data' => 'array',
+        'appraisal_data' => 'array',
+        'goals_data' => 'array',
+        'overall_score' => 'decimal:2',
+        'reviewed_at' => 'datetime',
+        'next_review_date' => 'date'
     ];
 
-    // Relationships
+    // Performance types
+    const TYPE_KPI = 'kpi';
+    const TYPE_APPRAISAL = 'appraisal';
+    const TYPE_GOAL = 'goal';
+    const TYPE_ANNUAL = 'annual';
+
+    // Status constants
+    const STATUS_DRAFT = 'draft';
+    const STATUS_PENDING = 'pending';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
+
+    // Rating constants
+    const RATING_EXCELLENT = 'excellent';
+    const RATING_GOOD = 'good';
+    const RATING_AVERAGE = 'average';
+    const RATING_BELOW_AVERAGE = 'below_average';
+    const RATING_POOR = 'poor';
+
     public function company()
     {
         return $this->belongsTo(Company::class);
@@ -56,127 +72,139 @@ class Performance extends Model
 
     public function reviewer()
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    // Scopes
-    public function scopeCurrentCompany($query)
+    public function scopeByType($query, $type)
     {
-        return $query->where('company_id', auth()->user()->company_id);
+        return $query->where('performance_type', $type);
     }
 
-    public function scopeThisYear($query)
+    public function scopeByStatus($query, $status)
     {
-        return $query->whereYear('review_date', date('Y'));
+        return $query->where('status', $status);
     }
 
-    public function scopeThisMonth($query)
+    public function scopeByPeriod($query, $startDate, $endDate)
     {
-        return $query->whereYear('review_date', date('Y'))
-                    ->whereMonth('review_date', date('m'));
+        return $query->whereBetween('period_start', [$startDate, $endDate]);
     }
 
-    public function scopeTopPerformers($query)
+    public function scopeByEmployee($query, $employeeId)
     {
-        return $query->where('overall_rating', '>=', 4.0);
+        return $query->where('employee_id', $employeeId);
     }
 
-    // Accessors
-    public function getFormattedReviewDateAttribute()
+    public function getStatusBadgeAttribute()
     {
-        return $this->review_date->format('d/m/Y');
+        $badges = [
+            self::STATUS_DRAFT => 'secondary',
+            self::STATUS_PENDING => 'warning',
+            self::STATUS_IN_PROGRESS => 'info',
+            self::STATUS_COMPLETED => 'success',
+            self::STATUS_APPROVED => 'success',
+            self::STATUS_REJECTED => 'danger'
+        ];
+
+        return $badges[$this->status] ?? 'secondary';
     }
 
     public function getRatingBadgeAttribute()
     {
-        $rating = $this->overall_rating;
-        
-        if ($rating >= 4.5) {
-            return '<span class="badge badge-success">Outstanding</span>';
-        } elseif ($rating >= 4.0) {
-            return '<span class="badge badge-primary">Excellent</span>';
-        } elseif ($rating >= 3.5) {
-            return '<span class="badge badge-info">Good</span>';
-        } elseif ($rating >= 3.0) {
-            return '<span class="badge badge-warning">Satisfactory</span>';
-        } else {
-            return '<span class="badge badge-danger">Below Satisfactory</span>';
+        $badges = [
+            self::RATING_EXCELLENT => 'success',
+            self::RATING_GOOD => 'info',
+            self::RATING_AVERAGE => 'warning',
+            self::RATING_BELOW_AVERAGE => 'warning',
+            self::RATING_POOR => 'danger'
+        ];
+
+        return $badges[$this->rating] ?? 'secondary';
+    }
+
+    public function getTypeLabelAttribute()
+    {
+        $labels = [
+            self::TYPE_KPI => 'KPI Review',
+            self::TYPE_APPRAISAL => 'Performance Appraisal',
+            self::TYPE_GOAL => 'Goal Review',
+            self::TYPE_ANNUAL => 'Annual Review'
+        ];
+
+        return $labels[$this->performance_type] ?? 'Unknown';
+    }
+
+    public function getRatingLabelAttribute()
+    {
+        $labels = [
+            self::RATING_EXCELLENT => 'Excellent',
+            self::RATING_GOOD => 'Good',
+            self::RATING_AVERAGE => 'Average',
+            self::RATING_BELOW_AVERAGE => 'Below Average',
+            self::RATING_POOR => 'Poor'
+        ];
+
+        return $labels[$this->rating] ?? 'Not Rated';
+    }
+
+    public function getScorePercentageAttribute()
+    {
+        if (!$this->overall_score) {
+            return 0;
         }
+
+        return round(($this->overall_score / 100) * 100, 1);
     }
 
-    public function getPeriodBadgeAttribute()
+    public function isCompleted()
     {
-        $periodClass = [
-            'monthly' => 'badge badge-info',
-            'quarterly' => 'badge badge-warning',
-            'yearly' => 'badge badge-success'
-        ];
-        
-        $periodText = [
-            'monthly' => 'Monthly',
-            'quarterly' => 'Quarterly',
-            'yearly' => 'Yearly'
-        ];
-        
-        return '<span class="' . $periodClass[$this->review_period] . '">' . $periodText[$this->review_period] . '</span>';
+        return in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_APPROVED]);
     }
 
-    // Methods
-    public function getAverageRating()
+    public function isPending()
     {
-        $ratings = [
-            $this->job_knowledge,
-            $this->quality_of_work,
-            $this->productivity,
-            $this->teamwork,
-            $this->communication,
-            $this->initiative,
-            $this->attendance
-        ];
-        
-        return round(array_sum($ratings) / count($ratings), 2);
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_IN_PROGRESS]);
     }
 
-    public function isOutstanding()
+    public function canBeReviewed()
     {
-        return $this->overall_rating >= 4.5;
+        return $this->status === self::STATUS_PENDING || $this->status === self::STATUS_IN_PROGRESS;
     }
 
-    public function isExcellent()
+    public function calculateOverallScore()
     {
-        return $this->overall_rating >= 4.0 && $this->overall_rating < 4.5;
+        if (!$this->kpi_data) {
+            return 0;
+        }
+
+        $totalScore = 0;
+        $totalWeight = 0;
+
+        foreach ($this->kpi_data as $kpi) {
+            $score = $kpi['score'] ?? 0;
+            $weight = $kpi['weight'] ?? 1;
+            
+            $totalScore += $score * $weight;
+            $totalWeight += $weight;
+        }
+
+        return $totalWeight > 0 ? round($totalScore / $totalWeight, 2) : 0;
     }
 
-    public function isGood()
+    public function determineRating()
     {
-        return $this->overall_rating >= 3.5 && $this->overall_rating < 4.0;
-    }
+        $score = $this->overall_score;
 
-    public function isSatisfactory()
-    {
-        return $this->overall_rating >= 3.0 && $this->overall_rating < 3.5;
-    }
-
-    public function isBelowSatisfactory()
-    {
-        return $this->overall_rating < 3.0;
-    }
-
-    public function getPerformanceLevel()
-    {
-        if ($this->isOutstanding()) return 'Outstanding';
-        if ($this->isExcellent()) return 'Excellent';
-        if ($this->isGood()) return 'Good';
-        if ($this->isSatisfactory()) return 'Satisfactory';
-        return 'Below Satisfactory';
-    }
-
-    public function getBonusPercentage()
-    {
-        if ($this->isOutstanding()) return 20;
-        if ($this->isExcellent()) return 15;
-        if ($this->isGood()) return 10;
-        if ($this->isSatisfactory()) return 5;
-        return 0;
+        if ($score >= 90) {
+            return self::RATING_EXCELLENT;
+        } elseif ($score >= 80) {
+            return self::RATING_GOOD;
+        } elseif ($score >= 70) {
+            return self::RATING_AVERAGE;
+        } elseif ($score >= 60) {
+            return self::RATING_BELOW_AVERAGE;
+        } else {
+            return self::RATING_POOR;
+        }
     }
 } 

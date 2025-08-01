@@ -49,16 +49,35 @@ class PerformanceController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to access KPI management.');
         }
 
-        $kpis = KPI::where('company_id', $user->company_id)
-            ->with(['employee', 'category'])
+        $performances = Performance::where('company_id', $user->company_id)
+            ->where('performance_type', Performance::TYPE_KPI)
+            ->with(['employee', 'reviewer'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
         
         $employees = Employee::where('company_id', $user->company_id)
             ->where('status', 'active')
             ->get();
+
+        $stats = [
+            'total_kpis' => Performance::where('company_id', $user->company_id)
+                ->where('performance_type', Performance::TYPE_KPI)
+                ->count(),
+            'completed_kpis' => Performance::where('company_id', $user->company_id)
+                ->where('performance_type', Performance::TYPE_KPI)
+                ->whereIn('status', [Performance::STATUS_COMPLETED, Performance::STATUS_APPROVED])
+                ->count(),
+            'pending_kpis' => Performance::where('company_id', $user->company_id)
+                ->where('performance_type', Performance::TYPE_KPI)
+                ->whereIn('status', [Performance::STATUS_PENDING, Performance::STATUS_IN_PROGRESS])
+                ->count(),
+            'average_score' => Performance::where('company_id', $user->company_id)
+                ->where('performance_type', Performance::TYPE_KPI)
+                ->whereNotNull('overall_score')
+                ->avg('overall_score')
+        ];
         
-        return view('performance.kpi', compact('kpis', 'employees'));
+        return view('performance.kpi', compact('performances', 'employees', 'stats'));
     }
 
     /**
@@ -75,30 +94,43 @@ class PerformanceController extends Controller
 
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
-            'kpi_name' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'target_value' => 'required|numeric|min:0',
-            'current_value' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:50',
-            'weight' => 'required|numeric|min:0|max:100',
-            'period' => 'required|string|in:monthly,quarterly,yearly',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'period_start' => 'required|date',
+            'period_end' => 'required|date|after:period_start',
+            'kpi_data' => 'required|array',
+            'kpi_data.*.name' => 'required|string|max:255',
+            'kpi_data.*.target' => 'required|numeric|min:0',
+            'kpi_data.*.actual' => 'required|numeric|min:0',
+            'kpi_data.*.weight' => 'required|numeric|min:0|max:100',
+            'notes' => 'nullable|string'
         ]);
 
-        KPI::create([
-            'employee_id' => $request->employee_id,
+        // Calculate overall score
+        $totalScore = 0;
+        $totalWeight = 0;
+        
+        foreach ($request->kpi_data as $kpi) {
+            $achievement = ($kpi['actual'] / $kpi['target']) * 100;
+            $score = min($achievement, 100); // Cap at 100%
+            $weight = $kpi['weight'];
+            
+            $totalScore += $score * $weight;
+            $totalWeight += $weight;
+        }
+
+        $overallScore = $totalWeight > 0 ? round($totalScore / $totalWeight, 2) : 0;
+
+        $performance = Performance::create([
             'company_id' => $user->company_id,
-            'kpi_name' => $request->kpi_name,
-            'description' => $request->description,
-            'target_value' => $request->target_value,
-            'current_value' => $request->current_value,
-            'unit' => $request->unit,
-            'weight' => $request->weight,
-            'period' => $request->period,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'created_by' => $user->id,
+            'employee_id' => $request->employee_id,
+            'performance_type' => Performance::TYPE_KPI,
+            'period_start' => $request->period_start,
+            'period_end' => $request->period_end,
+            'kpi_data' => $request->kpi_data,
+            'overall_score' => $overallScore,
+            'rating' => $this->determineRating($overallScore),
+            'status' => Performance::STATUS_PENDING,
+            'notes' => $request->notes,
+            'next_review_date' => Carbon::parse($request->period_end)->addMonth()
         ]);
 
         return redirect()->route('performance.kpi')
@@ -117,26 +149,45 @@ class PerformanceController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to update KPIs.');
         }
 
-        $kpi = KPI::where('id', $id)
+        $performance = Performance::where('id', $id)
             ->where('company_id', $user->company_id)
+            ->where('performance_type', Performance::TYPE_KPI)
             ->firstOrFail();
 
         $request->validate([
-            'kpi_name' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'target_value' => 'required|numeric|min:0',
-            'current_value' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:50',
-            'weight' => 'required|numeric|min:0|max:100',
-            'period' => 'required|string|in:monthly,quarterly,yearly',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'period_start' => 'required|date',
+            'period_end' => 'required|date|after:period_start',
+            'kpi_data' => 'required|array',
+            'kpi_data.*.name' => 'required|string|max:255',
+            'kpi_data.*.target' => 'required|numeric|min:0',
+            'kpi_data.*.actual' => 'required|numeric|min:0',
+            'kpi_data.*.weight' => 'required|numeric|min:0|max:100',
+            'notes' => 'nullable|string'
         ]);
 
-        $kpi->update($request->only([
-            'kpi_name', 'description', 'target_value', 'current_value',
-            'unit', 'weight', 'period', 'start_date', 'end_date'
-        ]));
+        // Calculate overall score
+        $totalScore = 0;
+        $totalWeight = 0;
+        
+        foreach ($request->kpi_data as $kpi) {
+            $achievement = ($kpi['actual'] / $kpi['target']) * 100;
+            $score = min($achievement, 100); // Cap at 100%
+            $weight = $kpi['weight'];
+            
+            $totalScore += $score * $weight;
+            $totalWeight += $weight;
+        }
+
+        $overallScore = $totalWeight > 0 ? round($totalScore / $totalWeight, 2) : 0;
+
+        $performance->update([
+            'period_start' => $request->period_start,
+            'period_end' => $request->period_end,
+            'kpi_data' => $request->kpi_data,
+            'overall_score' => $overallScore,
+            'rating' => $this->determineRating($overallScore),
+            'notes' => $request->notes
+        ]);
 
         return redirect()->route('performance.kpi')
             ->with('success', 'KPI updated successfully.');
@@ -502,5 +553,23 @@ class PerformanceController extends Controller
         ];
 
         return $reports;
+    }
+
+    /**
+     * Determine rating based on score.
+     */
+    private function determineRating($score)
+    {
+        if ($score >= 90) {
+            return Performance::RATING_EXCELLENT;
+        } elseif ($score >= 80) {
+            return Performance::RATING_GOOD;
+        } elseif ($score >= 70) {
+            return Performance::RATING_AVERAGE;
+        } elseif ($score >= 60) {
+            return Performance::RATING_BELOW_AVERAGE;
+        } else {
+            return Performance::RATING_POOR;
+        }
     }
 } 

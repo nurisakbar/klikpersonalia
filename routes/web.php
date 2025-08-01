@@ -16,6 +16,10 @@ use App\Http\Controllers\BenefitController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\BpjsController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\SalaryTransferController;
+use App\Http\Controllers\ExternalIntegrationController;
+use App\Http\Controllers\DataImportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -182,4 +186,34 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
     Route::get('/exports/taxes', [ExportController::class, 'exportTaxes'])->name('exports.taxes');
     Route::get('/exports/bpjs', [ExportController::class, 'exportBpjs'])->name('exports.bpjs');
     Route::post('/exports/all', [ExportController::class, 'exportAll'])->name('exports.all');
+
+    // Bank Integration (Phase 5.1)
+    Route::resource('bank-accounts', BankAccountController::class);
+    Route::post('/bank-accounts/{bankAccount}/toggle-status', [BankAccountController::class, 'toggleStatus'])->name('bank-accounts.toggle-status');
+    Route::post('/bank-accounts/{bankAccount}/set-primary', [BankAccountController::class, 'setPrimary'])->name('bank-accounts.set-primary');
+    Route::get('/bank-accounts/get-employee-accounts', [BankAccountController::class, 'getEmployeeAccounts'])->name('bank-accounts.get-employee-accounts');
+
+    Route::resource('salary-transfers', SalaryTransferController::class);
+    Route::post('/salary-transfers/{salaryTransfer}/process', [SalaryTransferController::class, 'process'])->name('salary-transfers.process');
+    Route::post('/salary-transfers/{salaryTransfer}/complete', [SalaryTransferController::class, 'complete'])->name('salary-transfers.complete');
+    Route::post('/salary-transfers/{salaryTransfer}/cancel', [SalaryTransferController::class, 'cancel'])->name('salary-transfers.cancel');
+    Route::post('/salary-transfers/{salaryTransfer}/retry', [SalaryTransferController::class, 'retry'])->name('salary-transfers.retry');
+    Route::post('/salary-transfers/batch-transfer', [SalaryTransferController::class, 'batchTransfer'])->name('salary-transfers.batch-transfer');
+    Route::post('/salary-transfers/import-bank-statement', [SalaryTransferController::class, 'importBankStatement'])->name('salary-transfers.import-bank-statement');
+    Route::get('/salary-transfers/statistics', [SalaryTransferController::class, 'statistics'])->name('salary-transfers.statistics');
+
+    // External System Integration (Phase 5.2)
+    Route::resource('integrations', ExternalIntegrationController::class);
+    Route::post('/integrations/{integration}/test-connection', [ExternalIntegrationController::class, 'testConnection'])->name('integrations.test-connection');
+    Route::post('/integrations/{integration}/sync-now', [ExternalIntegrationController::class, 'syncNow'])->name('integrations.sync-now');
+    Route::get('/integrations/{integration}/logs', [ExternalIntegrationController::class, 'logs'])->name('integrations.logs');
+    Route::post('/integrations/{integration}/toggle-status', [ExternalIntegrationController::class, 'toggleStatus'])->name('integrations.toggle-status');
+
+    // Data Import/Export (Phase 5.3)
+    Route::get('/import', [DataImportController::class, 'index'])->name('import.index');
+    Route::post('/import/employees', [DataImportController::class, 'importEmployees'])->name('import.employees');
+    Route::post('/import/payroll', [DataImportController::class, 'importPayroll'])->name('import.payroll');
+    Route::post('/import/attendance', [DataImportController::class, 'importAttendance'])->name('import.attendance');
+    Route::get('/import/template/{type}', [DataImportController::class, 'downloadTemplate'])->name('import.template');
+    Route::post('/import/validate', [DataImportController::class, 'validateImport'])->name('import.validate');
 });

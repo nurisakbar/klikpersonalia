@@ -57,26 +57,50 @@ class BenefitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:health,insurance,allowance,bonus,other',
-            'amount' => 'nullable|numeric|min:0',
-            'frequency' => 'required|in:monthly,quarterly,yearly,one_time',
-            'is_taxable' => 'boolean',
+            'benefit_type' => 'required|in:' . implode(',', [
+                Benefit::TYPE_HEALTH_INSURANCE,
+                Benefit::TYPE_LIFE_INSURANCE,
+                Benefit::TYPE_DISABILITY_INSURANCE,
+                Benefit::TYPE_RETIREMENT_PLAN,
+                Benefit::TYPE_EDUCATION_ASSISTANCE,
+                Benefit::TYPE_MEAL_ALLOWANCE,
+                Benefit::TYPE_TRANSPORT_ALLOWANCE,
+                Benefit::TYPE_HOUSING_ALLOWANCE,
+                Benefit::TYPE_OTHER
+            ]),
+            'cost_type' => 'required|in:' . implode(',', [
+                Benefit::COST_TYPE_FIXED,
+                Benefit::COST_TYPE_PERCENTAGE,
+                Benefit::COST_TYPE_MIXED
+            ]),
+            'cost_amount' => 'nullable|numeric|min:0',
+            'cost_percentage' => 'nullable|numeric|min:0|max:100',
+            'provider' => 'nullable|string|max:255',
+            'policy_number' => 'nullable|string|max:255',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after:start_date',
             'is_active' => 'boolean',
-            'effective_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date|after:effective_date',
+            'eligibility_criteria' => 'nullable|array',
+            'coverage_details' => 'nullable|array',
+            'notes' => 'nullable|string'
         ]);
 
         $benefit = Benefit::create([
             'company_id' => $user->company_id,
             'name' => $request->name,
             'description' => $request->description,
-            'type' => $request->type,
-            'amount' => $request->amount,
-            'frequency' => $request->frequency,
-            'is_taxable' => $request->has('is_taxable'),
-            'is_active' => $request->has('is_active'),
-            'effective_date' => $request->effective_date,
-            'expiry_date' => $request->expiry_date,
+            'benefit_type' => $request->benefit_type,
+            'cost_type' => $request->cost_type,
+            'cost_amount' => $request->cost_amount,
+            'cost_percentage' => $request->cost_percentage,
+            'provider' => $request->provider,
+            'policy_number' => $request->policy_number,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->boolean('is_active', true),
+            'eligibility_criteria' => $request->eligibility_criteria,
+            'coverage_details' => $request->coverage_details,
+            'notes' => $request->notes
         ]);
 
         return redirect()->route('benefits.benefits')
@@ -183,33 +207,47 @@ class BenefitController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'benefit_id' => 'required|exists:benefits,id',
-            'amount' => 'nullable|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'status' => 'required|in:active,inactive,pending',
-            'notes' => 'nullable|string',
+            'enrollment_date' => 'required|date',
+            'termination_date' => 'nullable|date|after:enrollment_date',
+            'monthly_cost' => 'nullable|numeric|min:0',
+            'employer_contribution' => 'nullable|numeric|min:0',
+            'employee_contribution' => 'nullable|numeric|min:0',
+            'coverage_amount' => 'nullable|numeric|min:0',
+            'policy_number' => 'nullable|string|max:255',
+            'status' => 'required|in:' . implode(',', [
+                EmployeeBenefit::STATUS_ACTIVE,
+                EmployeeBenefit::STATUS_INACTIVE,
+                EmployeeBenefit::STATUS_PENDING,
+                EmployeeBenefit::STATUS_TERMINATED,
+                EmployeeBenefit::STATUS_SUSPENDED
+            ]),
+            'notes' => 'nullable|string'
         ]);
 
         // Check if assignment already exists
-        $existingAssignment = EmployeeBenefit::where('employee_id', $request->employee_id)
+        $existingAssignment = EmployeeBenefit::where('company_id', $user->company_id)
+            ->where('employee_id', $request->employee_id)
             ->where('benefit_id', $request->benefit_id)
-            ->where('status', 'active')
+            ->where('status', EmployeeBenefit::STATUS_ACTIVE)
             ->first();
 
         if ($existingAssignment) {
-            return redirect()->back()->with('error', 'Employee already has this benefit assigned.');
+            return redirect()->back()->with('error', 'Employee is already enrolled in this benefit.');
         }
 
-        EmployeeBenefit::create([
+        $employeeBenefit = EmployeeBenefit::create([
+            'company_id' => $user->company_id,
             'employee_id' => $request->employee_id,
             'benefit_id' => $request->benefit_id,
-            'company_id' => $user->company_id,
-            'amount' => $request->amount,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
+            'enrollment_date' => $request->enrollment_date,
+            'termination_date' => $request->termination_date,
+            'monthly_cost' => $request->monthly_cost,
+            'employer_contribution' => $request->employer_contribution,
+            'employee_contribution' => $request->employee_contribution,
+            'coverage_amount' => $request->coverage_amount,
+            'policy_number' => $request->policy_number,
             'status' => $request->status,
-            'notes' => $request->notes,
-            'assigned_by' => $user->id,
+            'notes' => $request->notes
         ]);
 
         return redirect()->route('benefits.assignments')

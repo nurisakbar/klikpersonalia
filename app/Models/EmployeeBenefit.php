@@ -11,17 +11,41 @@ class EmployeeBenefit extends Model
     use HasFactory, HasUuid;
 
     protected $fillable = [
-        'employee_id', 'benefit_id', 'company_id', 'amount', 'start_date',
-        'end_date', 'status', 'notes', 'assigned_by',
+        'company_id',
+        'employee_id',
+        'benefit_id',
+        'enrollment_date',
+        'termination_date',
+        'monthly_cost',
+        'employer_contribution',
+        'employee_contribution',
+        'coverage_amount',
+        'policy_number',
+        'status',
+        'notes'
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'enrollment_date' => 'date',
+        'termination_date' => 'date',
+        'monthly_cost' => 'decimal:2',
+        'employer_contribution' => 'decimal:2',
+        'employee_contribution' => 'decimal:2',
+        'coverage_amount' => 'decimal:2'
     ];
 
-    // Relationships
+    // Status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+    const STATUS_PENDING = 'pending';
+    const STATUS_TERMINATED = 'terminated';
+    const STATUS_SUSPENDED = 'suspended';
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);
@@ -32,25 +56,9 @@ class EmployeeBenefit extends Model
         return $this->belongsTo(Benefit::class);
     }
 
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
-    }
-
-    public function assignedBy()
-    {
-        return $this->belongsTo(User::class, 'assigned_by');
-    }
-
-    // Scopes
-    public function scopeCurrentCompany($query)
-    {
-        return $query->where('company_id', auth()->user()->company_id);
-    }
-
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
     public function scopeByEmployee($query, $employeeId)
@@ -63,78 +71,102 @@ class EmployeeBenefit extends Model
         return $query->where('benefit_id', $benefitId);
     }
 
-    public function scopeExpired($query)
-    {
-        return $query->where('end_date', '<', now());
-    }
-
-    public function scopeNotExpired($query)
-    {
-        return $query->where(function ($q) {
-            $q->whereNull('end_date')
-              ->orWhere('end_date', '>=', now());
-        });
-    }
-
-    // Accessors
     public function getStatusBadgeAttribute()
     {
         $badges = [
-            'active' => 'badge-success',
-            'inactive' => 'badge-secondary',
-            'pending' => 'badge-warning',
-            'expired' => 'badge-danger',
+            self::STATUS_ACTIVE => 'success',
+            self::STATUS_INACTIVE => 'secondary',
+            self::STATUS_PENDING => 'warning',
+            self::STATUS_TERMINATED => 'danger',
+            self::STATUS_SUSPENDED => 'info'
         ];
 
-        return $badges[$this->status] ?? 'badge-secondary';
+        return $badges[$this->status] ?? 'secondary';
     }
 
-    public function getFormattedAmountAttribute()
+    public function getStatusLabelAttribute()
     {
-        return $this->amount ? 'Rp ' . number_format($this->amount, 0, ',', '.') : 'N/A';
-    }
+        $labels = [
+            self::STATUS_ACTIVE => 'Active',
+            self::STATUS_INACTIVE => 'Inactive',
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_TERMINATED => 'Terminated',
+            self::STATUS_SUSPENDED => 'Suspended'
+        ];
 
-    public function getFormattedStartDateAttribute()
-    {
-        return $this->start_date ? $this->start_date->format('d M Y') : 'N/A';
-    }
-
-    public function getFormattedEndDateAttribute()
-    {
-        return $this->end_date ? $this->end_date->format('d M Y') : 'N/A';
-    }
-
-    // Methods
-    public function isExpired()
-    {
-        return $this->end_date && $this->end_date < now();
+        return $labels[$this->status] ?? 'Unknown';
     }
 
     public function isActive()
     {
-        return $this->status === 'active' && !$this->isExpired();
+        return $this->status === self::STATUS_ACTIVE;
     }
 
-    public function getRemainingDays()
+    public function isTerminated()
     {
-        if (!$this->end_date) {
-            return null;
+        return $this->status === self::STATUS_TERMINATED;
+    }
+
+    public function calculateMonthlyCost($employeeSalary = null)
+    {
+        if (!$this->benefit) {
+            return 0;
         }
 
-        return max(0, now()->diffInDays($this->end_date, false));
-    }
-
-    public function getDaysElapsed()
-    {
-        return now()->diffInDays($this->start_date);
-    }
-
-    public function getTotalDays()
-    {
-        if (!$this->end_date) {
-            return null;
+        $baseCost = $this->benefit->calculateCost($employeeSalary);
+        
+        // If custom monthly cost is set, use it
+        if ($this->monthly_cost) {
+            return $this->monthly_cost;
         }
 
-        return $this->start_date->diffInDays($this->end_date);
+        return $baseCost;
+    }
+
+    public function calculateContributions($employeeSalary = null)
+    {
+        $totalCost = $this->calculateMonthlyCost($employeeSalary);
+        
+        // Default to 100% employer contribution if not specified
+        if (!$this->employer_contribution && !$this->employee_contribution) {
+            $this->employer_contribution = $totalCost;
+            $this->employee_contribution = 0;
+        }
+
+        return [
+            'total' => $totalCost,
+            'employer' => $this->employer_contribution ?? 0,
+            'employee' => $this->employee_contribution ?? 0
+        ];
+    }
+
+    public function getEnrollmentDurationAttribute()
+    {
+        if (!$this->enrollment_date) {
+            return 0;
+        }
+
+        $endDate = $this->termination_date ?? now();
+        return $this->enrollment_date->diffInDays($endDate);
+    }
+
+    public function getEnrollmentDurationFormattedAttribute()
+    {
+        $days = $this->enrollment_duration;
+        
+        if ($days < 30) {
+            return $days . ' days';
+        } elseif ($days < 365) {
+            $months = floor($days / 30);
+            return $months . ' month' . ($months > 1 ? 's' : '');
+        } else {
+            $years = floor($days / 365);
+            $months = floor(($days % 365) / 30);
+            $result = $years . ' year' . ($years > 1 ? 's' : '');
+            if ($months > 0) {
+                $result .= ' ' . $months . ' month' . ($months > 1 ? 's' : '');
+            }
+            return $result;
+        }
     }
 } 

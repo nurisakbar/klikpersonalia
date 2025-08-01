@@ -278,6 +278,104 @@
             </ul>
         </li>
 
+        <!-- Bank Integration -->
+        <li class="nav-item {{ request()->routeIs('bank-accounts.*') || request()->routeIs('salary-transfers.*') ? 'menu-open' : '' }}">
+            <a href="#" class="nav-link {{ request()->routeIs('bank-accounts.*') || request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-university"></i>
+                <p>
+                    Bank Integration
+                    <i class="right fas fa-angle-left"></i>
+                </p>
+            </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="{{ route('bank-accounts.index') }}" class="nav-link {{ request()->routeIs('bank-accounts.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Bank Accounts</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('bank-accounts.create') }}" class="nav-link {{ request()->routeIs('bank-accounts.create') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Add Bank Account</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('salary-transfers.index') }}" class="nav-link {{ request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Salary Transfers</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('salary-transfers.create') }}" class="nav-link {{ request()->routeIs('salary-transfers.create') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>New Transfer</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- External System Integration -->
+        <li class="nav-item {{ request()->routeIs('integrations.*') ? 'menu-open' : '' }}">
+            <a href="#" class="nav-link {{ request()->routeIs('integrations.*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-plug"></i>
+                <p>
+                    External Integration
+                    <i class="right fas fa-angle-left"></i>
+                </p>
+            </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="{{ route('integrations.index') }}" class="nav-link {{ request()->routeIs('integrations.index') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Integrations</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('integrations.create') }}" class="nav-link {{ request()->routeIs('integrations.create') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Add Integration</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Data Import/Export -->
+        <li class="nav-item {{ request()->routeIs('import.*') ? 'menu-open' : '' }}">
+            <a href="#" class="nav-link {{ request()->routeIs('import.*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-upload"></i>
+                <p>
+                    Data Import
+                    <i class="right fas fa-angle-left"></i>
+                </p>
+            </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="{{ route('import.index') }}" class="nav-link {{ request()->routeIs('import.index') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Import Dashboard</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+                        <p>Add Bank Account</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('salary-transfers.index') }}" class="nav-link {{ request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Salary Transfers</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('salary-transfers.create') }}" class="nav-link {{ request()->routeIs('salary-transfers.create') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>New Transfer</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
         <!-- Performance Management -->
         <li class="nav-item {{ request()->routeIs('performance.*') ? 'menu-open' : '' }}">
             <a href="#" class="nav-link {{ request()->routeIs('performance.*') ? 'active' : '' }}">
