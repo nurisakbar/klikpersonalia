@@ -30,6 +30,7 @@ class PayrollSeeder extends Seeder
                 $totalSalary = $basicSalary + $allowance + $overtime + $bonus - $deduction - $taxAmount - $bpjsAmount;
 
                 Payroll::create([
+                    'company_id' => $employee->company_id,
                     'employee_id' => $employee->id,
                     'period' => $period,
                     'basic_salary' => $basicSalary,

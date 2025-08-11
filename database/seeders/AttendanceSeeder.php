@@ -61,6 +61,7 @@ class AttendanceSeeder extends Seeder
                 }
 
                 Attendance::create([
+                    'company_id' => $employee->company_id,
                     'employee_id' => $employee->id,
                     'date' => $date->format('Y-m-d'),
                     'check_in' => $checkIn ? $checkIn->format('H:i:s') : null,

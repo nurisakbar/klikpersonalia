@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Employee;
+use App\Models\Company;
 
 class EmployeeSeeder extends Seeder
 {
@@ -13,8 +14,34 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get the first company (or create one if none exists)
+        $company = Company::first();
+        if (!$company) {
+            $company = Company::create([
+                'name' => 'KlikMedis Indonesia',
+                'email' => 'info@klikmedis.com',
+                'phone' => '+62 21 1234 5678',
+                'address' => 'Jl. Sudirman No. 123',
+                'city' => 'Jakarta Pusat',
+                'province' => 'DKI Jakarta',
+                'postal_code' => '12190',
+                'country' => 'Indonesia',
+                'website' => 'https://klikmedis.com',
+                'tax_number' => '123456789012345',
+                'business_number' => 'SIUP-123456789',
+                'status' => 'active',
+                'subscription_plan' => 'premium',
+                'subscription_start' => now(),
+                'subscription_end' => now()->addYear(),
+                'max_employees' => 100,
+                'is_trial' => false,
+                'trial_ends_at' => now()->addDays(30),
+            ]);
+        }
+
         $employees = [
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP001',
                 'name' => 'John Doe',
                 'email' => 'john.doe@klikmedis.com',
@@ -30,6 +57,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '1234567890'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP002',
                 'name' => 'Jane Smith',
                 'email' => 'jane.smith@klikmedis.com',
@@ -45,6 +73,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '0987654321'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP003',
                 'name' => 'Mike Johnson',
                 'email' => 'mike.johnson@klikmedis.com',
@@ -60,6 +89,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '1122334455'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP004',
                 'name' => 'Sarah Wilson',
                 'email' => 'sarah.wilson@klikmedis.com',
@@ -75,6 +105,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '5566778899'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP005',
                 'name' => 'David Brown',
                 'email' => 'david.brown@klikmedis.com',
@@ -90,6 +121,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '9988776655'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP006',
                 'name' => 'Lisa Anderson',
                 'email' => 'lisa.anderson@klikmedis.com',
@@ -105,6 +137,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '4433221100'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP007',
                 'name' => 'Robert Taylor',
                 'email' => 'robert.taylor@klikmedis.com',
@@ -120,6 +153,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '6677889900'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP008',
                 'name' => 'Emily Davis',
                 'email' => 'emily.davis@klikmedis.com',
@@ -135,6 +169,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '7788990011'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP009',
                 'name' => 'Michael Wilson',
                 'email' => 'michael.wilson@klikmedis.com',
@@ -150,6 +185,7 @@ class EmployeeSeeder extends Seeder
                 'bank_account' => '8899001122'
             ],
             [
+                'company_id' => $company->id,
                 'employee_id' => 'EMP010',
                 'name' => 'Jennifer Lee',
                 'email' => 'jennifer.lee@klikmedis.com',

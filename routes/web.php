@@ -32,7 +32,7 @@ Route::post('/check-company-email', [App\Http\Controllers\Auth\CompanyRegistrati
 Route::post('/check-owner-email', [App\Http\Controllers\Auth\CompanyRegistrationController::class, 'checkOwnerEmail'])->name('owner.check-email');
 
 // Protected routes (require authentication)
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'ensure.company'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
