@@ -1,0 +1,474 @@
+# Payroll System Monitoring Configuration
+
+# Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  - job_name: 'payroll-system'
+    static_configs:
+      - targets: ['app:9000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'
+    scrape_interval: 30s
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:3306']
+    scrape_interval: 30s
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+# Alert Rules
+groups:
+  - name: payroll-system-alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: cpu_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: memory_usage > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for 5 minutes"
+
+      - alert: HighDiskUsage
+        expr: disk_usage > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is above 90% for 5 minutes"
+
+      - alert: ApplicationDown
+        expr: up{job="payroll-system"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application is down"
+          description: "Payroll system application is not responding"
+
+      - alert: DatabaseDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database is down"
+          description: "MySQL database is not responding"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache is not responding"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10% for 5 minutes"
+
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow response time detected"
+          description: "95th percentile response time is above 2 seconds"
+
+      - alert: QueueBacklog
+        expr: queue_jobs_pending > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue backlog detected"
+          description: "More than 100 jobs are pending in the queue"
+
+      - alert: FailedJobs
+        expr: rate(queue_jobs_failed[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High failed jobs rate"
+          description: "Job failure rate is above 10% for 5 minutes"
+
+      - alert: BackupFailure
+        expr: backup_last_success_timestamp < time() - 86400
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup failure detected"
+          description: "No successful backup in the last 24 hours"
+
+      - alert: SSLExpiry
+        expr: ssl_certificate_expiry_timestamp < time() + 86400 * 30
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate will expire in less than 30 days"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 10% disk space available"
+
+      - alert: MemoryLow
+        expr: (node_memory_MemAvailable_bytes * 100) / node_memory_MemTotal_bytes < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low memory"
+          description: "Less than 10% memory available"
+
+      - alert: HighNetworkUsage
+        expr: rate(node_network_receive_bytes_total[5m]) > 1000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High network usage"
+          description: "Network receive rate is above 1MB/s for 5 minutes"
+
+      - alert: DatabaseConnections
+        expr: mysql_global_status_threads_connected > 150
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections"
+          description: "More than 150 active database connections"
+
+      - alert: SlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow queries detected"
+          description: "Slow query rate is above 0.1 per second"
+
+      - alert: RedisMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is above 80%"
+
+      - alert: ApplicationErrors
+        expr: rate(application_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High application error rate"
+          description: "Application error rate is above 0.1 per second"
+
+      - alert: AuthenticationFailures
+        expr: rate(authentication_failures_total[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is above 0.5 per second"
+
+      - alert: APIErrors
+        expr: rate(api_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is above 0.1 per second"
+
+      - alert: PayrollProcessingErrors
+        expr: rate(payroll_processing_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Payroll processing errors"
+          description: "Payroll processing error rate is above 0.05 per second"
+
+      - alert: TaxCalculationErrors
+        expr: rate(tax_calculation_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tax calculation errors"
+          description: "Tax calculation error rate is above 0.05 per second"
+
+      - alert: BPJSCalculationErrors
+        expr: rate(bpjs_calculation_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BPJS calculation errors"
+          description: "BPJS calculation error rate is above 0.05 per second"
+
+      - alert: ReportGenerationErrors
+        expr: rate(report_generation_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Report generation errors"
+          description: "Report generation error rate is above 0.1 per second"
+
+      - alert: ExportErrors
+        expr: rate(export_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Export errors"
+          description: "Export error rate is above 0.1 per second"
+
+      - alert: ImportErrors
+        expr: rate(import_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Import errors"
+          description: "Import error rate is above 0.1 per second"
+
+      - alert: IntegrationErrors
+        expr: rate(integration_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Integration errors"
+          description: "Integration error rate is above 0.1 per second"
+
+      - alert: WebhookErrors
+        expr: rate(webhook_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Webhook errors"
+          description: "Webhook error rate is above 0.1 per second"
+
+      - alert: NotificationErrors
+        expr: rate(notification_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Notification errors"
+          description: "Notification error rate is above 0.1 per second"
+
+      - alert: AuditLogErrors
+        expr: rate(audit_log_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Audit log errors"
+          description: "Audit log error rate is above 0.1 per second"
+
+      - alert: DataArchivingErrors
+        expr: rate(data_archiving_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Data archiving errors"
+          description: "Data archiving error rate is above 0.05 per second"
+
+      - alert: BackupErrors
+        expr: rate(backup_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup errors"
+          description: "Backup error rate is above 0.05 per second"
+
+      - alert: SecurityScanErrors
+        expr: rate(security_scan_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Security scan errors"
+          description: "Security scan error rate is above 0.05 per second"
+
+      - alert: ComplianceCheckErrors
+        expr: rate(compliance_check_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Compliance check errors"
+          description: "Compliance check error rate is above 0.05 per second"
+
+      - alert: PerformanceMonitoringErrors
+        expr: rate(performance_monitoring_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Performance monitoring errors"
+          description: "Performance monitoring error rate is above 0.05 per second"
+
+      - alert: HealthCheckErrors
+        expr: rate(health_check_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Health check errors"
+          description: "Health check error rate is above 0.05 per second"
+
+      - alert: SystemMaintenanceErrors
+        expr: rate(system_maintenance_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "System maintenance errors"
+          description: "System maintenance error rate is above 0.05 per second"
+
+      - alert: UpdateErrors
+        expr: rate(update_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "System update errors"
+          description: "System update error rate is above 0.05 per second"
+
+      - alert: OptimizationErrors
+        expr: rate(optimization_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Optimization errors"
+          description: "Optimization error rate is above 0.05 per second"
+
+      - alert: CacheErrors
+        expr: rate(cache_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache errors"
+          description: "Cache error rate is above 0.1 per second"
+
+      - alert: ConfigErrors
+        expr: rate(config_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Configuration errors"
+          description: "Configuration error rate is above 0.05 per second"
+
+      - alert: RouteErrors
+        expr: rate(route_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Route errors"
+          description: "Route error rate is above 0.05 per second"
+
+      - alert: ViewErrors
+        expr: rate(view_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "View errors"
+          description: "View error rate is above 0.05 per second"
+
+      - alert: MigrationErrors
+        expr: rate(migration_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Migration errors"
+          description: "Migration error rate is above 0.05 per second"
+
+      - alert: SeedingErrors
+        expr: rate(seeding_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Seeding errors"
+          description: "Seeding error rate is above 0.05 per second"
+
+      - alert: TestingErrors
+        expr: rate(testing_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Testing errors"
+          description: "Testing error rate is above 0.05 per second"
+
+      - alert: DeploymentErrors
+        expr: rate(deployment_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Deployment errors"
+          description: "Deployment error rate is above 0.05 per second" 

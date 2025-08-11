@@ -15,11 +15,15 @@ class DatabaseSeeder extends Seeder
     {
         // Call other seeders in proper order
         $this->call([
-            UserSeeder::class,
             CompanySeeder::class,
+            UserSeeder::class,
             EmployeeSeeder::class,
             PayrollSeeder::class,
             AttendanceSeeder::class,
+            LeaveSeeder::class,
+            OvertimeSeeder::class,
+            TaxSeeder::class,
+            BpjsSeeder::class,
         ]);
     }
 }

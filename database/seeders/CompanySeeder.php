@@ -14,9 +14,9 @@ class CompanySeeder extends Seeder
     public function run(): void
     {
         $company = Company::create([
-            'name' => 'KlikMedis Indonesia',
+            'name' => 'KlikMedis',
             'email' => 'info@klikmedis.com',
-            'phone' => '+62 21 1234 5678',
+            'phone' => '021-12345678',
             'address' => 'Jl. Sudirman No. 123',
             'city' => 'Jakarta Pusat',
             'province' => 'DKI Jakarta',
@@ -31,10 +31,9 @@ class CompanySeeder extends Seeder
             'subscription_end' => now()->addYear(),
             'max_employees' => 100,
             'is_trial' => false,
-            'trial_ends_at' => now()->addDays(30),
         ]);
 
-        $this->command->info('Company seeded successfully!');
+        $this->command->info('Company created successfully!');
         $this->command->info('Company ID: ' . $company->id);
     }
-}
+} 

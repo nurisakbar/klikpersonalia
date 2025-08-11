@@ -75,28 +75,10 @@ return new class extends Migration
         }
 
         // Update overtimes table
-        if (Schema::hasTable('overtimes') && !Schema::hasColumn('overtimes', 'company_id')) {
-            Schema::table('overtimes', function (Blueprint $table) {
-                $table->uuid('company_id')->after('id');
-            });
-        }
-        
-        // Drop and recreate unique constraint for overtimes
-        if (Schema::hasTable('overtimes')) {
-            $indexes = DB::select("SHOW INDEX FROM overtimes WHERE Key_name = 'overtimes_employee_id_date_unique'");
-            if (!empty($indexes)) {
-                Schema::table('overtimes', function (Blueprint $table) {
-                    $table->dropUnique(['employee_id', 'date']);
-                });
-            }
-            
-            $indexes = DB::select("SHOW INDEX FROM overtimes WHERE Key_name = 'overtimes_company_id_employee_id_date_unique'");
-            if (empty($indexes)) {
-                Schema::table('overtimes', function (Blueprint $table) {
-                    $table->unique(['company_id', 'employee_id', 'date']);
-                });
-            }
-        }
+        Schema::table('overtimes', function (Blueprint $table) {
+            $table->uuid('company_id')->after('id');
+            $table->unique(['company_id', 'employee_id', 'date']);
+        });
     }
 
     /**
@@ -165,26 +147,9 @@ return new class extends Migration
         }
 
         // Revert overtimes table
-        if (Schema::hasTable('overtimes')) {
-            $indexes = DB::select("SHOW INDEX FROM overtimes WHERE Key_name = 'overtimes_company_id_employee_id_date_unique'");
-            if (!empty($indexes)) {
-                Schema::table('overtimes', function (Blueprint $table) {
-                    $table->dropUnique(['company_id', 'employee_id', 'date']);
-                });
-            }
-            
-            $indexes = DB::select("SHOW INDEX FROM overtimes WHERE Key_name = 'overtimes_employee_id_date_unique'");
-            if (empty($indexes)) {
-                Schema::table('overtimes', function (Blueprint $table) {
-                    $table->unique(['employee_id', 'date']);
-                });
-            }
-            
-            if (Schema::hasColumn('overtimes', 'company_id')) {
-                Schema::table('overtimes', function (Blueprint $table) {
-                    $table->dropColumn('company_id');
-                });
-            }
-        }
+        Schema::table('overtimes', function (Blueprint $table) {
+            $table->dropUnique(['company_id', 'employee_id', 'date']);
+            $table->dropColumn('company_id');
+        });
     }
 };

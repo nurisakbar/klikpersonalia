@@ -13,8 +13,24 @@ return new class extends Migration
     public function up(): void
     {
         // Drop foreign key constraints first
-        $this->dropForeignKeys();
-        
+        Schema::table('leaves', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+            $table->dropForeign(['approved_by']);
+        });
+
+        Schema::table('overtimes', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+            $table->dropForeign(['approved_by']);
+        });
+
+        Schema::table('payrolls', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+        });
+
+        Schema::table('attendances', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+        });
+
         // Convert users table ID to UUID
         Schema::table('users', function (Blueprint $table) {
             $table->uuid('id')->change();
@@ -50,9 +66,25 @@ return new class extends Migration
             $table->uuid('employee_id')->change();
             $table->uuid('approved_by')->nullable()->change();
         });
-        
-        // Recreate foreign key constraints
-        $this->createForeignKeys();
+
+        // Recreate foreign key constraints with UUID references
+        Schema::table('payrolls', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+        });
+
+        Schema::table('attendances', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+        });
+
+        Schema::table('leaves', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+        });
+
+        Schema::table('overtimes', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+        });
     }
 
     /**
@@ -61,8 +93,24 @@ return new class extends Migration
     public function down(): void
     {
         // Drop foreign key constraints first
-        $this->dropForeignKeys();
-        
+        Schema::table('leaves', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+            $table->dropForeign(['approved_by']);
+        });
+
+        Schema::table('overtimes', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+            $table->dropForeign(['approved_by']);
+        });
+
+        Schema::table('payrolls', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+        });
+
+        Schema::table('attendances', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+        });
+
         // Revert users table
         Schema::table('users', function (Blueprint $table) {
             $table->bigIncrements('id')->change();
@@ -98,70 +146,24 @@ return new class extends Migration
             $table->unsignedBigInteger('employee_id')->change();
             $table->unsignedBigInteger('approved_by')->nullable()->change();
         });
-        
-        // Recreate foreign key constraints
-        $this->createForeignKeys();
-    }
-    
-    /**
-     * Drop all foreign key constraints
-     */
-    private function dropForeignKeys(): void
-    {
-        $tables = ['employees', 'payrolls', 'attendances', 'leaves', 'overtimes'];
-        
-        foreach ($tables as $table) {
-            if (Schema::hasTable($table)) {
-                $foreignKeys = DB::select("
-                    SELECT CONSTRAINT_NAME 
-                    FROM information_schema.KEY_COLUMN_USAGE 
-                    WHERE TABLE_SCHEMA = DATABASE() 
-                    AND TABLE_NAME = '{$table}' 
-                    AND REFERENCED_TABLE_NAME IS NOT NULL
-                ");
-                
-                foreach ($foreignKeys as $foreignKey) {
-                    Schema::table($table, function (Blueprint $table) use ($foreignKey) {
-                        $table->dropForeign($foreignKey->CONSTRAINT_NAME);
-                    });
-                }
-            }
-        }
-    }
-    
-    /**
-     * Create all foreign key constraints
-     */
-    private function createForeignKeys(): void
-    {
-        // Payrolls foreign keys
-        if (Schema::hasTable('payrolls')) {
-            Schema::table('payrolls', function (Blueprint $table) {
-                $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
-            });
-        }
-        
-        // Attendances foreign keys
-        if (Schema::hasTable('attendances')) {
-            Schema::table('attendances', function (Blueprint $table) {
-                $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
-            });
-        }
-        
-        // Leaves foreign keys
-        if (Schema::hasTable('leaves')) {
-            Schema::table('leaves', function (Blueprint $table) {
-                $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
-                $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
-            });
-        }
-        
-        // Overtimes foreign keys
-        if (Schema::hasTable('overtimes')) {
-            Schema::table('overtimes', function (Blueprint $table) {
-                $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
-                $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
-            });
-        }
+
+        // Recreate original foreign key constraints
+        Schema::table('payrolls', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+        });
+
+        Schema::table('attendances', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+        });
+
+        Schema::table('leaves', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+        });
+
+        Schema::table('overtimes', function (Blueprint $table) {
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+        });
     }
 };
