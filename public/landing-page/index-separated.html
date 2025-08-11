@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KlikMedis Payroll - Sistem Payroll Terintegrasi Profesional</title>
+    <meta name="description" content="Sistem payroll terintegrasi untuk perusahaan modern. Kelola gaji, absensi, PPh 21, BPJS dengan mudah dan akurat.">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calculator me-2"></i>
+                KlikMedis Payroll
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Fitur</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#stats">Statistik</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Kontak</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary-custom" href="/login">Masuk</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content" data-aos="fade-right">
+                    <h1 class="hero-title">
+                        Sistem Payroll Terintegrasi untuk Perusahaan Modern
+                    </h1>
+                    <p class="hero-subtitle">
+                        Kelola gaji, absensi, dan laporan keuangan dengan mudah. 
+                        Terintegrasi dengan perhitungan PPh 21, BPJS, dan otomatisasi payroll yang akurat.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/register" class="btn btn-primary-custom">
+                            <i class="fas fa-rocket me-2"></i>
+                            Mulai Gratis
+                        </a>
+                        <a href="#features" class="btn btn-outline-custom">
+                            <i class="fas fa-play me-2"></i>
+                            Pelajari Lebih Lanjut
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="text-center">
+                        <img src="https://via.placeholder.com/600x400/1e40af/ffffff?text=Payroll+Dashboard" 
+                             alt="Payroll Dashboard" class="img-fluid rounded-3 shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h2 class="section-title">Fitur Lengkap Payroll System</h2>
+                    <p class="section-subtitle">
+                        Solusi komprehensif untuk mengelola semua aspek penggajian perusahaan Anda
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Employee Management -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 class="feature-title">Manajemen Karyawan</h4>
+                        <p class="feature-description">
+                            Kelola data karyawan dengan lengkap termasuk informasi pribadi, 
+                            posisi, departemen, dan riwayat kerja dalam satu sistem terpusat.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Data karyawan terpusat</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Struktur organisasi</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Riwayat kerja</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Payroll Processing -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h4 class="feature-title">Proses Payroll Otomatis</h4>
+                        <p class="feature-description">
+                            Hitung gaji secara otomatis dengan komponen gaji yang fleksibel, 
+                            tunjangan, bonus, dan potongan sesuai kebijakan perusahaan.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Perhitungan otomatis</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Komponen gaji fleksibel</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Bonus & tunjangan</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Tax Calculation -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h4 class="feature-title">Perhitungan PPh 21</h4>
+                        <p class="feature-description">
+                            Perhitungan pajak penghasilan (PPh 21) yang akurat sesuai 
+                            regulasi terbaru dengan dukungan PTKP dan tarif progresif.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>PPh 21 otomatis</li>
+                            <li><i class="fas fa-check text-success me-2"></i>PTKP terbaru</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Laporan pajak</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- BPJS Integration -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="feature-title">Integrasi BPJS</h4>
+                        <p class="feature-description">
+                            Perhitungan iuran BPJS Kesehatan dan Ketenagakerjaan yang 
+                            akurat sesuai dengan ketentuan pemerintah Indonesia.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>BPJS Kesehatan</li>
+                            <li><i class="fas fa-check text-success me-2"></i>BPJS Ketenagakerjaan</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Laporan BPJS</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Attendance Management -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h4 class="feature-title">Sistem Absensi</h4>
+                        <p class="feature-description">
+                            Kelola kehadiran karyawan dengan sistem check-in/check-out, 
+                            lembur, dan cuti dalam satu platform terintegrasi.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Check-in/out</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Perhitungan lembur</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Manajemen cuti</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Reports & Analytics -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="feature-title">Laporan & Analitik</h4>
+                        <p class="feature-description">
+                            Dashboard analitik yang informatif dengan laporan payroll, 
+                            absensi, dan tren pengeluaran perusahaan yang detail.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Dashboard real-time</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Laporan komprehensif</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Analitik tren</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="stats" class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-item">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Perusahaan Aktif</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <div class="stat-label">Karyawan Terkelola</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-item">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">Uptime Sistem</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Dukungan Teknis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="cta-card" data-aos="zoom-in">
+                        <div class="cta-content">
+                            <h2 class="mb-4">Siap untuk Memulai?</h2>
+                            <p class="lead mb-4">
+                                Bergabunglah dengan ratusan perusahaan yang telah mempercayai 
+                                KlikMedis Payroll untuk mengelola sistem penggajian mereka.
+                            </p>
+                            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                                <a href="/register" class="btn btn-light btn-lg px-4 py-3 fw-bold">
+                                    <i class="fas fa-rocket me-2"></i>
+                                    Mulai Trial Gratis
+                                </a>
+                                <a href="#contact" class="btn btn-outline-light btn-lg px-4 py-3">
+                                    <i class="fas fa-phone me-2"></i>
+                                    Konsultasi Gratis
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="footer-title">
+                        <i class="fas fa-calculator me-2"></i>
+                        KlikMedis Payroll
+                    </h5>
+                    <p class="text-muted">
+                        Solusi lengkap sistem payroll terintegrasi untuk perusahaan modern. 
+                        Mengelola gaji, absensi, dan laporan keuangan dengan mudah dan akurat.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="footer-title">Produk</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-link">Payroll System</a></li>
+                        <li><a href="#" class="footer-link">Attendance</a></li>
+                        <li><a href="#" class="footer-link">Tax Management</a></li>
+                        <li><a href="#" class="footer-link">BPJS Integration</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="footer-title">Perusahaan</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-link">Tentang Kami</a></li>
+                        <li><a href="#" class="footer-link">Karir</a></li>
+                        <li><a href="#" class="footer-link">Blog</a></li>
+                        <li><a href="#" class="footer-link">Press Kit</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4">
+                    <h6 class="footer-title">Kontak</h6>
+                    <ul class="list-unstyled">
+                        <li class="text-muted mb-2">
+                            <i class="fas fa-phone me-2"></i>+62 21 1234 5678
+                        </li>
+                        <li class="text-muted mb-2">
+                            <i class="fas fa-envelope me-2"></i>info@klikmedis.com
+                        </li>
+                        <li class="text-muted">
+                            <i class="fas fa-map-marker-alt me-2"></i>Jakarta, Indonesia
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4" style="border-color: #374151;">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">
+                        © 2025 KlikMedis Payroll. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="footer-link me-3">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

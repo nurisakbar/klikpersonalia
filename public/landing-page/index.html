@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KlikPersonalia - Platform HRD Terintegrasi untuk Perusahaan Modern</title>
+    <meta name="description" content="Platform HRD terintegrasi untuk perusahaan modern. Kelola karyawan, payroll, absensi, PPh 21, BPJS, dan semua tugas HRD dengan mudah dan akurat.">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --light-blue: #dbeafe;
+            --dark-blue: #1e3a8a;
+            --accent-blue: #60a5fa;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(30, 64, 175, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-blue) !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: var(--text-dark) !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-blue) !important;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 50%, var(--secondary-blue) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.05"><polygon points="0,100 1000,0 1000,100"/></svg>');
+            background-size: cover;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        /* Buttons */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--accent-blue), var(--secondary-blue));
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            color: white;
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid var(--primary-blue);
+            background: transparent;
+            color: var(--primary-blue);
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary-blue);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+        }
+        
+        .btn-outline-custom {
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-custom:hover {
+            background: white;
+            color: var(--primary-blue);
+            transform: translateY(-3px);
+        }
+        
+        /* Features Section */
+        .features-section {
+            padding: 100px 0;
+            background: var(--gray-50);
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid var(--gray-100);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(30, 64, 175, 0.15);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--light-blue), var(--accent-blue));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            font-size: 28px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        
+        .feature-description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+            background: var(--gray-50);
+        }
+        
+        .cta-card {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            border-radius: 30px;
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.05"><polygon points="0,100 1000,0 1000,100"/></svg>');
+            background-size: cover;
+        }
+        
+        .cta-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Trusted By Section */
+        .trusted-section {
+            background: white;
+            border-top: 1px solid var(--gray-100);
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .company-logo {
+            text-align: center;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .company-logo img {
+            max-height: 60px;
+            filter: grayscale(100%);
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        .company-logo:hover img {
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        /* Testimonials Section */
+        .testimonial-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid var(--gray-100);
+            position: relative;
+        }
+        
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 4rem;
+            color: var(--light-blue);
+            font-family: serif;
+            line-height: 1;
+        }
+        
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(30, 64, 175, 0.15);
+        }
+        
+        .testimonial-content {
+            margin-bottom: 25px;
+        }
+        
+        .testimonial-text {
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-style: italic;
+            margin-top: 20px;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .author-avatar img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+        
+        .author-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .author-position {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        /* Screenshots Section */
+        .screenshots-section {
+            background: white;
+        }
+        
+        .screenshots-carousel {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .carousel-container {
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(30, 64, 175, 0.15);
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .carousel-slide {
+            min-width: 100%;
+            flex-shrink: 0;
+            padding: 0 15px;
+        }
+        
+        .screenshot-card {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .screenshot-header {
+            background: var(--gray-100);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .browser-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27ca3f; }
+        
+        .screenshot-title {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        
+        .screenshot-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .screenshot-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 64, 175, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .screenshot-card:hover .screenshot-overlay {
+            opacity: 1;
+        }
+        
+        .overlay-content {
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .overlay-content h5 {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .overlay-content p {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        /* Carousel Controls */
+        .carousel-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .carousel-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+        }
+        
+        .carousel-btn:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 64, 175, 0.4);
+        }
+        
+        .carousel-btn:disabled {
+            background: var(--gray-100);
+            color: var(--text-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .carousel-indicators {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--gray-100);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .indicator.active {
+            background: var(--primary-blue);
+            transform: scale(1.2);
+        }
+        
+        .indicator:hover {
+            background: var(--secondary-blue);
+        }
+        
+        /* Keunggulan Section */
+        .keunggulan-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid var(--gray-100);
+            text-align: center;
+        }
+        
+        .keunggulan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(30, 64, 175, 0.15);
+        }
+        
+        .keunggulan-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--light-blue), var(--accent-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            font-size: 32px;
+            margin: 0 auto 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .keunggulan-card:hover .keunggulan-icon {
+            transform: scale(1.1);
+        }
+        
+        .keunggulan-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        
+        .keunggulan-description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        
+        /* Harga Section */
+        .harga-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 40px rgba(30, 64, 175, 0.1);
+            border: 2px solid var(--gray-100);
+            transition: all 0.3s ease;
+            position: relative;
+            height: 100%;
+        }
+        
+        .harga-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(30, 64, 175, 0.15);
+            border-color: var(--primary-blue);
+        }
+        
+        .harga-card.featured {
+            border-color: var(--primary-blue);
+            box-shadow: 0 20px 50px rgba(30, 64, 175, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .harga-card.featured:hover {
+            transform: scale(1.05) translateY(-5px);
+        }
+        
+        .paket-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-100);
+            color: var(--text-dark);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .paket-badge.featured {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+        }
+        
+        .harga-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .harga-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        
+        .harga-amount {
+            margin-bottom: 10px;
+        }
+        
+        .currency {
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+        
+        .amount {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .period {
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+        
+        .harga-subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        .harga-features {
+            margin-bottom: 30px;
+        }
+        
+        .harga-features li {
+            padding: 8px 0;
+            color: var(--text-dark);
+        }
+        
+        .harga-footer {
+            text-align: center;
+        }
+        
+        .harga-info {
+            padding: 20px;
+        }
+        
+        .harga-info h5 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+        
+        /* Demo Section */
+        .demo-features {
+            margin: 30px 0;
+        }
+        
+        .demo-feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+        
+        .demo-feature i {
+            font-size: 1.2rem;
+        }
+        
+        .demo-image {
+            text-align: center;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-title {
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--accent-blue);
+        }
+        
+        .footer-link {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: var(--accent-blue);
+        }
+        
+        .social-links a {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background: var(--accent-blue);
+            transform: translateY(-3px);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+            
+            .company-logo {
+                padding: 15px;
+            }
+            
+            .company-logo img {
+                max-height: 50px;
+            }
+            
+            .testimonial-card {
+                padding: 25px;
+            }
+            
+            .testimonial-text {
+                font-size: 0.95rem;
+            }
+            
+            .screenshots-carousel {
+                max-width: 100%;
+            }
+            
+            .carousel-controls {
+                gap: 20px;
+                margin-top: 20px;
+            }
+            
+            .carousel-btn {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .carousel-slide .row {
+                margin: 0;
+            }
+            
+            .carousel-slide .col-lg-4 {
+                padding: 0 5px;
+            }
+            
+            .keunggulan-card {
+                padding: 25px 20px;
+            }
+            
+            .keunggulan-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            
+            .harga-card {
+                padding: 30px 25px;
+            }
+            
+            .harga-card.featured {
+                transform: none;
+            }
+            
+            .harga-card.featured:hover {
+                transform: translateY(-5px);
+            }
+            
+            .amount {
+                font-size: 2.5rem;
+            }
+            
+            .paket-badge {
+                font-size: 0.8rem;
+                padding: 6px 15px;
+            }
+            
+            .demo-features {
+                margin: 20px 0;
+            }
+            
+            .demo-feature {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-element:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-element:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 60%;
+            right: 20%;
+            animation-delay: 2s;
+        }
+        
+        .floating-element:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            top: 40%;
+            left: 10%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-users-cog me-2"></i>
+                KlikPersonalia
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#beranda">Beranda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Fitur</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#keunggulan">Keunggulan</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#testimonial">Testimonial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#harga">Harga</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Kontak</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-outline-primary me-2" href="#demo">Lihat Demo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary-custom" href="/register">Coba Gratis</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="beranda" class="hero-section">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content" data-aos="fade-right">
+                    <h1 class="hero-title">
+                        Platform HRD Terintegrasi untuk Perusahaan Modern
+                    </h1>
+                    <p class="hero-subtitle">
+                        Kelola semua tugas HRD dalam satu platform: karyawan, payroll, absensi, rekrutmen, 
+                        pelatihan, dan laporan keuangan. Terintegrasi dengan PPh 21, BPJS, dan otomatisasi yang akurat.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/register" class="btn btn-primary-custom">
+                            <i class="fas fa-rocket me-2"></i>
+                            Coba Gratis 30 Hari
+                        </a>
+                        <a href="#demo" class="btn btn-outline-custom">
+                            <i class="fas fa-play me-2"></i>
+                            Lihat Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="text-center">
+                        <img src="https://via.placeholder.com/600x400/1e40af/ffffff?text=HRD+Platform+Dashboard" 
+                             alt="HRD Platform Dashboard" class="img-fluid rounded-3 shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h2 class="section-title">Fitur Lengkap Platform HRD</h2>
+                    <p class="section-subtitle">
+                        Solusi komprehensif untuk mengelola semua aspek sumber daya manusia perusahaan Anda
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Employee Management -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 class="feature-title">Manajemen Karyawan</h4>
+                        <p class="feature-description">
+                            Kelola data karyawan dengan lengkap termasuk informasi pribadi, 
+                            posisi, departemen, riwayat kerja, dan dokumen dalam satu sistem terpusat.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Data karyawan terpusat</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Struktur organisasi</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Riwayat kerja & dokumen</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Payroll Processing -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h4 class="feature-title">Sistem Payroll Terintegrasi</h4>
+                        <p class="feature-description">
+                            Hitung gaji secara otomatis dengan komponen gaji yang fleksibel, 
+                            tunjangan, bonus, dan potongan sesuai kebijakan perusahaan.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Perhitungan otomatis</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Komponen gaji fleksibel</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Bonus & tunjangan</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Tax Calculation -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h4 class="feature-title">Perhitungan PPh 21</h4>
+                        <p class="feature-description">
+                            Perhitungan pajak penghasilan (PPh 21) yang akurat sesuai 
+                            regulasi terbaru dengan dukungan PTKP dan tarif progresif.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>PPh 21 otomatis</li>
+                            <li><i class="fas fa-check text-success me-2"></i>PTKP terbaru</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Laporan pajak</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- BPJS Integration -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="feature-title">Integrasi BPJS</h4>
+                        <p class="feature-description">
+                            Perhitungan iuran BPJS Kesehatan dan Ketenagakerjaan yang 
+                            akurat sesuai dengan ketentuan pemerintah Indonesia.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>BPJS Kesehatan</li>
+                            <li><i class="fas fa-check text-success me-2"></i>BPJS Ketenagakerjaan</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Laporan BPJS</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Attendance Management -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h4 class="feature-title">Sistem Absensi</h4>
+                        <p class="feature-description">
+                            Kelola kehadiran karyawan dengan sistem check-in/check-out, 
+                            lembur, dan cuti dalam satu platform terintegrasi.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Check-in/out</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Perhitungan lembur</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Manajemen cuti</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Recruitment & Onboarding -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h4 class="feature-title">Rekrutmen & Onboarding</h4>
+                        <p class="feature-description">
+                            Kelola proses rekrutmen dari posting lowongan, screening kandidat, 
+                            hingga onboarding karyawan baru dengan workflow yang terstruktur.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Job posting & aplikasi</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Screening kandidat</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Onboarding terstruktur</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4 mt-4">
+                <!-- Performance Management -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="700">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h4 class="feature-title">Manajemen Kinerja</h4>
+                        <p class="feature-description">
+                            Sistem evaluasi kinerja karyawan dengan KPI, goal setting, 
+                            dan feedback yang terintegrasi untuk pengembangan SDM.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>KPI & goal setting</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Evaluasi kinerja</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Feedback system</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Training & Development -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="800">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h4 class="feature-title">Pelatihan & Pengembangan</h4>
+                        <p class="feature-description">
+                            Kelola program pelatihan, tracking progress, dan sertifikasi 
+                            untuk pengembangan kompetensi karyawan.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Program pelatihan</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Progress tracking</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Sertifikasi</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Reports & Analytics -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="900">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="feature-title">Laporan & Analitik HRD</h4>
+                        <p class="feature-description">
+                            Dashboard analitik yang informatif dengan laporan HRD, 
+                            payroll, absensi, dan tren pengembangan SDM yang detail.
+                        </p>
+                        <ul class="list-unstyled mt-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Dashboard real-time</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Laporan komprehensif</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Analitik SDM</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section class="screenshots-section py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h2 class="section-title">Lihat Aplikasi dalam Aksi</h2>
+                    <p class="section-subtitle">
+                        Jelajahi interface yang user-friendly dan fitur-fitur canggih KlikMedis Payroll
+                    </p>
+                </div>
+            </div>
+            
+            <div class="screenshots-carousel" data-aos="fade-up">
+                <div class="carousel-container">
+                    <div class="carousel-track">
+                        <!-- Slide 1: 3 Screenshots -->
+                        <div class="carousel-slide">
+                            <div class="row g-4">
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="screenshot-card">
+                                        <div class="screenshot-header">
+                                            <div class="browser-dots">
+                                                <span class="dot red"></span>
+                                                <span class="dot yellow"></span>
+                                                <span class="dot green"></span>
+                                            </div>
+                                            <div class="screenshot-title">Dashboard Payroll</div>
+                                        </div>
+                                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                                             alt="Dashboard Payroll" class="screenshot-image">
+                                        <div class="screenshot-overlay">
+                                            <div class="overlay-content">
+                                                <h5>Dashboard Payroll</h5>
+                                                <p>Overview lengkap penggajian, absensi, dan laporan keuangan</p>
+                                                <a href="#" class="btn btn-light btn-sm">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="screenshot-card">
+                                        <div class="screenshot-header">
+                                            <div class="browser-dots">
+                                                <span class="dot red"></span>
+                                                <span class="dot yellow"></span>
+                                                <span class="dot green"></span>
+                                            </div>
+                                            <div class="screenshot-title">Manajemen Karyawan</div>
+                                        </div>
+                                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                                             alt="Manajemen Karyawan" class="screenshot-image">
+                                        <div class="screenshot-overlay">
+                                            <div class="overlay-content">
+                                                <h5>Manajemen Karyawan</h5>
+                                                <p>Kelola data karyawan dengan mudah dan terstruktur</p>
+                                                <a href="#" class="btn btn-light btn-sm">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="screenshot-card">
+                                        <div class="screenshot-header">
+                                            <div class="browser-dots">
+                                                <span class="dot red"></span>
+                                                <span class="dot yellow"></span>
+                                                <span class="dot green"></span>
+                                            </div>
+                                            <div class="screenshot-title">Laporan Pajak</div>
+                                        </div>
+                                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                                             alt="Laporan Pajak" class="screenshot-image">
+                                        <div class="screenshot-overlay">
+                                            <div class="overlay-content">
+                                                <h5>Laporan Pajak</h5>
+                                                <p>Generate laporan PPh 21 dan BPJS secara otomatis</p>
+                                                <a href="#" class="btn btn-light btn-sm">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Slide 2: 3 Screenshots -->
+                        <div class="carousel-slide">
+                            <div class="row g-4">
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="screenshot-card">
+                                        <div class="screenshot-header">
+                                            <div class="browser-dots">
+                                                <span class="dot red"></span>
+                                                <span class="dot yellow"></span>
+                                                <span class="dot green"></span>
+                                            </div>
+                                            <div class="screenshot-title">Sistem Absensi</div>
+                                        </div>
+                                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                                             alt="Sistem Absensi" class="screenshot-image">
+                                        <div class="screenshot-overlay">
+                                            <div class="overlay-content">
+                                                <h5>Sistem Absensi</h5>
+                                                <p>Monitor kehadiran dan lembur karyawan real-time</p>
+                                                <a href="#" class="btn btn-light btn-sm">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="screenshot-card">
+                                        <div class="screenshot-header">
+                                            <div class="browser-dots">
+                                                <span class="dot red"></span>
+                                                <span class="dot yellow"></span>
+                                                <span class="dot green"></span>
+                                            </div>
+                                            <div class="screenshot-title">Analitik & Laporan</div>
+                                        </div>
+                                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                                             alt="Analitik & Laporan" class="screenshot-image">
+                                        <div class="screenshot-overlay">
+                                            <div class="overlay-content">
+                                                <h5>Analitik & Laporan</h5>
+                                                <p>Dashboard analitik dengan grafik dan statistik detail</p>
+                                                <a href="#" class="btn btn-light btn-sm">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="screenshot-card">
+                                        <div class="screenshot-header">
+                                            <div class="browser-dots">
+                                                <span class="dot red"></span>
+                                                <span class="dot yellow"></span>
+                                                <span class="dot green"></span>
+                                            </div>
+                                            <div class="screenshot-title">Pengaturan Perusahaan</div>
+                                        </div>
+                                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                                             alt="Pengaturan Perusahaan" class="screenshot-image">
+                                        <div class="screenshot-overlay">
+                                            <div class="overlay-content">
+                                                <h5>Pengaturan Perusahaan</h5>
+                                                <p>Konfigurasi kebijakan perusahaan dan pengaturan sistem</p>
+                                                <a href="#" class="btn btn-light btn-sm">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="carousel-controls">
+                    <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="carousel-indicators">
+                        <span class="indicator active" onclick="goToSlide(0)"></span>
+                        <span class="indicator" onclick="goToSlide(1)"></span>
+                    </div>
+                    <button class="carousel-btn next-btn" onclick="moveCarousel(1)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Keunggulan Section -->
+    <section id="keunggulan" class="keunggulan-section py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h2 class="section-title">Keunggulan Platform HRD KlikPersonalia</h2>
+                    <p class="section-subtitle">
+                        Mengapa ribuan perusahaan memilih KlikPersonalia sebagai platform HRD terdepan
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="keunggulan-card">
+                        <div class="keunggulan-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h4 class="keunggulan-title">Cloud-based</h4>
+                        <p class="keunggulan-description">
+                            Akses dari mana saja, 24/7 tanpa perlu instalasi software. Data tersimpan aman di cloud dengan backup otomatis.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="keunggulan-card">
+                        <div class="keunggulan-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 class="keunggulan-title">Multi-user</h4>
+                        <p class="keunggulan-description">
+                            Role-based access untuk HR, manager, karyawan dengan hak akses yang berbeda sesuai kebutuhan.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="keunggulan-card">
+                        <div class="keunggulan-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <h4 class="keunggulan-title">Terintegrasi</h4>
+                        <p class="keunggulan-description">
+                            BPJS, PPh 21, WhatsApp notification, dan berbagai sistem eksternal lainnya dalam satu platform.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="keunggulan-card">
+                        <div class="keunggulan-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4 class="keunggulan-title">Mudah Digunakan</h4>
+                        <p class="keunggulan-description">
+                            Interface yang user-friendly, responsive design, dan dapat diakses dari mobile dan desktop.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                    <div class="keunggulan-card">
+                        <div class="keunggulan-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="keunggulan-title">Keamanan Data</h4>
+                        <p class="keunggulan-description">
+                            Enkripsi data, backup otomatis, dan compliance dengan standar keamanan data perusahaan.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+                    <div class="keunggulan-card">
+                        <div class="keunggulan-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h4 class="keunggulan-title">Support 24/7</h4>
+                        <p class="keunggulan-description">
+                            Tim support yang siap membantu melalui WhatsApp, email, dan telepon selama 24 jam.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="stats" class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-item">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Perusahaan Aktif</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <div class="stat-label">Karyawan Terkelola</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-item">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">Uptime Sistem</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Dukungan Teknis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By Section -->
+    <section class="trusted-section py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h3 class="section-title" style="font-size: 2rem;">Dipercaya oleh Perusahaan Besar</h3>
+                    <p class="section-subtitle">
+                        Ratusan perusahaan terkemuka telah mempercayai KlikPersonalia untuk mengelola sistem HRD mereka
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row align-items-center justify-content-center g-4">
+                <div class="col-lg-2 col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="company-logo">
+                        <img src="https://via.placeholder.com/150x80/1e40af/ffffff?text=PT+Telkom" 
+                             alt="PT Telkom" class="img-fluid grayscale">
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="company-logo">
+                        <img src="https://via.placeholder.com/150x80/1e40af/ffffff?text=Bank+BCA" 
+                             alt="Bank BCA" class="img-fluid grayscale">
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="company-logo">
+                        <img src="https://via.placeholder.com/150x80/1e40af/ffffff?text=PT+Astra" 
+                             alt="PT Astra" class="img-fluid grayscale">
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="company-logo">
+                        <img src="https://via.placeholder.com/150x80/1e40af/ffffff?text=PT+Semen+Indonesia" 
+                             alt="PT Semen Indonesia" class="img-fluid grayscale">
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-6" data-aos="fade-up" data-aos-delay="500">
+                    <div class="company-logo">
+                        <img src="https://via.placeholder.com/150x80/1e40af/ffffff?text=PT+Indofood" 
+                             alt="PT Indofood" class="img-fluid grayscale">
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-6" data-aos="fade-up" data-aos-delay="600">
+                    <div class="company-logo">
+                        <img src="https://via.placeholder.com/150x80/1e40af/ffffff?text=PT+Unilever" 
+                             alt="PT Unilever" class="img-fluid grayscale">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonial" class="testimonials-section py-5" style="background: var(--gray-50);">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h2 class="section-title">Apa Kata Klien Kami</h2>
+                    <p class="section-subtitle">
+                        Testimoni dari para profesional HR yang telah menggunakan KlikPersonalia
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <div class="stars mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="testimonial-text">
+                                "KlikMedis Payroll telah mengubah cara kami mengelola penggajian. 
+                                Sistem yang sangat user-friendly dan perhitungan yang akurat. 
+                                Tim support juga sangat responsif."
+                            </p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="https://via.placeholder.com/60x60/1e40af/ffffff?text=SD" 
+                                     alt="Sarah Dewi" class="rounded-circle">
+                            </div>
+                            <div class="author-info">
+                                <h6 class="author-name">Sarah Dewi</h6>
+                                <p class="author-position">HR Manager - PT Telkom</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <div class="stars mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="testimonial-text">
+                                "Integrasi dengan BPJS dan perhitungan PPh 21 yang otomatis 
+                                sangat membantu tim kami. Laporan yang detail dan mudah dipahami."
+                            </p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="https://via.placeholder.com/60x60/1e40af/ffffff?text=BP" 
+                                     alt="Budi Prasetyo" class="rounded-circle">
+                            </div>
+                            <div class="author-info">
+                                <h6 class="author-name">Budi Prasetyo</h6>
+                                <p class="author-position">Finance Director - Bank BCA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <div class="stars mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="testimonial-text">
+                                "Sejak menggunakan KlikMedis Payroll, proses penggajian 
+                                menjadi lebih efisien. Dashboard yang informatif membantu 
+                                kami membuat keputusan yang lebih baik."
+                            </p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="https://via.placeholder.com/60x60/1e40af/ffffff?text=DR" 
+                                     alt="Diana Rahmawati" class="rounded-circle">
+                            </div>
+                            <div class="author-info">
+                                <h6 class="author-name">Diana Rahmawati</h6>
+                                <p class="author-position">HR Director - PT Astra</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Harga Section -->
+    <section id="harga" class="harga-section py-5" style="background: var(--gray-50);">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto" data-aos="fade-up">
+                    <h2 class="section-title">Harga Terjangkau untuk Perusahaan</h2>
+                    <p class="section-subtitle">
+                        Satu skema harga, semua fitur lengkap platform HRD
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Paket Starter -->
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="harga-card">
+                        <div class="harga-header">
+                            <div class="paket-badge">Starter</div>
+                            <h3 class="harga-title">Paket Starter</h3>
+                            <div class="harga-amount">
+                                <span class="currency">Rp</span>
+                                <span class="amount">250.000</span>
+                                <span class="period">/bulan</span>
+                            </div>
+                            <p class="harga-subtitle">Cocok untuk perusahaan kecil</p>
+                        </div>
+                        
+                        <div class="harga-features">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Manajemen Karyawan (max 50)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Sistem Payroll Dasar</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Absensi Manual</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Perhitungan PPh 21</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Laporan Dasar</li>
+                                <li><i class="fas fa-check text-success me-2"></i>3 User Akses</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Cloud Storage 5GB</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Email Support</li>
+                                <li><i class="fas fa-times text-muted me-2"></i>Integrasi BPJS</li>
+                                <li><i class="fas fa-times text-muted me-2"></i>Rekrutmen System</li>
+                                <li><i class="fas fa-times text-muted me-2"></i>Performance Management</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="harga-footer">
+                            <a href="/register" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-rocket me-2"></i>
+                                Mulai Sekarang
+                            </a>
+                            <p class="text-muted mt-3 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Trial gratis 14 hari
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Paket Professional -->
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="harga-card featured">
+                        <div class="harga-header">
+                            <div class="paket-badge featured">Professional</div>
+                            <h3 class="harga-title">Paket Professional</h3>
+                            <div class="harga-amount">
+                                <span class="currency">Rp</span>
+                                <span class="amount">500.000</span>
+                                <span class="period">/bulan</span>
+                            </div>
+                            <p class="harga-subtitle">Cocok untuk perusahaan menengah</p>
+                        </div>
+                        
+                        <div class="harga-features">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Manajemen Karyawan (max 200)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Sistem Payroll Lengkap</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Absensi Digital & Lembur</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Integrasi PPh 21 & BPJS</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Rekrutmen & Onboarding</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Performance Management</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Laporan & Analytics</li>
+                                <li><i class="fas fa-check text-success me-2"></i>10 User Akses</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Cloud Storage 20GB</li>
+                                <li><i class="fas fa-check text-success me-2"></i>WhatsApp Support</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Training Staff</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="harga-footer">
+                            <a href="/register" class="btn btn-primary-custom w-100">
+                                <i class="fas fa-star me-2"></i>
+                                Pilihan Terpopuler
+                            </a>
+                            <p class="text-muted mt-3 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Trial gratis 30 hari
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Paket Enterprise -->
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="harga-card">
+                        <div class="harga-header">
+                            <div class="paket-badge">Enterprise</div>
+                            <h3 class="harga-title">Paket Enterprise</h3>
+                            <div class="harga-amount">
+                                <span class="currency">Rp</span>
+                                <span class="amount">1.000.000</span>
+                                <span class="period">/bulan</span>
+                            </div>
+                            <p class="harga-subtitle">Cocok untuk perusahaan besar</p>
+                        </div>
+                        
+                        <div class="harga-features">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Manajemen Karyawan Unlimited</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Sistem Payroll Advanced</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Absensi Biometric & GPS</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Integrasi PPh 21 & BPJS</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Rekrutmen & ATS</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Performance & Training</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Analytics & AI Insights</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Unlimited User</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Cloud Storage 100GB</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Dedicated Support</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Custom Integration</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="harga-footer">
+                            <a href="/register" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-crown me-2"></i>
+                                Hubungi Sales
+                            </a>
+                            <p class="text-muted mt-3 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Konsultasi khusus
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-lg-4 text-center" data-aos="fade-up" data-aos-delay="100">
+                    <div class="harga-info">
+                        <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 2rem;"></i>
+                        <h5>Tidak Ada Biaya Tersembunyi</h5>
+                        <p class="text-muted">Semua paket sudah termasuk semua fitur yang disebutkan dan support teknis sesuai level.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 text-center" data-aos="fade-up" data-aos-delay="200">
+                    <div class="harga-info">
+                        <i class="fas fa-credit-card text-primary mb-3" style="font-size: 2rem;"></i>
+                        <h5>Skema Pembayaran Fleksibel</h5>
+                        <p class="text-muted">Pembayaran disesuaikan dengan anggaran perusahaan, bisa bulanan, triwulan, atau tahunan.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 text-center" data-aos="fade-up" data-aos-delay="300">
+                    <div class="harga-info">
+                        <i class="fas fa-sync-alt text-primary mb-3" style="font-size: 2rem;"></i>
+                        <h5>Upgrade/Downgrade Mudah</h5>
+                        <p class="text-muted">Bisa upgrade atau downgrade paket kapan saja sesuai kebutuhan perusahaan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo-section py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <h2 class="section-title">Lihat Platform HRD KlikPersonalia dalam Aksi</h2>
+                    <p class="section-subtitle">
+                        Jadwalkan demo gratis dan lihat bagaimana platform HRD KlikPersonalia dapat mengoptimalkan operasional HRD perusahaan Anda.
+                    </p>
+                    
+                    <div class="demo-features">
+                        <div class="demo-feature">
+                            <i class="fas fa-clock text-primary me-3"></i>
+                            <span>Demo 30 menit</span>
+                        </div>
+                        <div class="demo-feature">
+                            <i class="fas fa-gift text-primary me-3"></i>
+                            <span>Gratis tanpa biaya</span>
+                        </div>
+                        <div class="demo-feature">
+                            <i class="fas fa-comments text-primary me-3"></i>
+                            <span>Konsultasi langsung</span>
+                        </div>
+                    </div>
+                    
+                    <a href="#contact" class="btn btn-primary-custom mt-4">
+                        <i class="fas fa-calendar me-2"></i>
+                        Jadwalkan Demo
+                    </a>
+                </div>
+                
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="demo-image">
+                        <img src="https://idcloudhost.com/wp-content/uploads/2021/11/odoo.jpg" 
+                             alt="Demo KlikPersonalia" class="img-fluid rounded-3 shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="cta-card" data-aos="zoom-in">
+                        <div class="cta-content">
+                            <h2 class="mb-4">Siap untuk Memulai?</h2>
+                            <p class="lead mb-4">
+                                Bergabunglah dengan ratusan perusahaan yang telah mempercayai 
+                                KlikMedis Payroll untuk mengelola sistem penggajian mereka.
+                            </p>
+                            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                                <a href="/register" class="btn btn-light btn-lg px-4 py-3 fw-bold">
+                                    <i class="fas fa-rocket me-2"></i>
+                                    Mulai Trial Gratis
+                                </a>
+                                <a href="#contact" class="btn btn-outline-light btn-lg px-4 py-3">
+                                    <i class="fas fa-phone me-2"></i>
+                                    Konsultasi Gratis
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="footer-title">
+                        <i class="fas fa-users-cog me-2"></i>
+                        KlikPersonalia
+                    </h5>
+                    <p class="text-muted">
+                        Solusi lengkap platform HRD terintegrasi untuk perusahaan modern. 
+                        Mengelola karyawan, payroll, absensi, dan semua tugas HRD dengan mudah dan akurat.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="footer-title">Produk</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-link">Manajemen Karyawan</a></li>
+                        <li><a href="#" class="footer-link">Sistem Payroll</a></li>
+                        <li><a href="#" class="footer-link">Absensi & Lembur</a></li>
+                        <li><a href="#" class="footer-link">Rekrutmen</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="footer-title">Perusahaan</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-link">Tentang Kami</a></li>
+                        <li><a href="#" class="footer-link">Karir</a></li>
+                        <li><a href="#" class="footer-link">Blog</a></li>
+                        <li><a href="#" class="footer-link">Press Kit</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4">
+                    <h6 class="footer-title">Kontak</h6>
+                    <ul class="list-unstyled">
+                        <li class="text-muted mb-2">
+                            <i class="fas fa-phone me-2"></i>+62 21 1234 5678
+                        </li>
+                        <li class="text-muted mb-2">
+                            <i class="fas fa-envelope me-2"></i>info@klikmedis.com
+                        </li>
+                        <li class="text-muted">
+                            <i class="fas fa-map-marker-alt me-2"></i>Jakarta, Indonesia
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4" style="border-color: #374151;">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                                            <p class="text-muted mb-0">
+                            © 2025 KlikPersonalia. All rights reserved.
+                        </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="footer-link me-3">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 1000,
+            easing: 'ease-in-out',
+            once: true
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Navbar background on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+        
+        // Screenshots Carousel
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const track = document.querySelector('.carousel-track');
+        const indicators = document.querySelectorAll('.indicator');
+        const totalSlides = slides.length; // Should be 2 slides now
+        let autoPlayInterval;
+        
+        function updateCarousel() {
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            // Update indicators
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentSlide);
+            });
+            
+            // Update button states
+            const prevBtn = document.querySelector('.prev-btn');
+            const nextBtn = document.querySelector('.next-btn');
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+        }
+        
+        function moveCarousel(direction) {
+            currentSlide += direction;
+            
+            if (currentSlide < 0) {
+                currentSlide = totalSlides - 1;
+            } else if (currentSlide >= totalSlides) {
+                currentSlide = 0;
+            }
+            
+            updateCarousel();
+        }
+        
+        function goToSlide(slideIndex) {
+            currentSlide = slideIndex;
+            updateCarousel();
+        }
+        
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(() => {
+                moveCarousel(1);
+            }, 3000); // Change slide every 3 seconds
+        }
+        
+        function stopAutoPlay() {
+            clearInterval(autoPlayInterval);
+        }
+        
+        // Start auto play when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            startAutoPlay();
+            
+            // Pause auto play when hovering over carousel
+            const carousel = document.querySelector('.screenshots-carousel');
+            carousel.addEventListener('mouseenter', stopAutoPlay);
+            carousel.addEventListener('mouseleave', startAutoPlay);
+        });
+    </script>
+</body>
+</html>

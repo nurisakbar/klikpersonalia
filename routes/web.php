@@ -32,9 +32,15 @@ use App\Http\Controllers\DataImportController;
 |
 */
 
+// Landing page route
 Route::get('/', function () {
+    return view('landing-page');
+})->name('landing');
+
+// Redirect dashboard to authenticated users
+Route::get('/dashboard', function () {
     return redirect()->route('dashboard');
-});
+})->middleware('auth');
 
 // Authentication routes (Breeze)
 require __DIR__.'/auth.php';
