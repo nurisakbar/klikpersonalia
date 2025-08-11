@@ -34,8 +34,13 @@ use App\Http\Controllers\DataImportController;
 
 // Landing page route
 Route::get('/', function () {
-    return view('landing-page');
+    return redirect()->route('login');
 })->name('landing');
+
+// Landing page route (accessible via /landing)
+Route::get('/landing', function () {
+    return view('landing-page');
+})->name('landing.page');
 
 // Redirect dashboard to authenticated users
 Route::get('/dashboard', function () {
