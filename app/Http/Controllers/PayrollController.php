@@ -27,15 +27,14 @@ class PayrollController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to view payrolls.');
         }
 
-        $month = $request->get('month', Carbon::now()->month);
-        $year = $request->get('year', Carbon::now()->year);
+        $period = $request->get('period', Carbon::now()->format('Y-m'));
         $status = $request->get('status', '');
         
         $query = Payroll::with(['employee'])
             ->where('company_id', $user->company_id);
         
-        if ($month && $year) {
-            $query->where('month', $month)->where('year', $year);
+        if ($period) {
+            $query->where('period', 'LIKE', $period . '%');
         }
         
         if ($status) {
@@ -45,9 +44,9 @@ class PayrollController extends Controller
         $payrolls = $query->orderBy('created_at', 'desc')->paginate(15);
         
         // Get summary statistics
-        $summary = $this->getPayrollSummary($user->company_id, $month, $year);
+        $summary = $this->getPayrollSummary($user->company_id, $period);
         
-        return view('payrolls.index', compact('payrolls', 'summary', 'month', 'year', 'status'));
+        return view('payrolls.index', compact('payrolls', 'summary', 'period', 'status'));
     }
 
     /**
@@ -66,10 +65,9 @@ class PayrollController extends Controller
             ->where('status', 'active')
             ->get();
         
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
+        $currentPeriod = Carbon::now()->format('Y-m');
         
-        return view('payrolls.create', compact('employees', 'currentMonth', 'currentYear'));
+        return view('payrolls.create', compact('employees', 'currentPeriod'));
     }
 
     /**
@@ -86,50 +84,56 @@ class PayrollController extends Controller
 
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
-            'month' => 'required|integer|between:1,12',
-            'year' => 'required|integer|min:2020',
+            'period' => 'required|string|max:20',
             'basic_salary' => 'required|numeric|min:0',
-            'allowances' => 'nullable|numeric|min:0',
-            'deductions' => 'nullable|numeric|min:0',
+            'allowance' => 'nullable|numeric|min:0',
+            'overtime' => 'nullable|numeric|min:0',
+            'bonus' => 'nullable|numeric|min:0',
+            'deduction' => 'nullable|numeric|min:0',
+            'tax_amount' => 'nullable|numeric|min:0',
+            'bpjs_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // Check if payroll already exists for this employee and month
+        // Check if payroll already exists for this employee and period
         $existingPayroll = Payroll::where('employee_id', $request->employee_id)
-            ->where('month', $request->month)
-            ->where('year', $request->year)
+            ->where('period', $request->period)
             ->where('company_id', $user->company_id)
             ->first();
 
         if ($existingPayroll) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['employee_id' => 'Payroll already exists for this employee and month.']);
+                ->withErrors(['employee_id' => 'Payroll already exists for this employee and period.']);
         }
 
         // Get employee
         $employee = Employee::findOrFail($request->employee_id);
         
-        // Calculate payroll components
-        $payrollData = $this->calculatePayroll($employee, $request->month, $request->year);
+        // Calculate total salary
+        $totalSalary = $request->basic_salary + 
+                      ($request->allowance ?? 0) + 
+                      ($request->overtime ?? 0) + 
+                      ($request->bonus ?? 0) - 
+                      ($request->deduction ?? 0) - 
+                      ($request->tax_amount ?? 0) - 
+                      ($request->bpjs_amount ?? 0);
         
         // Create payroll
         $payroll = Payroll::create([
             'employee_id' => $request->employee_id,
             'company_id' => $user->company_id,
-            'month' => $request->month,
-            'year' => $request->year,
+            'period' => $request->period,
             'basic_salary' => $request->basic_salary,
-            'allowances' => $request->allowances ?? 0,
-            'deductions' => $request->deductions ?? 0,
-            'overtime_pay' => $payrollData['overtime_pay'],
-            'leave_deduction' => $payrollData['leave_deduction'],
-            'attendance_bonus' => $payrollData['attendance_bonus'],
-            'total_salary' => $payrollData['total_salary'],
-            'status' => 'pending',
+            'allowance' => $request->allowance ?? 0,
+            'overtime' => $request->overtime ?? 0,
+            'bonus' => $request->bonus ?? 0,
+            'deduction' => $request->deduction ?? 0,
+            'tax_amount' => $request->tax_amount ?? 0,
+            'bpjs_amount' => $request->bpjs_amount ?? 0,
+            'total_salary' => $totalSalary,
+            'status' => 'draft',
             'notes' => $request->notes,
-            'generated_by' => $user->id,
-            'generated_at' => now(),
         ]);
 
         return redirect()->route('payrolls.index')
@@ -190,8 +194,12 @@ class PayrollController extends Controller
 
         $request->validate([
             'basic_salary' => 'required|numeric|min:0',
-            'allowances' => 'nullable|numeric|min:0',
-            'deductions' => 'nullable|numeric|min:0',
+            'allowance' => 'nullable|numeric|min:0',
+            'overtime' => 'nullable|numeric|min:0',
+            'bonus' => 'nullable|numeric|min:0',
+            'deduction' => 'nullable|numeric|min:0',
+            'tax_amount' => 'nullable|numeric|min:0',
+            'bpjs_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -199,20 +207,25 @@ class PayrollController extends Controller
             ->where('company_id', $user->company_id)
             ->firstOrFail();
 
-        // Recalculate payroll
-        $payrollData = $this->calculatePayroll($payroll->employee, $payroll->month, $payroll->year);
+        // Calculate total salary
+        $totalSalary = $request->basic_salary + 
+                      ($request->allowance ?? 0) + 
+                      ($request->overtime ?? 0) + 
+                      ($request->bonus ?? 0) - 
+                      ($request->deduction ?? 0) - 
+                      ($request->tax_amount ?? 0) - 
+                      ($request->bpjs_amount ?? 0);
         
         $payroll->update([
             'basic_salary' => $request->basic_salary,
-            'allowances' => $request->allowances ?? 0,
-            'deductions' => $request->deductions ?? 0,
-            'overtime_pay' => $payrollData['overtime_pay'],
-            'leave_deduction' => $payrollData['leave_deduction'],
-            'attendance_bonus' => $payrollData['attendance_bonus'],
-            'total_salary' => $payrollData['total_salary'],
+            'allowance' => $request->allowance ?? 0,
+            'overtime' => $request->overtime ?? 0,
+            'bonus' => $request->bonus ?? 0,
+            'deduction' => $request->deduction ?? 0,
+            'tax_amount' => $request->tax_amount ?? 0,
+            'bpjs_amount' => $request->bpjs_amount ?? 0,
+            'total_salary' => $totalSalary,
             'notes' => $request->notes,
-            'updated_by' => $user->id,
-            'updated_at' => now(),
         ]);
 
         return redirect()->route('payrolls.index')
@@ -255,13 +268,11 @@ class PayrollController extends Controller
 
         $payroll = Payroll::where('id', $id)
             ->where('company_id', $user->company_id)
-            ->where('status', 'pending')
+            ->where('status', 'draft')
             ->firstOrFail();
 
         $payroll->update([
             'status' => 'approved',
-            'approved_by' => $user->id,
-            'approved_at' => now(),
         ]);
 
         return redirect()->route('payrolls.index')
@@ -577,22 +588,21 @@ class PayrollController extends Controller
     /**
      * Get payroll summary statistics.
      */
-    private function getPayrollSummary($companyId, $month, $year)
+    private function getPayrollSummary($companyId, $period)
     {
         $payrolls = Payroll::where('company_id', $companyId)
-            ->where('month', $month)
-            ->where('year', $year)
+            ->where('period', 'LIKE', $period . '%')
             ->get();
 
         return [
             'total_payrolls' => $payrolls->count(),
-            'pending_payrolls' => $payrolls->where('status', 'pending')->count(),
+            'draft_payrolls' => $payrolls->where('status', 'draft')->count(),
             'approved_payrolls' => $payrolls->where('status', 'approved')->count(),
-            'rejected_payrolls' => $payrolls->where('status', 'rejected')->count(),
+            'paid_payrolls' => $payrolls->where('status', 'paid')->count(),
             'total_salary' => $payrolls->sum('total_salary'),
-            'total_overtime' => $payrolls->sum('overtime_pay'),
-            'total_bonus' => $payrolls->sum('attendance_bonus'),
-            'total_deductions' => $payrolls->sum('deductions') + $payrolls->sum('leave_deduction'),
+            'total_overtime' => $payrolls->sum('overtime'),
+            'total_bonus' => $payrolls->sum('bonus'),
+            'total_deductions' => $payrolls->sum('deduction'),
         ];
     }
 }

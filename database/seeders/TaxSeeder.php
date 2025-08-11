@@ -25,16 +25,15 @@ class TaxSeeder extends Seeder
                 
                 // Get payroll for this period
                 $payroll = Payroll::where('employee_id', $employee->id)
-                    ->where('month', $date->month)
-                    ->where('year', $date->year)
+                    ->where('period', $period)
                     ->first();
                 
                 if ($payroll) {
                     // Calculate taxable income
                     $taxableIncome = $payroll->basic_salary + 
-                                   $payroll->allowances + 
-                                   $payroll->overtime_pay + 
-                                   $payroll->attendance_bonus;
+                                   $payroll->allowance + 
+                                   $payroll->overtime + 
+                                   $payroll->bonus;
                     
                     // Calculate tax using the Tax model
                     $taxCalculation = Tax::calculatePPh21($employee, $taxableIncome);

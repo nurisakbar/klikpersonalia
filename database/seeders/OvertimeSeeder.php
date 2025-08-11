@@ -40,12 +40,21 @@ class OvertimeSeeder extends Seeder
             // Create 2-4 overtime requests per employee
             $numOvertimes = rand(2, 4);
             
+            // Generate unique dates for this employee
+            $dates = [];
+            for ($i = 0; $i < $numOvertimes; $i++) {
+                do {
+                    $date = Carbon::now()->addDays(rand(-30, 30));
+                } while (in_array($date->format('Y-m-d'), $dates));
+                $dates[] = $date->format('Y-m-d');
+            }
+            
             for ($i = 0; $i < $numOvertimes; $i++) {
                 $overtimeType = $overtimeTypes[array_rand($overtimeTypes)];
                 $status = $statuses[array_rand($statuses)];
                 
-                // Generate random date (past and future)
-                $date = Carbon::now()->addDays(rand(-30, 30));
+                // Use unique date for this overtime
+                $date = Carbon::parse($dates[$i]);
                 
                 // Generate random times
                 $startHour = rand(17, 20); // After 5 PM

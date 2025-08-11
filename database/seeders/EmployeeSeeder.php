@@ -25,7 +25,7 @@ class EmployeeSeeder extends Seeder
         $employees = [
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP001',
+                'employee_id' => 'EMP002',
                 'name' => 'John Doe',
                 'email' => 'john.doe@klikmedis.com',
                 'phone' => '081234567890',
@@ -48,7 +48,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP002',
+                'employee_id' => 'EMP003',
                 'name' => 'Jane Smith',
                 'email' => 'jane.smith@klikmedis.com',
                 'phone' => '081234567892',
@@ -71,7 +71,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP003',
+                'employee_id' => 'EMP004',
                 'name' => 'Mike Johnson',
                 'email' => 'mike.johnson@klikmedis.com',
                 'phone' => '081234567894',
@@ -94,7 +94,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP004',
+                'employee_id' => 'EMP005',
                 'name' => 'Sarah Wilson',
                 'email' => 'sarah.wilson@klikmedis.com',
                 'phone' => '081234567896',
@@ -117,7 +117,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP005',
+                'employee_id' => 'EMP006',
                 'name' => 'David Brown',
                 'email' => 'david.brown@klikmedis.com',
                 'phone' => '081234567898',
@@ -135,7 +135,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP006',
+                'employee_id' => 'EMP007',
                 'name' => 'Lisa Anderson',
                 'email' => 'lisa.anderson@klikmedis.com',
                 'phone' => '081234567800',
@@ -152,7 +152,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP007',
+                'employee_id' => 'EMP008',
                 'name' => 'Robert Taylor',
                 'email' => 'robert.taylor@klikmedis.com',
                 'phone' => '081234567802',
@@ -169,7 +169,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP008',
+                'employee_id' => 'EMP009',
                 'name' => 'Emily Davis',
                 'email' => 'emily.davis@klikmedis.com',
                 'phone' => '081234567804',
@@ -186,7 +186,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP009',
+                'employee_id' => 'EMP010',
                 'name' => 'Michael Wilson',
                 'email' => 'michael.wilson@klikmedis.com',
                 'phone' => '081234567806',
@@ -203,7 +203,7 @@ class EmployeeSeeder extends Seeder
             ],
             [
                 'company_id' => $company->id,
-                'employee_id' => 'EMP010',
+                'employee_id' => 'EMP011',
                 'name' => 'Jennifer Lee',
                 'email' => 'jennifer.lee@klikmedis.com',
                 'phone' => '081234567808',
