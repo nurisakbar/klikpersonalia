@@ -13,38 +13,30 @@ class Payroll extends Model
     protected $fillable = [
         'employee_id',
         'company_id',
-        'month',
-        'year',
+        'period',
         'basic_salary',
-        'allowances',
-        'deductions',
-        'overtime_pay',
-        'leave_deduction',
-        'attendance_bonus',
+        'allowance',
+        'overtime',
+        'bonus',
+        'deduction',
+        'tax_amount',
+        'bpjs_amount',
         'total_salary',
         'status',
+        'payment_date',
         'notes',
-        'generated_by',
-        'generated_at',
-        'approved_by',
-        'approved_at',
-        'rejected_by',
-        'rejected_at',
-        'rejection_reason',
-        'updated_by',
     ];
 
     protected $casts = [
         'basic_salary' => 'decimal:2',
-        'allowances' => 'decimal:2',
-        'deductions' => 'decimal:2',
-        'overtime_pay' => 'decimal:2',
-        'leave_deduction' => 'decimal:2',
-        'attendance_bonus' => 'decimal:2',
+        'allowance' => 'decimal:2',
+        'overtime' => 'decimal:2',
+        'bonus' => 'decimal:2',
+        'deduction' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'bpjs_amount' => 'decimal:2',
         'total_salary' => 'decimal:2',
-        'generated_at' => 'datetime',
-        'approved_at' => 'datetime',
-        'rejected_at' => 'datetime',
+        'payment_date' => 'date',
     ];
 
     /**
@@ -167,13 +159,7 @@ class Payroll extends Model
      */
     public function getFormattedPeriodAttribute()
     {
-        $monthNames = [
-            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-            5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-            9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
-        ];
-        
-        return $monthNames[$this->month] . ' ' . $this->year;
+        return $this->period;
     }
 
     /**
@@ -182,18 +168,22 @@ class Payroll extends Model
     public function getStatusBadgeAttribute()
     {
         $statusClass = [
+            'draft' => 'badge badge-secondary',
             'pending' => 'badge badge-warning',
             'approved' => 'badge badge-success',
+            'paid' => 'badge badge-info',
             'rejected' => 'badge badge-danger'
         ];
         
         $statusText = [
+            'draft' => 'Draft',
             'pending' => 'Pending',
             'approved' => 'Approved',
+            'paid' => 'Paid',
             'rejected' => 'Rejected'
         ];
         
-        return '<span class="' . $statusClass[$this->status] . '">' . $statusText[$this->status] . '</span>';
+        return '<span class="' . ($statusClass[$this->status] ?? 'badge badge-secondary') . '">' . ($statusText[$this->status] ?? 'Unknown') . '</span>';
     }
 
     /**

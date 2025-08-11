@@ -43,37 +43,29 @@
                                 </div>
 
                                 <!-- Period Selection -->
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="month">Month <span class="text-danger">*</span></label>
-                                            <select name="month" id="month" class="form-control @error('month') is-invalid @enderror" required>
-                                                @for($i = 1; $i <= 12; $i++)
-                                                    <option value="{{ $i }}" {{ $currentMonth == $i ? 'selected' : '' }}>
-                                                        {{ date('F', mktime(0, 0, 0, $i, 1)) }}
-                                                    </option>
-                                                @endfor
-                                            </select>
-                                            @error('month')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="year">Year <span class="text-danger">*</span></label>
-                                            <select name="year" id="year" class="form-control @error('year') is-invalid @enderror" required>
-                                                @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
-                                                    <option value="{{ $i }}" {{ $currentYear == $i ? 'selected' : '' }}>
-                                                        {{ $i }}
-                                                    </option>
-                                                @endfor
-                                            </select>
-                                            @error('year')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
+                                <div class="form-group">
+                                    <label for="period">Period <span class="text-danger">*</span></label>
+                                    <select name="period" id="period" class="form-control @error('period') is-invalid @enderror" required>
+                                        @php
+                                            $currentYear = date('Y');
+                                            $currentMonth = date('m');
+                                            $selectedPeriod = $currentPeriod ?? $currentYear . '-' . $currentMonth;
+                                        @endphp
+                                        @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
+                                            @for($month = 1; $month <= 12; $month++)
+                                                @php
+                                                    $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
+                                                    $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
+                                                @endphp
+                                                <option value="{{ $periodValue }}" {{ $selectedPeriod == $periodValue ? 'selected' : '' }}>
+                                                    {{ $periodLabel }}
+                                                </option>
+                                            @endfor
+                                        @endfor
+                                    </select>
+                                    @error('period')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <!-- Basic Salary -->
@@ -93,36 +85,36 @@
                                     @enderror
                                 </div>
 
-                                <!-- Allowances -->
+                                <!-- Allowance -->
                                 <div class="form-group">
-                                    <label for="allowances">Additional Allowances</label>
+                                    <label for="allowance">Allowance</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Rp</span>
                                         </div>
-                                        <input type="number" name="allowances" id="allowances" 
-                                               class="form-control @error('allowances') is-invalid @enderror" 
-                                               value="{{ old('allowances', 0) }}" 
+                                        <input type="number" name="allowance" id="allowance" 
+                                               class="form-control @error('allowance') is-invalid @enderror" 
+                                               value="{{ old('allowance', 0) }}" 
                                                min="0" step="1000">
                                     </div>
-                                    @error('allowances')
+                                    @error('allowance')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                <!-- Deductions -->
+                                <!-- Deduction -->
                                 <div class="form-group">
-                                    <label for="deductions">Additional Deductions</label>
+                                    <label for="deduction">Deduction</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Rp</span>
                                         </div>
-                                        <input type="number" name="deductions" id="deductions" 
-                                               class="form-control @error('deductions') is-invalid @enderror" 
-                                               value="{{ old('deductions', 0) }}" 
+                                        <input type="number" name="deduction" id="deduction" 
+                                               class="form-control @error('deduction') is-invalid @enderror" 
+                                               value="{{ old('deduction', 0) }}" 
                                                min="0" step="1000">
                                     </div>
-                                    @error('deductions')
+                                    @error('deduction')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

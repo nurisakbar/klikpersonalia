@@ -32,22 +32,23 @@
                         <div class="col-md-8">
                             <form method="GET" action="{{ route('payrolls.index') }}" class="form-inline">
                                 <div class="form-group mr-2">
-                                    <label for="month" class="mr-2">Month:</label>
-                                    <select name="month" id="month" class="form-control">
-                                        @for($i = 1; $i <= 12; $i++)
-                                            <option value="{{ $i }}" {{ $month == $i ? 'selected' : '' }}>
-                                                {{ date('F', mktime(0, 0, 0, $i, 1)) }}
-                                            </option>
-                                        @endfor
-                                    </select>
-                                </div>
-                                <div class="form-group mr-2">
-                                    <label for="year" class="mr-2">Year:</label>
-                                    <select name="year" id="year" class="form-control">
-                                        @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
-                                            <option value="{{ $i }}" {{ $year == $i ? 'selected' : '' }}>
-                                                {{ $i }}
-                                            </option>
+                                    <label for="period" class="mr-2">Period:</label>
+                                    <select name="period" id="period" class="form-control">
+                                        @php
+                                            $currentYear = date('Y');
+                                            $currentMonth = date('m');
+                                            $selectedPeriod = $period ?? $currentYear . '-' . $currentMonth;
+                                        @endphp
+                                        @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
+                                            @for($month = 1; $month <= 12; $month++)
+                                                @php
+                                                    $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
+                                                    $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
+                                                @endphp
+                                                <option value="{{ $periodValue }}" {{ $selectedPeriod == $periodValue ? 'selected' : '' }}>
+                                                    {{ $periodLabel }}
+                                                </option>
+                                            @endfor
                                         @endfor
                                     </select>
                                 </div>
@@ -55,9 +56,9 @@
                                     <label for="status" class="mr-2">Status:</label>
                                     <select name="status" id="status" class="form-control">
                                         <option value="">All Status</option>
-                                        <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="draft" {{ $status == 'draft' ? 'selected' : '' }}>Draft</option>
                                         <option value="approved" {{ $status == 'approved' ? 'selected' : '' }}>Approved</option>
-                                        <option value="rejected" {{ $status == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                        <option value="paid" {{ $status == 'paid' ? 'selected' : '' }}>Paid</option>
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-primary">
@@ -90,8 +91,8 @@
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h3>{{ $summary['pending_payrolls'] }}</h3>
-                                    <p>Pending</p>
+                                    <h3>{{ $summary['draft_payrolls'] }}</h3>
+                                    <p>Draft</p>
                                 </div>
                                 <div class="icon">
                                     <i class="fas fa-clock"></i>
@@ -112,13 +113,13 @@
                         </div>
                         
                         <div class="col-lg-3 col-6">
-                            <div class="small-box bg-danger">
+                            <div class="small-box bg-info">
                                 <div class="inner">
-                                    <h3>{{ $summary['rejected_payrolls'] }}</h3>
-                                    <p>Rejected</p>
+                                    <h3>{{ $summary['paid_payrolls'] }}</h3>
+                                    <p>Paid</p>
                                 </div>
                                 <div class="icon">
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-check-double"></i>
                                 </div>
                             </div>
                         </div>
@@ -416,28 +417,28 @@ $(document).ready(function() {
 
 function setPeriod(period) {
     const today = new Date();
-    let month, year;
+    let selectedPeriod;
     
     if (period === 'current') {
-        month = today.getMonth() + 1;
-        year = today.getFullYear();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        selectedPeriod = year + '-' + month;
     } else if (period === 'previous') {
-        month = today.getMonth();
-        year = today.getFullYear();
+        let year = today.getFullYear();
+        let month = today.getMonth();
         if (month === 0) {
             month = 12;
             year--;
         }
+        selectedPeriod = year + '-' + String(month).padStart(2, '0');
     }
     
-    document.getElementById('month').value = month;
-    document.getElementById('year').value = year;
+    document.getElementById('period').value = selectedPeriod;
     document.querySelector('form').submit();
 }
 
 function exportPayrolls() {
-    const month = document.getElementById('month').value;
-    const year = document.getElementById('year').value;
+    const period = document.getElementById('period').value;
     
     // Create export form
     const form = document.createElement('form');
@@ -449,15 +450,10 @@ function exportPayrolls() {
     csrfToken.name = '_token';
     csrfToken.value = '{{ csrf_token() }}';
     
-    const monthInput = document.createElement('input');
-    monthInput.type = 'hidden';
-    monthInput.name = 'month';
-    monthInput.value = month;
-    
-    const yearInput = document.createElement('input');
-    yearInput.type = 'hidden';
-    yearInput.name = 'year';
-    yearInput.value = year;
+    const periodInput = document.createElement('input');
+    periodInput.type = 'hidden';
+    periodInput.name = 'period';
+    periodInput.value = period;
     
     const formatInput = document.createElement('input');
     formatInput.type = 'hidden';
@@ -465,8 +461,7 @@ function exportPayrolls() {
     formatInput.value = 'pdf';
     
     form.appendChild(csrfToken);
-    form.appendChild(monthInput);
-    form.appendChild(yearInput);
+    form.appendChild(periodInput);
     form.appendChild(formatInput);
     
     document.body.appendChild(form);
