@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Employee;
+use App\Models\Company;
 
 class EmployeeSeeder extends Seeder
 {
@@ -13,9 +14,18 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get the first company (assuming CompanySeeder runs first)
+        $company = Company::first();
+        
+        if (!$company) {
+            $this->command->error('No company found. Please run CompanySeeder first.');
+            return;
+        }
+
         $employees = [
             [
-                'employee_id' => 'EMP001',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP002',
                 'name' => 'John Doe',
                 'email' => 'john.doe@klikmedis.com',
                 'phone' => '081234567890',
@@ -23,14 +33,22 @@ class EmployeeSeeder extends Seeder
                 'join_date' => '2024-01-15',
                 'department' => 'IT',
                 'position' => 'Senior Developer',
+                'ptkp_status' => 'TK/0',
                 'basic_salary' => 8000000,
                 'status' => 'active',
                 'emergency_contact' => '081234567891',
                 'bank_name' => 'BCA',
-                'bank_account' => '1234567890'
+                'bank_account' => '1234567890',
+                'bpjs_kesehatan_number' => '0001234567890',
+                'bpjs_ketenagakerjaan_number' => '0001234567890',
+                'bpjs_kesehatan_active' => true,
+                'bpjs_ketenagakerjaan_active' => true,
+                'bpjs_effective_date' => '2024-01-15',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP002',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP003',
                 'name' => 'Jane Smith',
                 'email' => 'jane.smith@klikmedis.com',
                 'phone' => '081234567892',
@@ -38,14 +56,22 @@ class EmployeeSeeder extends Seeder
                 'join_date' => '2024-02-01',
                 'department' => 'HR',
                 'position' => 'HR Manager',
+                'ptkp_status' => 'K/1',
                 'basic_salary' => 7000000,
                 'status' => 'active',
                 'emergency_contact' => '081234567893',
                 'bank_name' => 'Mandiri',
-                'bank_account' => '0987654321'
+                'bank_account' => '0987654321',
+                'bpjs_kesehatan_number' => '0001234567891',
+                'bpjs_ketenagakerjaan_number' => '0001234567891',
+                'bpjs_kesehatan_active' => true,
+                'bpjs_ketenagakerjaan_active' => true,
+                'bpjs_effective_date' => '2024-02-01',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP003',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP004',
                 'name' => 'Mike Johnson',
                 'email' => 'mike.johnson@klikmedis.com',
                 'phone' => '081234567894',
@@ -53,14 +79,22 @@ class EmployeeSeeder extends Seeder
                 'join_date' => '2024-02-10',
                 'department' => 'Finance',
                 'position' => 'Accountant',
+                'ptkp_status' => 'TK/1',
                 'basic_salary' => 6500000,
                 'status' => 'active',
                 'emergency_contact' => '081234567895',
                 'bank_name' => 'BNI',
-                'bank_account' => '1122334455'
+                'bank_account' => '1122334455',
+                'bpjs_kesehatan_number' => '0001234567892',
+                'bpjs_ketenagakerjaan_number' => '0001234567892',
+                'bpjs_kesehatan_active' => true,
+                'bpjs_ketenagakerjaan_active' => true,
+                'bpjs_effective_date' => '2024-02-10',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP004',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP005',
                 'name' => 'Sarah Wilson',
                 'email' => 'sarah.wilson@klikmedis.com',
                 'phone' => '081234567896',
@@ -68,14 +102,22 @@ class EmployeeSeeder extends Seeder
                 'join_date' => '2024-02-15',
                 'department' => 'Marketing',
                 'position' => 'Marketing Specialist',
+                'ptkp_status' => 'K/2',
                 'basic_salary' => 6000000,
                 'status' => 'active',
                 'emergency_contact' => '081234567897',
                 'bank_name' => 'BRI',
-                'bank_account' => '5566778899'
+                'bank_account' => '5566778899',
+                'bpjs_kesehatan_number' => '0001234567893',
+                'bpjs_ketenagakerjaan_number' => '0001234567893',
+                'bpjs_kesehatan_active' => true,
+                'bpjs_ketenagakerjaan_active' => true,
+                'bpjs_effective_date' => '2024-02-15',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP005',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP006',
                 'name' => 'David Brown',
                 'email' => 'david.brown@klikmedis.com',
                 'phone' => '081234567898',
@@ -83,14 +125,17 @@ class EmployeeSeeder extends Seeder
                 'join_date' => '2024-01-20',
                 'department' => 'Sales',
                 'position' => 'Sales Manager',
+                'ptkp_status' => 'K/3',
                 'basic_salary' => 7500000,
                 'status' => 'active',
                 'emergency_contact' => '081234567899',
                 'bank_name' => 'BCA',
-                'bank_account' => '9988776655'
+                'bank_account' => '9988776655',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP006',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP007',
                 'name' => 'Lisa Anderson',
                 'email' => 'lisa.anderson@klikmedis.com',
                 'phone' => '081234567800',
@@ -102,10 +147,12 @@ class EmployeeSeeder extends Seeder
                 'status' => 'active',
                 'emergency_contact' => '081234567801',
                 'bank_name' => 'Mandiri',
-                'bank_account' => '4433221100'
+                'bank_account' => '4433221100',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP007',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP008',
                 'name' => 'Robert Taylor',
                 'email' => 'robert.taylor@klikmedis.com',
                 'phone' => '081234567802',
@@ -117,10 +164,12 @@ class EmployeeSeeder extends Seeder
                 'status' => 'active',
                 'emergency_contact' => '081234567803',
                 'bank_name' => 'BNI',
-                'bank_account' => '6677889900'
+                'bank_account' => '6677889900',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP008',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP009',
                 'name' => 'Emily Davis',
                 'email' => 'emily.davis@klikmedis.com',
                 'phone' => '081234567804',
@@ -132,10 +181,12 @@ class EmployeeSeeder extends Seeder
                 'status' => 'active',
                 'emergency_contact' => '081234567805',
                 'bank_name' => 'BRI',
-                'bank_account' => '7788990011'
+                'bank_account' => '7788990011',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP009',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP010',
                 'name' => 'Michael Wilson',
                 'email' => 'michael.wilson@klikmedis.com',
                 'phone' => '081234567806',
@@ -147,10 +198,12 @@ class EmployeeSeeder extends Seeder
                 'status' => 'inactive',
                 'emergency_contact' => '081234567807',
                 'bank_name' => 'BCA',
-                'bank_account' => '8899001122'
+                'bank_account' => '8899001122',
+                'company_id' => $company->id,
             ],
             [
-                'employee_id' => 'EMP010',
+                'company_id' => $company->id,
+                'employee_id' => 'EMP011',
                 'name' => 'Jennifer Lee',
                 'email' => 'jennifer.lee@klikmedis.com',
                 'phone' => '081234567808',
@@ -162,7 +215,8 @@ class EmployeeSeeder extends Seeder
                 'status' => 'active',
                 'emergency_contact' => '081234567809',
                 'bank_name' => 'Mandiri',
-                'bank_account' => '9900112233'
+                'bank_account' => '9900112233',
+                'company_id' => $company->id,
             ]
         ];
 

@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Payroll;
 use App\Models\Employee;
+use App\Models\Company;
 
 class PayrollSeeder extends Seeder
 {
@@ -15,6 +16,13 @@ class PayrollSeeder extends Seeder
     public function run(): void
     {
         $employees = Employee::all();
+        $company = Company::first();
+        
+        if (!$company) {
+            $this->command->error('No company found. Please run CompanySeeder first.');
+            return;
+        }
+        
         $periods = ['Januari 2024', 'Februari 2024', 'Maret 2024'];
 
         foreach ($employees as $employee) {
@@ -30,7 +38,9 @@ class PayrollSeeder extends Seeder
                 $totalSalary = $basicSalary + $allowance + $overtime + $bonus - $deduction - $taxAmount - $bpjsAmount;
 
                 Payroll::create([
+                    'company_id' => $employee->company_id,
                     'employee_id' => $employee->id,
+                    'company_id' => $company->id,
                     'period' => $period,
                     'basic_salary' => $basicSalary,
                     'allowance' => $allowance,

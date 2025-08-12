@@ -4,38 +4,34 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Traits\HasUuid;
 use Carbon\Carbon;
 
 class Overtime extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'employee_id',
+        'overtime_type',
         'date',
         'start_time',
         'end_time',
-        'hours',
-        'type',
+        'total_hours',
         'reason',
         'status',
         'approved_by',
         'approved_at',
         'approval_notes',
-        'rate_multiplier',
-        'total_amount',
         'attachment',
         'company_id',
     ];
 
     protected $casts = [
         'date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'hours' => 'decimal:2',
-        'rate_multiplier' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'start_time' => 'string',
+        'end_time' => 'string',
+        'total_hours' => 'integer',
         'approved_at' => 'datetime',
     ];
 
@@ -122,7 +118,7 @@ class Overtime extends Model
      */
     public function getFormattedStartTimeAttribute()
     {
-        return $this->start_time ? Carbon::parse($this->start_time)->format('H:i') : '-';
+        return $this->start_time;
     }
 
     /**
@@ -130,7 +126,7 @@ class Overtime extends Model
      */
     public function getFormattedEndTimeAttribute()
     {
-        return $this->end_time ? Carbon::parse($this->end_time)->format('H:i') : '-';
+        return $this->end_time;
     }
 
     /**
@@ -167,53 +163,20 @@ class Overtime extends Model
     public function getTypeBadgeAttribute()
     {
         $typeClass = [
-            'weekday' => 'badge badge-info',
+            'regular' => 'badge badge-info',
+            'holiday' => 'badge badge-danger',
             'weekend' => 'badge badge-warning',
-            'holiday' => 'badge badge-danger'
+            'emergency' => 'badge badge-dark'
         ];
         
         $typeText = [
-            'weekday' => 'Hari Kerja',
-            'weekend' => 'Akhir Pekan',
-            'holiday' => 'Hari Libur'
+            'regular' => 'Regular Overtime',
+            'holiday' => 'Holiday Overtime',
+            'weekend' => 'Weekend Overtime',
+            'emergency' => 'Emergency Overtime'
         ];
         
-        return '<span class="' . $typeClass[$this->type] . '">' . $typeText[$this->type] . '</span>';
-    }
-
-    /**
-     * Get the overtime's formatted total amount.
-     */
-    public function getFormattedTotalAmountAttribute()
-    {
-        return 'Rp ' . number_format($this->total_amount, 0, ',', '.');
-    }
-
-    /**
-     * Calculate overtime hours.
-     */
-    public function calculateHours()
-    {
-        if ($this->start_time && $this->end_time) {
-            $startTime = Carbon::parse($this->start_time);
-            $endTime = Carbon::parse($this->end_time);
-            $hours = $startTime->diffInHours($endTime, true);
-            
-            $this->update(['hours' => $hours]);
-        }
-    }
-
-    /**
-     * Calculate total amount based on employee salary and rate multiplier.
-     */
-    public function calculateTotalAmount()
-    {
-        if ($this->employee && $this->hours) {
-            $hourlyRate = $this->employee->basic_salary / 173; // 173 working hours per month
-            $totalAmount = $hourlyRate * $this->hours * $this->rate_multiplier;
-            
-            $this->update(['total_amount' => $totalAmount]);
-        }
+        return '<span class="' . $typeClass[$this->overtime_type] . '">' . $typeText[$this->overtime_type] . '</span>';
     }
 
     /**
@@ -264,62 +227,5 @@ class Overtime extends Model
     public function isRejected()
     {
         return $this->status === 'rejected';
-    }
-
-    /**
-     * Get overtime summary for employee.
-     */
-    public static function getSummary($employeeId, $month = null, $year = null)
-    {
-        $query = self::where('employee_id', $employeeId);
-        
-        if ($month && $year) {
-            $query->whereYear('date', $year)->whereMonth('date', $month);
-        }
-        
-        return [
-            'total_overtimes' => $query->count(),
-            'pending_overtimes' => $query->where('status', 'pending')->count(),
-            'approved_overtimes' => $query->where('status', 'approved')->count(),
-            'rejected_overtimes' => $query->where('status', 'rejected')->count(),
-            'total_hours' => $query->where('status', 'approved')->sum('hours'),
-            'total_amount' => $query->where('status', 'approved')->sum('total_amount'),
-            'weekday_hours' => $query->where('type', 'weekday')->where('status', 'approved')->sum('hours'),
-            'weekend_hours' => $query->where('type', 'weekend')->where('status', 'approved')->sum('hours'),
-            'holiday_hours' => $query->where('type', 'holiday')->where('status', 'approved')->sum('hours'),
-        ];
-    }
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($overtime) {
-            if (!$overtime->rate_multiplier) {
-                $overtime->rate_multiplier = self::getDefaultRateMultiplier($overtime->type);
-            }
-        });
-
-        static::saving(function ($overtime) {
-            $overtime->calculateHours();
-            $overtime->calculateTotalAmount();
-        });
-    }
-
-    /**
-     * Get default rate multiplier based on type.
-     */
-    private static function getDefaultRateMultiplier($type)
-    {
-        $rates = [
-            'weekday' => 1.5,
-            'weekend' => 2.0,
-            'holiday' => 3.0
-        ];
-        
-        return $rates[$type] ?? 1.5;
     }
 } 

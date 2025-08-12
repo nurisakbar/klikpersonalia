@@ -1,0 +1,319 @@
+# Crontab Configuration for Payroll Management System
+# Production Automated Tasks
+
+# Environment variables
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=admin@your-domain.com
+
+# Laravel Scheduler - Run every minute
+* * * * * cd /var/www/payroll-system && php artisan schedule:run >> /dev/null 2>&1
+
+# Database Backup - Daily at 2:00 AM
+0 2 * * * cd /var/www/payroll-system && php artisan backup:run >> /var/log/cron/backup.log 2>&1
+
+# Data Cleanup - Daily at 3:00 AM
+0 3 * * * cd /var/www/payroll-system && php artisan data:cleanup >> /var/log/cron/cleanup.log 2>&1
+
+# System Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan system:monitor >> /var/log/cron/monitor.log 2>&1
+
+# Health Check - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan health:check >> /var/log/cron/health.log 2>&1
+
+# Performance Monitoring - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan performance:monitor >> /var/log/cron/performance.log 2>&1
+
+# Security Scan - Daily at 4:00 AM
+0 4 * * * cd /var/www/payroll-system && php artisan security:scan >> /var/log/cron/security.log 2>&1
+
+# Compliance Check - Daily at 5:00 AM
+0 5 * * * cd /var/www/payroll-system && php artisan compliance:check >> /var/log/cron/compliance.log 2>&1
+
+# Data Archiving - Weekly on Sunday at 1:00 AM
+0 1 * * 0 cd /var/www/payroll-system && php artisan data:archive >> /var/log/cron/archive.log 2>&1
+
+# Report Generation - Monthly on 1st at 6:00 AM
+0 6 1 * * cd /var/www/payroll-system && php artisan reports:generate >> /var/log/cron/reports.log 2>&1
+
+# Payroll Processing - Monthly on 25th at 8:00 AM
+0 8 25 * * cd /var/www/payroll-system && php artisan payroll:process >> /var/log/cron/payroll.log 2>&1
+
+# Tax Calculation - Monthly on 26th at 8:00 AM
+0 8 26 * * cd /var/www/payroll-system && php artisan tax:calculate >> /var/log/cron/tax.log 2>&1
+
+# BPJS Calculation - Monthly on 27th at 8:00 AM
+0 8 27 * * cd /var/www/payroll-system && php artisan bpjs:calculate >> /var/log/cron/bpjs.log 2>&1
+
+# External System Sync - Every 30 minutes
+*/30 * * * * cd /var/www/payroll-system && php artisan integration:sync >> /var/log/cron/sync.log 2>&1
+
+# Webhook Processing - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan webhooks:process >> /var/log/cron/webhooks.log 2>&1
+
+# Audit Processing - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan audit:process >> /var/log/cron/audit.log 2>&1
+
+# Notification Sending - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan notifications:send >> /var/log/cron/notifications.log 2>&1
+
+# Export Processing - Every hour
+0 * * * * cd /var/www/payroll-system && php artisan export:process >> /var/log/cron/export.log 2>&1
+
+# Import Processing - Every hour
+0 * * * * cd /var/www/payroll-system && php artisan import:process >> /var/log/cron/import.log 2>&1
+
+# Cache Clearing - Daily at 1:00 AM
+0 1 * * * cd /var/www/payroll-system && php artisan cache:clear >> /var/log/cron/cache.log 2>&1
+
+# Config Caching - Daily at 1:30 AM
+30 1 * * * cd /var/www/payroll-system && php artisan config:cache >> /var/log/cron/config.log 2>&1
+
+# Route Caching - Daily at 1:45 AM
+45 1 * * * cd /var/www/payroll-system && php artisan route:cache >> /var/log/cron/route.log 2>&1
+
+# View Caching - Daily at 2:00 AM
+0 2 * * * cd /var/www/payroll-system && php artisan view:cache >> /var/log/cron/view.log 2>&1
+
+# System Optimization - Weekly on Saturday at 2:00 AM
+0 2 * * 6 cd /var/www/payroll-system && php artisan optimize >> /var/log/cron/optimize.log 2>&1
+
+# Database Maintenance - Weekly on Sunday at 3:00 AM
+0 3 * * 0 cd /var/www/payroll-system && php artisan db:maintenance >> /var/log/cron/db-maintenance.log 2>&1
+
+# Log Rotation - Daily at 4:00 AM
+0 4 * * * cd /var/www/payroll-system && php artisan log:rotate >> /var/log/cron/log-rotation.log 2>&1
+
+# Temporary File Cleanup - Daily at 5:00 AM
+0 5 * * * cd /var/www/payroll-system && php artisan temp:cleanup >> /var/log/cron/temp-cleanup.log 2>&1
+
+# Session Cleanup - Daily at 6:00 AM
+0 6 * * * cd /var/www/payroll-system && php artisan session:cleanup >> /var/log/cron/session-cleanup.log 2>&1
+
+# Failed Job Cleanup - Daily at 7:00 AM
+0 7 * * * cd /var/www/payroll-system && php artisan queue:flush >> /var/log/cron/queue-cleanup.log 2>&1
+
+# Email Queue Processing - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan queue:work --queue=emails --timeout=300 >> /var/log/cron/email-queue.log 2>&1
+
+# Export Queue Processing - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan queue:work --queue=exports --timeout=600 >> /var/log/cron/export-queue.log 2>&1
+
+# Import Queue Processing - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan queue:work --queue=imports --timeout=900 >> /var/log/cron/import-queue.log 2>&1
+
+# Report Queue Processing - Every 30 minutes
+*/30 * * * * cd /var/www/payroll-system && php artisan queue:work --queue=reports --timeout=1200 >> /var/log/cron/report-queue.log 2>&1
+
+# Backup Queue Processing - Every hour
+0 * * * * cd /var/www/payroll-system && php artisan queue:work --queue=backups --timeout=1800 >> /var/log/cron/backup-queue.log 2>&1
+
+# System Update Check - Weekly on Monday at 8:00 AM
+0 8 * * 1 cd /var/www/payroll-system && php artisan system:update-check >> /var/log/cron/update-check.log 2>&1
+
+# SSL Certificate Renewal Check - Monthly on 1st at 9:00 AM
+0 9 1 * * cd /var/www/payroll-system && php artisan ssl:check >> /var/log/cron/ssl-check.log 2>&1
+
+# Database Backup Verification - Daily at 10:00 AM
+0 10 * * * cd /var/www/payroll-system && php artisan backup:verify >> /var/log/cron/backup-verify.log 2>&1
+
+# System Performance Report - Daily at 11:00 AM
+0 11 * * * cd /var/www/payroll-system && php artisan performance:report >> /var/log/cron/performance-report.log 2>&1
+
+# Security Report - Daily at 12:00 PM
+0 12 * * * cd /var/www/payroll-system && php artisan security:report >> /var/log/cron/security-report.log 2>&1
+
+# Compliance Report - Daily at 1:00 PM
+0 13 * * * cd /var/www/payroll-system && php artisan compliance:report >> /var/log/cron/compliance-report.log 2>&1
+
+# User Activity Report - Daily at 2:00 PM
+0 14 * * * cd /var/www/payroll-system && php artisan user:activity-report >> /var/log/cron/user-activity.log 2>&1
+
+# System Health Report - Daily at 3:00 PM
+0 15 * * * cd /var/www/payroll-system && php artisan health:report >> /var/log/cron/health-report.log 2>&1
+
+# Error Log Analysis - Daily at 4:00 PM
+0 16 * * * cd /var/www/payroll-system && php artisan log:analyze >> /var/log/cron/log-analysis.log 2>&1
+
+# Database Performance Analysis - Daily at 5:00 PM
+0 17 * * * cd /var/www/payroll-system && php artisan db:analyze >> /var/log/cron/db-analysis.log 2>&1
+
+# Cache Performance Analysis - Daily at 6:00 PM
+0 18 * * * cd /var/www/payroll-system && php artisan cache:analyze >> /var/log/cron/cache-analysis.log 2>&1
+
+# Queue Performance Analysis - Daily at 7:00 PM
+0 19 * * * cd /var/www/payroll-system && php artisan queue:analyze >> /var/log/cron/queue-analysis.log 2>&1
+
+# API Performance Analysis - Daily at 8:00 PM
+0 20 * * * cd /var/www/payroll-system && php artisan api:analyze >> /var/log/cron/api-analysis.log 2>&1
+
+# System Resource Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan system:resources >> /var/log/cron/resources.log 2>&1
+
+# Disk Space Monitoring - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan system:disk-space >> /var/log/cron/disk-space.log 2>&1
+
+# Memory Usage Monitoring - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan system:memory >> /var/log/cron/memory.log 2>&1
+
+# CPU Usage Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan system:cpu >> /var/log/cron/cpu.log 2>&1
+
+# Network Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan system:network >> /var/log/cron/network.log 2>&1
+
+# Database Connection Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan db:monitor >> /var/log/cron/db-monitor.log 2>&1
+
+# Redis Connection Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan redis:monitor >> /var/log/cron/redis-monitor.log 2>&1
+
+# Email Delivery Monitoring - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan email:monitor >> /var/log/cron/email-monitor.log 2>&1
+
+# SMS Delivery Monitoring - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan sms:monitor >> /var/log/cron/sms-monitor.log 2>&1
+
+# Push Notification Monitoring - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan push:monitor >> /var/log/cron/push-monitor.log 2>&1
+
+# Webhook Delivery Monitoring - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan webhook:monitor >> /var/log/cron/webhook-monitor.log 2>&1
+
+# API Rate Limit Monitoring - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan api:rate-limit-monitor >> /var/log/cron/api-rate-limit.log 2>&1
+
+# User Session Monitoring - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan session:monitor >> /var/log/cron/session-monitor.log 2>&1
+
+# File Upload Monitoring - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan file:monitor >> /var/log/cron/file-monitor.log 2>&1
+
+# Backup Storage Monitoring - Every hour
+0 * * * * cd /var/www/payroll-system && php artisan backup:monitor >> /var/log/cron/backup-monitor.log 2>&1
+
+# SSL Certificate Monitoring - Daily at 9:00 AM
+0 9 * * * cd /var/www/payroll-system && php artisan ssl:monitor >> /var/log/cron/ssl-monitor.log 2>&1
+
+# Domain Expiry Monitoring - Daily at 10:00 AM
+0 10 * * * cd /var/www/payroll-system && php artisan domain:monitor >> /var/log/cron/domain-monitor.log 2>&1
+
+# Third-party Service Monitoring - Every 30 minutes
+*/30 * * * * cd /var/www/payroll-system && php artisan service:monitor >> /var/log/cron/service-monitor.log 2>&1
+
+# Integration Health Check - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan integration:health >> /var/log/cron/integration-health.log 2>&1
+
+# Mobile App Monitoring - Every 10 minutes
+*/10 * * * * cd /var/www/payroll-system && php artisan mobile:monitor >> /var/log/cron/mobile-monitor.log 2>&1
+
+# API Documentation Update - Daily at 11:00 PM
+0 23 * * * cd /var/www/payroll-system && php artisan api:docs:generate >> /var/log/cron/api-docs.log 2>&1
+
+# System Statistics Collection - Every hour
+0 * * * * cd /var/www/payroll-system && php artisan stats:collect >> /var/log/cron/stats.log 2>&1
+
+# Analytics Data Processing - Every 30 minutes
+*/30 * * * * cd /var/www/payroll-system && php artisan analytics:process >> /var/log/cron/analytics.log 2>&1
+
+# Report Data Aggregation - Every hour
+0 * * * * cd /var/www/payroll-system && php artisan reports:aggregate >> /var/log/cron/reports-aggregate.log 2>&1
+
+# Data Validation - Every 15 minutes
+*/15 * * * * cd /var/www/payroll-system && php artisan data:validate >> /var/log/cron/data-validation.log 2>&1
+
+# Data Integrity Check - Daily at 1:00 AM
+0 1 * * * cd /var/www/payroll-system && php artisan data:integrity >> /var/log/cron/data-integrity.log 2>&1
+
+# System Maintenance Mode Check - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan maintenance:check >> /var/log/cron/maintenance-check.log 2>&1
+
+# Emergency Alert System - Every minute
+* * * * * cd /var/www/payroll-system && php artisan emergency:check >> /var/log/cron/emergency.log 2>&1
+
+# System Recovery Procedures - Every 5 minutes
+*/5 * * * * cd /var/www/payroll-system && php artisan recovery:check >> /var/log/cron/recovery.log 2>&1
+
+# Disaster Recovery Test - Weekly on Sunday at 2:00 AM
+0 2 * * 0 cd /var/www/payroll-system && php artisan disaster:recovery:test >> /var/log/cron/disaster-recovery.log 2>&1
+
+# System Performance Optimization - Weekly on Saturday at 3:00 AM
+0 3 * * 6 cd /var/www/payroll-system && php artisan performance:optimize >> /var/log/cron/performance-optimize.log 2>&1
+
+# Database Index Optimization - Weekly on Sunday at 4:00 AM
+0 4 * * 0 cd /var/www/payroll-system && php artisan db:optimize >> /var/log/cron/db-optimize.log 2>&1
+
+# Cache Warming - Daily at 6:00 AM
+0 6 * * * cd /var/www/payroll-system && php artisan cache:warm >> /var/log/cron/cache-warm.log 2>&1
+
+# Search Index Rebuild - Weekly on Monday at 5:00 AM
+0 5 * * 1 cd /var/www/payroll-system && php artisan search:rebuild >> /var/log/cron/search-rebuild.log 2>&1
+
+# System Update Notification - Daily at 8:00 PM
+0 20 * * * cd /var/www/payroll-system && php artisan system:notify-updates >> /var/log/cron/update-notifications.log 2>&1
+
+# User Account Cleanup - Monthly on 1st at 7:00 AM
+0 7 1 * * cd /var/www/payroll-system && php artisan user:cleanup >> /var/log/cron/user-cleanup.log 2>&1
+
+# Audit Trail Cleanup - Monthly on 1st at 8:00 AM
+0 8 1 * * cd /var/www/payroll-system && php artisan audit:cleanup >> /var/log/cron/audit-cleanup.log 2>&1
+
+# System Log Archiving - Monthly on 1st at 9:00 AM
+0 9 1 * * cd /var/www/payroll-system && php artisan log:archive >> /var/log/cron/log-archive.log 2>&1
+
+# Performance Data Archiving - Monthly on 1st at 10:00 AM
+0 10 1 * * cd /var/www/payroll-system && php artisan performance:archive >> /var/log/cron/performance-archive.log 2>&1
+
+# Security Data Archiving - Monthly on 1st at 11:00 AM
+0 11 1 * * cd /var/www/payroll-system && php artisan security:archive >> /var/log/cron/security-archive.log 2>&1
+
+# Compliance Data Archiving - Monthly on 1st at 12:00 PM
+0 12 1 * * cd /var/www/payroll-system && php artisan compliance:archive >> /var/log/cron/compliance-archive.log 2>&1
+
+# System Health Data Archiving - Monthly on 1st at 1:00 PM
+0 13 1 * * cd /var/www/payroll-system && php artisan health:archive >> /var/log/cron/health-archive.log 2>&1
+
+# Monitoring Data Archiving - Monthly on 1st at 2:00 PM
+0 14 1 * * cd /var/www/payroll-system && php artisan monitoring:archive >> /var/log/cron/monitoring-archive.log 2>&1
+
+# Analytics Data Archiving - Monthly on 1st at 3:00 PM
+0 15 1 * * cd /var/www/payroll-system && php artisan analytics:archive >> /var/log/cron/analytics-archive.log 2>&1
+
+# Report Data Archiving - Monthly on 1st at 4:00 PM
+0 16 1 * * cd /var/www/payroll-system && php artisan reports:archive >> /var/log/cron/reports-archive.log 2>&1
+
+# Backup Data Archiving - Monthly on 1st at 5:00 PM
+0 17 1 * * cd /var/www/payroll-system && php artisan backup:archive >> /var/log/cron/backup-archive.log 2>&1
+
+# System Configuration Backup - Daily at 12:00 AM
+0 0 * * * cd /var/www/payroll-system && php artisan config:backup >> /var/log/cron/config-backup.log 2>&1
+
+# Database Schema Backup - Weekly on Sunday at 1:00 AM
+0 1 * * 0 cd /var/www/payroll-system && php artisan db:schema:backup >> /var/log/cron/schema-backup.log 2>&1
+
+# Application Code Backup - Weekly on Sunday at 2:00 AM
+0 2 * * 0 cd /var/www/payroll-system && php artisan code:backup >> /var/log/cron/code-backup.log 2>&1
+
+# System State Backup - Weekly on Sunday at 3:00 AM
+0 3 * * 0 cd /var/www/payroll-system && php artisan system:state:backup >> /var/log/cron/system-state-backup.log 2>&1
+
+# Emergency Backup - Every 6 hours
+0 */6 * * * cd /var/www/payroll-system && php artisan backup:emergency >> /var/log/cron/emergency-backup.log 2>&1
+
+# System Recovery Point - Every 12 hours
+0 */12 * * * cd /var/www/payroll-system && php artisan system:recovery:point >> /var/log/cron/recovery-point.log 2>&1
+
+# System Snapshot - Daily at 3:00 AM
+0 3 * * * cd /var/www/payroll-system && php artisan system:snapshot >> /var/log/cron/system-snapshot.log 2>&1
+
+# Database Snapshot - Daily at 4:00 AM
+0 4 * * * cd /var/www/payroll-system && php artisan db:snapshot >> /var/log/cron/db-snapshot.log 2>&1
+
+# File System Snapshot - Daily at 5:00 AM
+0 5 * * * cd /var/www/payroll-system && php artisan filesystem:snapshot >> /var/log/cron/filesystem-snapshot.log 2>&1
+
+# Configuration Snapshot - Daily at 6:00 AM
+0 6 * * * cd /var/www/payroll-system && php artisan config:snapshot >> /var/log/cron/config-snapshot.log 2>&1
+
+# System State Snapshot - Daily at 7:00 AM
+0 7 * * * cd /var/www/payroll-system && php artisan system:state:snapshot >> /var/log/cron/system-state-snapshot.log 2>&1 

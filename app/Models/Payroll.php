@@ -4,14 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Traits\HasUuid;
 
 class Payroll extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'employee_id',
+        'company_id',
         'period',
         'basic_salary',
         'allowance',
@@ -24,7 +25,6 @@ class Payroll extends Model
         'status',
         'payment_date',
         'notes',
-        'company_id'
     ];
 
     protected $casts = [
@@ -56,11 +56,59 @@ class Payroll extends Model
     }
 
     /**
-     * Scope a query to only include draft payrolls.
+     * Get the user who generated the payroll.
      */
-    public function scopeDraft($query)
+    public function generatedBy()
     {
-        return $query->where('status', 'draft');
+        return $this->belongsTo(User::class, 'generated_by');
+    }
+
+    /**
+     * Get the user who approved the payroll.
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the user who rejected the payroll.
+     */
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * Get the user who updated the payroll.
+     */
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the taxes for the payroll.
+     */
+    public function taxes()
+    {
+        return $this->hasMany(Tax::class);
+    }
+
+    /**
+     * Get the BPJS records for the payroll.
+     */
+    public function bpjs()
+    {
+        return $this->hasMany(Bpjs::class);
+    }
+
+    /**
+     * Scope a query to only include pending payrolls.
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 
     /**
@@ -72,11 +120,11 @@ class Payroll extends Model
     }
 
     /**
-     * Scope a query to only include paid payrolls.
+     * Scope a query to only include rejected payrolls.
      */
-    public function scopePaid($query)
+    public function scopeRejected($query)
     {
-        return $query->where('status', 'paid');
+        return $query->where('status', 'rejected');
     }
 
     /**
@@ -107,11 +155,11 @@ class Payroll extends Model
     }
 
     /**
-     * Get the payroll's formatted payment date.
+     * Get the payroll's formatted period.
      */
-    public function getFormattedPaymentDateAttribute()
+    public function getFormattedPeriodAttribute()
     {
-        return $this->payment_date ? $this->payment_date->format('d/m/Y') : '-';
+        return $this->period;
     }
 
     /**
@@ -121,47 +169,69 @@ class Payroll extends Model
     {
         $statusClass = [
             'draft' => 'badge badge-secondary',
-            'approved' => 'badge badge-warning',
-            'paid' => 'badge badge-success'
+            'pending' => 'badge badge-warning',
+            'approved' => 'badge badge-success',
+            'paid' => 'badge badge-info',
+            'rejected' => 'badge badge-danger'
         ];
         
         $statusText = [
             'draft' => 'Draft',
-            'approved' => 'Disetujui',
-            'paid' => 'Dibayar'
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'paid' => 'Paid',
+            'rejected' => 'Rejected'
         ];
         
-        return '<span class="' . $statusClass[$this->status] . '">' . $statusText[$this->status] . '</span>';
+        return '<span class="' . ($statusClass[$this->status] ?? 'badge badge-secondary') . '">' . ($statusText[$this->status] ?? 'Unknown') . '</span>';
     }
 
     /**
-     * Calculate total salary.
+     * Check if payroll is pending.
      */
-    public function calculateTotalSalary()
+    public function isPending()
     {
-        $total = $this->basic_salary + $this->allowance + $this->overtime + $this->bonus;
-        $total = $total - $this->deduction - $this->tax_amount - $this->bpjs_amount;
-        
-        return max(0, $total);
+        return $this->status === 'pending';
     }
 
     /**
-     * Boot the model.
+     * Check if payroll is approved.
      */
-    protected static function boot()
+    public function isApproved()
     {
-        parent::boot();
+        return $this->status === 'approved';
+    }
 
-        static::creating(function ($payroll) {
-            if (!$payroll->total_salary) {
-                $payroll->total_salary = $payroll->calculateTotalSalary();
-            }
-        });
+    /**
+     * Check if payroll is rejected.
+     */
+    public function isRejected()
+    {
+        return $this->status === 'rejected';
+    }
 
-        static::updating(function ($payroll) {
-            if ($payroll->isDirty(['basic_salary', 'allowance', 'overtime', 'bonus', 'deduction', 'tax_amount', 'bpjs_amount'])) {
-                $payroll->total_salary = $payroll->calculateTotalSalary();
-            }
-        });
+    /**
+     * Approve the payroll.
+     */
+    public function approve($approvedBy)
+    {
+        $this->update([
+            'status' => 'approved',
+            'approved_by' => $approvedBy,
+            'approved_at' => now(),
+        ]);
+    }
+
+    /**
+     * Reject the payroll.
+     */
+    public function reject($rejectedBy, $reason = null)
+    {
+        $this->update([
+            'status' => 'rejected',
+            'rejected_by' => $rejectedBy,
+            'rejected_at' => now(),
+            'rejection_reason' => $reason,
+        ]);
     }
 } 

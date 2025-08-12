@@ -117,43 +117,301 @@
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <!-- Add icons to the links using the .nav-icon class
-                             with font-awesome or any other icon font library -->
+                        <!-- Dashboard -->
                         <li class="nav-item">
                             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
+
+                        <!-- Employee Management -->
                         <li class="nav-item">
                             <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-users"></i>
                                 <p>Karyawan</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('payroll.index') }}" class="nav-link {{ request()->routeIs('payroll.*') ? 'active' : '' }}">
+
+                        <!-- Payroll Management -->
+                        <li class="nav-item {{ request()->routeIs('payrolls.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-money-bill-wave"></i>
-                                <p>Payroll</p>
+                                <p>
+                                    Payroll Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('payrolls.index') }}" class="nav-link {{ request()->routeIs('payrolls.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>All Payrolls</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('payrolls.create') }}" class="nav-link {{ request()->routeIs('payrolls.create') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Generate Payroll</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('attendance.index') }}" class="nav-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}">
+
+                        <!-- Attendance Management -->
+                        <li class="nav-item {{ request()->routeIs('attendance.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-clock"></i>
-                                <p>Absensi</p>
+                                <p>
+                                    Attendance Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('attendance.index') }}" class="nav-link {{ request()->routeIs('attendance.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Attendance Records</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('attendance.check-in-out') }}" class="nav-link {{ request()->routeIs('attendance.check-in-out') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Check In/Out</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('attendance.calendar') }}" class="nav-link {{ request()->routeIs('attendance.calendar*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Attendance Calendar</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
+
+                        <!-- Leave Management -->
+                        <li class="nav-item {{ request()->routeIs('leaves.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('leaves.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-alt"></i>
+                                <p>
+                                    Leave Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('leaves.index') }}" class="nav-link {{ request()->routeIs('leaves.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>My Leave Requests</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('leaves.create') }}" class="nav-link {{ request()->routeIs('leaves.create') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Submit Leave Request</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('leaves.balance') }}" class="nav-link {{ request()->routeIs('leaves.balance') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Leave Balance</p>
+                                    </a>
+                                </li>
+                                @if(in_array(auth()->user()->role, ['admin', 'hr', 'manager']))
+                                <li class="nav-item">
+                                    <a href="{{ route('leaves.approval') }}" class="nav-link {{ request()->routeIs('leaves.approval') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Leave Approval</p>
+                                    </a>
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+
+                        <!-- Overtime Management -->
+                        <li class="nav-item {{ request()->routeIs('overtimes.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('overtimes.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-clock"></i>
+                                <p>
+                                    Overtime Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('overtimes.index') }}" class="nav-link {{ request()->routeIs('overtimes.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>My Overtime Requests</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('overtimes.create') }}" class="nav-link {{ request()->routeIs('overtimes.create') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Submit Overtime Request</p>
+                                    </a>
+                                </li>
+                                @if(in_array(auth()->user()->role, ['admin', 'hr', 'manager']))
+                                <li class="nav-item">
+                                    <a href="{{ route('overtimes.approval') }}" class="nav-link {{ request()->routeIs('overtimes.approval') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Overtime Approval</p>
+                                    </a>
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+
+                        <!-- Tax Management -->
+                        <li class="nav-item {{ request()->routeIs('taxes.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('taxes.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calculator"></i>
+                                <p>
+                                    Tax Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('taxes.index') }}" class="nav-link {{ request()->routeIs('taxes.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Tax Calculations</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('taxes.report') }}" class="nav-link {{ request()->routeIs('taxes.report') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Tax Reports</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- BPJS Management -->
+                        <li class="nav-item {{ request()->routeIs('bpjs.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('bpjs.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-heartbeat"></i>
+                                <p>
+                                    BPJS Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('bpjs.index') }}" class="nav-link {{ request()->routeIs('bpjs.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>BPJS Calculations</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('bpjs.report') }}" class="nav-link {{ request()->routeIs('bpjs.report') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>BPJS Reports</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Bank Integration -->
+                        <li class="nav-item {{ request()->routeIs('bank-accounts.*') || request()->routeIs('salary-transfers.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('bank-accounts.*') || request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-university"></i>
+                                <p>
+                                    Bank Integration
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('bank-accounts.index') }}" class="nav-link {{ request()->routeIs('bank-accounts.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Bank Accounts</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('salary-transfers.index') }}" class="nav-link {{ request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Salary Transfers</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Reports -->
                         <li class="nav-item">
                             <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Laporan</p>
+                                <p>Reports</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-cog"></i>
-                                <p>Pengaturan</p>
+
+                        <!-- Export Data -->
+                        <li class="nav-item {{ request()->routeIs('exports.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('exports.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-download"></i>
+                                <p>
+                                    Export Data
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('exports.index') }}" class="nav-link {{ request()->routeIs('exports.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Export Dashboard</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('exports.employees') }}?format=xlsx" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Export Employees</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('exports.payrolls') }}?format=xlsx" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Export Payrolls</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Settings -->
+                        <li class="nav-item {{ request()->routeIs('settings.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>
+                                    Settings
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Settings Dashboard</p>
+                                    </a>
+                                </li>
+                                @if(in_array(auth()->user()->role, ['admin']))
+                                <li class="nav-item">
+                                    <a href="{{ route('settings.company') }}" class="nav-link {{ request()->routeIs('settings.company') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Company Settings</p>
+                                    </a>
+                                </li>
+                                @endif
+                                <li class="nav-item">
+                                    <a href="{{ route('settings.profile') }}" class="nav-link {{ request()->routeIs('settings.profile') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>User Profile</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('settings.password') }}" class="nav-link {{ request()->routeIs('settings.password') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Change Password</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </nav>

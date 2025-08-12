@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Company;
 use Carbon\Carbon;
 
 class AttendanceSeeder extends Seeder
@@ -16,9 +17,15 @@ class AttendanceSeeder extends Seeder
     public function run(): void
     {
         $employees = Employee::all();
+        $company = Company::first();
         
         if ($employees->isEmpty()) {
             $this->command->info('No employees found. Please run EmployeeSeeder first.');
+            return;
+        }
+        
+        if (!$company) {
+            $this->command->error('No company found. Please run CompanySeeder first.');
             return;
         }
 
@@ -61,7 +68,9 @@ class AttendanceSeeder extends Seeder
                 }
 
                 Attendance::create([
+                    'company_id' => $employee->company_id,
                     'employee_id' => $employee->id,
+                    'company_id' => $company->id,
                     'date' => $date->format('Y-m-d'),
                     'check_in' => $checkIn ? $checkIn->format('H:i:s') : null,
                     'check_out' => $checkOut ? $checkOut->format('H:i:s') : null,

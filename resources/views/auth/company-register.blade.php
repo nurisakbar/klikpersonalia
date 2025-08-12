@@ -1,22 +1,21 @@
 @extends('layouts.guest')
 
-@section('title', 'Daftar Perusahaan - Payroll KlikMedis')
+@section('title', 'Register Company - Payroll KlikMedis')
 
 @section('content')
 <div class="register-box">
     <div class="register-logo">
-        <a href="{{ route('dashboard') }}">
-            <img src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/img/AdminLTELogo.png" alt="Payroll KlikMedis" class="brand-image img-circle elevation-3" style="opacity: .8">
-            <b>Payroll</b> KlikMedis
-        </a>
+        <a href="/"><b>Payroll</b> KlikMedis</a>
     </div>
 
     <div class="card">
         <div class="card-body register-card-body">
-            <p class="login-box-msg">Daftar Perusahaan Baru</p>
+            <p class="login-box-msg">Register a new company membership</p>
 
             @if ($errors->any())
-                <div class="alert alert-danger">
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!</h5>
                     <ul class="mb-0">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -30,229 +29,261 @@
                 
                 <!-- Step 1: Company Information -->
                 <div class="step" id="step1">
-                    <h5 class="text-center mb-3">
-                        <i class="fas fa-building"></i> Informasi Perusahaan
-                    </h5>
+                    <h6 class="text-center mb-3">
+                        <i class="fas fa-building"></i> Company Information
+                    </h6>
                     
-                    <div class="form-group">
-                        <label for="company_name">Nama Perusahaan <span class="text-danger">*</span></label>
-                        <input type="text" name="company_name" id="company_name" class="form-control @error('company_name') is-invalid @enderror" value="{{ old('company_name') }}" required>
+                    <div class="input-group mb-3">
+                        <input type="text" name="company_name" id="company_name" class="form-control @error('company_name') is-invalid @enderror" 
+                               placeholder="Company name" value="{{ old('company_name') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-building"></span>
+                            </div>
+                        </div>
                         @error('company_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="company_email">Email Perusahaan <span class="text-danger">*</span></label>
-                        <input type="email" name="company_email" id="company_email" class="form-control @error('company_email') is-invalid @enderror" value="{{ old('company_email') }}" required>
-                        <small class="form-text text-muted" id="company_email_feedback"></small>
+                    <div class="input-group mb-3">
+                        <input type="email" name="company_email" id="company_email" class="form-control @error('company_email') is-invalid @enderror" 
+                               placeholder="Company email" value="{{ old('company_email') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-envelope"></span>
+                            </div>
+                        </div>
                         @error('company_email')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="company_phone">Nomor Telepon <span class="text-danger">*</span></label>
-                        <input type="text" name="company_phone" id="company_phone" class="form-control @error('company_phone') is-invalid @enderror" value="{{ old('company_phone') }}" required>
+                    <div class="input-group mb-3">
+                        <input type="text" name="company_phone" id="company_phone" class="form-control @error('company_phone') is-invalid @enderror" 
+                               placeholder="Phone number" value="{{ old('company_phone') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-phone"></span>
+                            </div>
+                        </div>
                         @error('company_phone')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="company_address">Alamat <span class="text-danger">*</span></label>
-                        <textarea name="company_address" id="company_address" class="form-control @error('company_address') is-invalid @enderror" rows="3" required>{{ old('company_address') }}</textarea>
+                    <div class="input-group mb-3">
+                        <textarea name="company_address" id="company_address" class="form-control @error('company_address') is-invalid @enderror" 
+                                  placeholder="Company address" rows="2" required>{{ old('company_address') }}</textarea>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-map-marker-alt"></span>
+                            </div>
+                        </div>
                         @error('company_address')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="company_city">Kota <span class="text-danger">*</span></label>
-                                <input type="text" name="company_city" id="company_city" class="form-control @error('company_city') is-invalid @enderror" value="{{ old('company_city') }}" required>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                                <input type="text" name="company_city" id="company_city" class="form-control @error('company_city') is-invalid @enderror" 
+                                       placeholder="City" value="{{ old('company_city') }}" required>
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fas fa-city"></span>
+                                    </div>
+                                </div>
                                 @error('company_city')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="company_province">Provinsi <span class="text-danger">*</span></label>
-                                <input type="text" name="company_province" id="company_province" class="form-control @error('company_province') is-invalid @enderror" value="{{ old('company_province') }}" required>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                                <input type="text" name="company_province" id="company_province" class="form-control @error('company_province') is-invalid @enderror" 
+                                       placeholder="Province" value="{{ old('company_province') }}" required>
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fas fa-map"></span>
+                                    </div>
+                                </div>
                                 @error('company_province')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
                                 @enderror
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="company_postal_code">Kode Pos <span class="text-danger">*</span></label>
-                        <input type="text" name="company_postal_code" id="company_postal_code" class="form-control @error('company_postal_code') is-invalid @enderror" value="{{ old('company_postal_code') }}" required>
+                    <div class="input-group mb-3">
+                        <input type="text" name="company_postal_code" id="company_postal_code" class="form-control @error('company_postal_code') is-invalid @enderror" 
+                               placeholder="Postal code" value="{{ old('company_postal_code') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-mail-bulk"></span>
+                            </div>
+                        </div>
                         @error('company_postal_code')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="company_website">Website (Opsional)</label>
-                        <input type="url" name="company_website" id="company_website" class="form-control @error('company_website') is-invalid @enderror" value="{{ old('company_website') }}">
-                        @error('company_website')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="company_tax_number">NPWP (Opsional)</label>
-                                <input type="text" name="company_tax_number" id="company_tax_number" class="form-control @error('company_tax_number') is-invalid @enderror" value="{{ old('company_tax_number') }}">
-                                @error('company_tax_number')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="company_business_number">SIUP/NIB (Opsional)</label>
-                                <input type="text" name="company_business_number" id="company_business_number" class="form-control @error('company_business_number') is-invalid @enderror" value="{{ old('company_business_number') }}">
-                                @error('company_business_number')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
                     </div>
 
                     <button type="button" class="btn btn-primary btn-block" onclick="nextStep()">
-                        Selanjutnya <i class="fas fa-arrow-right"></i>
+                        Next <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
 
                 <!-- Step 2: Owner Information -->
                 <div class="step" id="step2" style="display: none;">
-                    <h5 class="text-center mb-3">
-                        <i class="fas fa-user"></i> Informasi Pemilik
-                    </h5>
+                    <h6 class="text-center mb-3">
+                        <i class="fas fa-user"></i> Owner Information
+                    </h6>
                     
-                    <div class="form-group">
-                        <label for="owner_name">Nama Lengkap <span class="text-danger">*</span></label>
-                        <input type="text" name="owner_name" id="owner_name" class="form-control @error('owner_name') is-invalid @enderror" value="{{ old('owner_name') }}" required>
+                    <div class="input-group mb-3">
+                        <input type="text" name="owner_name" id="owner_name" class="form-control @error('owner_name') is-invalid @enderror" 
+                               placeholder="Full name" value="{{ old('owner_name') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-user"></span>
+                            </div>
+                        </div>
                         @error('owner_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="owner_email">Email <span class="text-danger">*</span></label>
-                        <input type="email" name="owner_email" id="owner_email" class="form-control @error('owner_email') is-invalid @enderror" value="{{ old('owner_email') }}" required>
-                        <small class="form-text text-muted" id="owner_email_feedback"></small>
+                    <div class="input-group mb-3">
+                        <input type="email" name="owner_email" id="owner_email" class="form-control @error('owner_email') is-invalid @enderror" 
+                               placeholder="Email" value="{{ old('owner_email') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-envelope"></span>
+                            </div>
+                        </div>
                         @error('owner_email')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="owner_phone">Nomor Telepon <span class="text-danger">*</span></label>
-                        <input type="text" name="owner_phone" id="owner_phone" class="form-control @error('owner_phone') is-invalid @enderror" value="{{ old('owner_phone') }}" required>
+                    <div class="input-group mb-3">
+                        <input type="text" name="owner_phone" id="owner_phone" class="form-control @error('owner_phone') is-invalid @enderror" 
+                               placeholder="Phone number" value="{{ old('owner_phone') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-phone"></span>
+                            </div>
+                        </div>
                         @error('owner_phone')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="owner_position">Jabatan <span class="text-danger">*</span></label>
-                        <input type="text" name="owner_position" id="owner_position" class="form-control @error('owner_position') is-invalid @enderror" value="{{ old('owner_position') }}" required>
+                    <div class="input-group mb-3">
+                        <input type="text" name="owner_position" id="owner_position" class="form-control @error('owner_position') is-invalid @enderror" 
+                               placeholder="Position" value="{{ old('owner_position') }}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-briefcase"></span>
+                            </div>
+                        </div>
                         @error('owner_position')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="password">Password <span class="text-danger">*</span></label>
-                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" required>
-                        <small class="form-text text-muted">Minimal 8 karakter</small>
+                    <div class="input-group mb-3">
+                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
+                               placeholder="Password" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
                         @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="password_confirmation">Konfirmasi Password <span class="text-danger">*</span></label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" name="terms_accepted" id="terms_accepted" class="custom-control-input @error('terms_accepted') is-invalid @enderror" required>
-                            <label class="custom-control-label" for="terms_accepted">
-                                Saya menyetujui <a href="#" target="_blank">Syarat dan Ketentuan</a> serta <a href="#" target="_blank">Kebijakan Privasi</a>
-                            </label>
-                            @error('terms_accepted')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <div class="input-group mb-3">
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" 
+                               placeholder="Retype password" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-6">
-                            <button type="button" class="btn btn-secondary btn-block" onclick="prevStep()">
-                                <i class="fas fa-arrow-left"></i> Sebelumnya
+                        <div class="col-8">
+                            <div class="icheck-primary">
+                                <input type="checkbox" name="terms_accepted" id="terms_accepted" class="@error('terms_accepted') is-invalid @enderror" required>
+                                <label for="terms_accepted">
+                                    I agree to the <a href="#">terms</a>
+                                </label>
+                                @error('terms_accepted')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-4">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-user-plus"></i> Register
                             </button>
                         </div>
-                        <div class="col-6">
-                            <button type="submit" class="btn btn-success btn-block">
-                                <i class="fas fa-check"></i> Daftar
+                        <!-- /.col -->
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-secondary btn-block" onclick="prevStep()">
+                                <i class="fas fa-arrow-left"></i> Previous
                             </button>
                         </div>
                     </div>
                 </div>
             </form>
 
-            <div class="text-center mt-3">
-                <a href="{{ route('login') }}" class="text-center">
-                    Sudah punya akun? Login di sini
+            <div class="social-auth-links text-center mt-2 mb-3">
+                <p>- OR -</p>
+                <a href="{{ route('login') }}" class="btn btn-block btn-success">
+                    <i class="fas fa-sign-in-alt mr-2"></i> I already have a membership
                 </a>
             </div>
         </div>
-    </div>
+        <!-- /.form-box -->
+    </div><!-- /.card -->
 </div>
+<!-- /.register-box -->
 @endsection
-
-@push('css')
-<style>
-.register-box {
-    width: 500px;
-    margin: 7% auto;
-}
-
-.register-card-body {
-    padding: 20px;
-}
-
-.step {
-    transition: all 0.3s ease;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.custom-control-label {
-    font-size: 0.875rem;
-}
-
-.custom-control-label a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.custom-control-label a:hover {
-    text-decoration: underline;
-}
-</style>
-@endpush
 
 @push('js')
 <script>
@@ -293,55 +324,15 @@ function validateStep1() {
     return isValid;
 }
 
-// Email availability check
-document.getElementById('company_email').addEventListener('blur', function() {
-    const email = this.value;
-    if (email) {
-        fetch('/check-company-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ email: email })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const feedback = document.getElementById('company_email_feedback');
-            if (data.available) {
-                feedback.className = 'form-text text-success';
-                feedback.textContent = data.message;
-            } else {
-                feedback.className = 'form-text text-danger';
-                feedback.textContent = data.message;
-            }
-        });
-    }
+// Add loading state to submit button
+$('form').on('submit', function() {
+    $('button[type="submit"]').html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+    $('button[type="submit"]').prop('disabled', true);
 });
 
-document.getElementById('owner_email').addEventListener('blur', function() {
-    const email = this.value;
-    if (email) {
-        fetch('/check-owner-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ email: email })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const feedback = document.getElementById('owner_email_feedback');
-            if (data.available) {
-                feedback.className = 'form-text text-success';
-                feedback.textContent = data.message;
-            } else {
-                feedback.className = 'form-text text-danger';
-                feedback.textContent = data.message;
-            }
-        });
-    }
-});
+// Auto-hide alerts after 10 seconds
+setTimeout(function() {
+    $('.alert').fadeOut('slow');
+}, 10000);
 </script>
 @endpush 
