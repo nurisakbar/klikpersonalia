@@ -8,13 +8,16 @@ use App\Models\Attendance;
 use App\Models\Leave;
 use App\Models\Overtime;
 use App\Models\Company;
+use App\Services\PayrollService;
 use Illuminate\Http\Request;
+use App\Http\Requests\PayrollRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PayrollController extends Controller
 {
+    public function __construct(private PayrollService $payrollService) {}
     /**
      * Display a listing of payrolls.
      */
@@ -30,21 +33,11 @@ class PayrollController extends Controller
         $period = $request->get('period', Carbon::now()->format('Y-m'));
         $status = $request->get('status', '');
         
-        $query = Payroll::with(['employee'])
-            ->where('company_id', $user->company_id);
-        
-        if ($period) {
-            $query->where('period', 'LIKE', $period . '%');
-        }
-        
-        if ($status) {
-            $query->where('status', $status);
-        }
-        
-        $payrolls = $query->orderBy('created_at', 'desc')->paginate(15);
+        // Use service to get payrolls
+        $payrolls = $this->payrollService->getPaginatedPayrolls($period, $status, 15);
         
         // Get summary statistics
-        $summary = $this->getPayrollSummary($user->company_id, $period);
+        $summary = $this->payrollService->getPayrollSummary($period);
         
         return view('payrolls.index', compact('payrolls', 'summary', 'period', 'status'));
     }
@@ -61,10 +54,8 @@ class PayrollController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to create payrolls.');
         }
 
-        $employees = Employee::where('company_id', $user->company_id)
-            ->where('status', 'active')
-            ->get();
-        
+        // Use service to get employees
+        $employees = $this->payrollService->getActiveEmployees();
         $currentPeriod = Carbon::now()->format('Y-m');
         
         return view('payrolls.create', compact('employees', 'currentPeriod'));
@@ -73,71 +64,14 @@ class PayrollController extends Controller
     /**
      * Store a newly created payroll in storage.
      */
-    public function store(Request $request)
+    public function store(PayrollRequest $request)
     {
-        $user = Auth::user();
-        
-        // Check if user has permission
-        if (!in_array($user->role, ['admin', 'hr'])) {
-            return redirect()->back()->with('error', 'You do not have permission to create payrolls.');
+        $result = $this->payrollService->generateSingle($request->validated());
+
+        if ($result['success']) {
+            return redirect()->route('payrolls.index')->with('success', $result['message']);
         }
-
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'period' => 'required|string|max:20',
-            'basic_salary' => 'required|numeric|min:0',
-            'allowance' => 'nullable|numeric|min:0',
-            'overtime' => 'nullable|numeric|min:0',
-            'bonus' => 'nullable|numeric|min:0',
-            'deduction' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'bpjs_amount' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
-        ]);
-
-        // Check if payroll already exists for this employee and period
-        $existingPayroll = Payroll::where('employee_id', $request->employee_id)
-            ->where('period', $request->period)
-            ->where('company_id', $user->company_id)
-            ->first();
-
-        if ($existingPayroll) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['employee_id' => 'Payroll already exists for this employee and period.']);
-        }
-
-        // Get employee
-        $employee = Employee::findOrFail($request->employee_id);
-        
-        // Calculate total salary
-        $totalSalary = $request->basic_salary + 
-                      ($request->allowance ?? 0) + 
-                      ($request->overtime ?? 0) + 
-                      ($request->bonus ?? 0) - 
-                      ($request->deduction ?? 0) - 
-                      ($request->tax_amount ?? 0) - 
-                      ($request->bpjs_amount ?? 0);
-        
-        // Create payroll
-        $payroll = Payroll::create([
-            'employee_id' => $request->employee_id,
-            'company_id' => $user->company_id,
-            'period' => $request->period,
-            'basic_salary' => $request->basic_salary,
-            'allowance' => $request->allowance ?? 0,
-            'overtime' => $request->overtime ?? 0,
-            'bonus' => $request->bonus ?? 0,
-            'deduction' => $request->deduction ?? 0,
-            'tax_amount' => $request->tax_amount ?? 0,
-            'bpjs_amount' => $request->bpjs_amount ?? 0,
-            'total_salary' => $totalSalary,
-            'status' => 'draft',
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('payrolls.index')
-            ->with('success', 'Payroll generated successfully for ' . $employee->name);
+        return redirect()->back()->withInput()->with('error', $result['message']);
     }
 
     /**
@@ -152,10 +86,12 @@ class PayrollController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to view payrolls.');
         }
 
-        $payroll = Payroll::with(['employee', 'generatedBy'])
-            ->where('id', $id)
-            ->where('company_id', $user->company_id)
-            ->firstOrFail();
+        // Use service to get payroll
+        $payroll = $this->payrollService->findPayroll($id);
+        
+        if (!$payroll) {
+            return redirect()->route('payrolls.index')->with('error', 'Payroll not found.');
+        }
 
         return view('payrolls.show', compact('payroll'));
     }
@@ -172,10 +108,12 @@ class PayrollController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to edit payrolls.');
         }
 
-        $payroll = Payroll::with('employee')
-            ->where('id', $id)
-            ->where('company_id', $user->company_id)
-            ->firstOrFail();
+        // Use service to get payroll
+        $payroll = $this->payrollService->findPayroll($id);
+        
+        if (!$payroll) {
+            return redirect()->route('payrolls.index')->with('error', 'Payroll not found.');
+        }
 
         return view('payrolls.edit', compact('payroll'));
     }
@@ -203,33 +141,12 @@ class PayrollController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $payroll = Payroll::where('id', $id)
-            ->where('company_id', $user->company_id)
-            ->firstOrFail();
+        $result = $this->payrollService->updatePayroll($id, $request->all());
 
-        // Calculate total salary
-        $totalSalary = $request->basic_salary + 
-                      ($request->allowance ?? 0) + 
-                      ($request->overtime ?? 0) + 
-                      ($request->bonus ?? 0) - 
-                      ($request->deduction ?? 0) - 
-                      ($request->tax_amount ?? 0) - 
-                      ($request->bpjs_amount ?? 0);
-        
-        $payroll->update([
-            'basic_salary' => $request->basic_salary,
-            'allowance' => $request->allowance ?? 0,
-            'overtime' => $request->overtime ?? 0,
-            'bonus' => $request->bonus ?? 0,
-            'deduction' => $request->deduction ?? 0,
-            'tax_amount' => $request->tax_amount ?? 0,
-            'bpjs_amount' => $request->bpjs_amount ?? 0,
-            'total_salary' => $totalSalary,
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('payrolls.index')
-            ->with('success', 'Payroll updated successfully.');
+        if ($result['success']) {
+            return redirect()->route('payrolls.index')->with('success', $result['message']);
+        }
+        return redirect()->back()->withInput()->with('error', $result['message']);
     }
 
     /**
@@ -244,14 +161,16 @@ class PayrollController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to delete payrolls.');
         }
 
-        $payroll = Payroll::where('id', $id)
-            ->where('company_id', $user->company_id)
-            ->firstOrFail();
+        $result = $this->payrollService->deletePayroll($id);
 
-        $payroll->delete();
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
 
-        return redirect()->route('payrolls.index')
-            ->with('success', 'Payroll deleted successfully.');
+        if ($result['success']) {
+            return redirect()->route('payrolls.index')->with('success', $result['message']);
+        }
+        return redirect()->back()->with('error', $result['message']);
     }
 
     /**
@@ -263,52 +182,58 @@ class PayrollController extends Controller
         
         // Check if user has permission
         if (!in_array($user->role, ['admin', 'hr'])) {
-            return redirect()->back()->with('error', 'You do not have permission to approve payrolls.');
+            return response()->json(['success' => false, 'message' => 'You do not have permission to approve payrolls.'], 403);
         }
 
-        $payroll = Payroll::where('id', $id)
-            ->where('company_id', $user->company_id)
-            ->where('status', 'draft')
-            ->firstOrFail();
-
-        $payroll->update([
+        $result = $this->payrollService->updatePayroll($id, [
             'status' => 'approved',
+            'approved_by' => $user->id,
+            'approved_at' => now()
         ]);
 
-        return redirect()->route('payrolls.index')
-            ->with('success', 'Payroll approved successfully.');
+        return response()->json($result);
     }
 
     /**
      * Reject payroll.
      */
-    public function reject(Request $request, string $id)
+    public function reject(string $id)
     {
         $user = Auth::user();
         
         // Check if user has permission
         if (!in_array($user->role, ['admin', 'hr'])) {
-            return redirect()->back()->with('error', 'You do not have permission to reject payrolls.');
+            return response()->json(['success' => false, 'message' => 'You do not have permission to reject payrolls.'], 403);
         }
 
-        $request->validate([
-            'rejection_reason' => 'required|string|max:500',
-        ]);
-
-        $payroll = Payroll::where('id', $id)
-            ->where('company_id', $user->company_id)
-            ->where('status', 'pending')
-            ->firstOrFail();
-
-        $payroll->update([
+        $result = $this->payrollService->updatePayroll($id, [
             'status' => 'rejected',
             'rejected_by' => $user->id,
-            'rejected_at' => now(),
-            'rejection_reason' => $request->rejection_reason,
+            'rejected_at' => now()
         ]);
 
-        return redirect()->route('payrolls.index')
-            ->with('success', 'Payroll rejected successfully.');
+        return response()->json($result);
+    }
+
+    /**
+     * Mark payroll as paid.
+     */
+    public function markPaid(string $id)
+    {
+        $user = Auth::user();
+        
+        // Check if user has permission
+        if (!in_array($user->role, ['admin', 'hr'])) {
+            return response()->json(['success' => false, 'message' => 'You do not have permission to mark payrolls as paid.'], 403);
+        }
+
+        $result = $this->payrollService->updatePayroll($id, [
+            'status' => 'paid',
+            'paid_by' => $user->id,
+            'paid_at' => now()
+        ]);
+
+        return response()->json($result);
     }
 
     /**
@@ -419,62 +344,75 @@ class PayrollController extends Controller
      */
     public function calculate(Request $request)
     {
-        $user = Auth::user();
-        
-        // Check if user has permission
-        if (!in_array($user->role, ['admin', 'hr'])) {
-            return response()->json(['success' => false, 'message' => 'Permission denied.'], 403);
+        try {
+            $user = Auth::user();
+            
+            // Check if user has permission
+            if (!in_array($user->role, ['admin', 'hr'])) {
+                return response()->json(['success' => false, 'message' => 'Permission denied.'], 403);
+            }
+
+            $request->validate([
+                'employee_id' => 'required|exists:employees,id',
+                'month' => 'required|integer|between:1,12',
+                'year' => 'required|integer|min:2020',
+                'basic_salary' => 'required|numeric|min:0',
+                'allowances' => 'nullable|numeric|min:0',
+                'deductions' => 'nullable|numeric|min:0',
+            ]);
+
+            $employee = Employee::findOrFail($request->employee_id);
+            
+            // Check if employee belongs to user's company
+            if ($employee->company_id !== $user->company_id) {
+                return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
+            }
+
+            // Calculate payroll components
+            $payrollData = $this->calculatePayroll($employee, $request->month, $request->year);
+            
+            // Add additional allowances and deductions
+            $payrollData['allowances'] = $request->allowances ?? 0;
+            $payrollData['deductions'] = $request->deductions ?? 0;
+            $payrollData['total_salary'] += $payrollData['allowances'] - $payrollData['deductions'];
+            
+            // Format period
+            $monthNames = [
+                1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+                5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+                9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'employee_name' => $employee->name,
+                    'period' => $monthNames[$request->month] . ' ' . $request->year,
+                    'basic_salary' => $request->basic_salary,
+                    'overtime_pay' => $payrollData['overtime_pay'],
+                    'attendance_bonus' => $payrollData['attendance_bonus'],
+                    'allowances' => $payrollData['allowances'],
+                    'leave_deduction' => $payrollData['leave_deduction'],
+                    'deductions' => $payrollData['deductions'],
+                    'total_salary' => $payrollData['total_salary'],
+                    'attendance_rate' => round($payrollData['attendance_rate'], 1),
+                    'present_days' => $payrollData['present_days'],
+                    'late_days' => $payrollData['late_days'],
+                    'total_working_days' => $payrollData['total_working_days'],
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Payroll calculation error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error calculating payroll: ' . $e->getMessage()
+            ], 500);
         }
-
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'month' => 'required|integer|between:1,12',
-            'year' => 'required|integer|min:2020',
-            'basic_salary' => 'required|numeric|min:0',
-            'allowances' => 'nullable|numeric|min:0',
-            'deductions' => 'nullable|numeric|min:0',
-        ]);
-
-        $employee = Employee::findOrFail($request->employee_id);
-        
-        // Check if employee belongs to user's company
-        if ($employee->company_id !== $user->company_id) {
-            return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
-        }
-
-        // Calculate payroll components
-        $payrollData = $this->calculatePayroll($employee, $request->month, $request->year);
-        
-        // Add additional allowances and deductions
-        $payrollData['allowances'] = $request->allowances ?? 0;
-        $payrollData['deductions'] = $request->deductions ?? 0;
-        $payrollData['total_salary'] += $payrollData['allowances'] - $payrollData['deductions'];
-        
-        // Format period
-        $monthNames = [
-            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-            5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-            9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
-        ];
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'employee_name' => $employee->name,
-                'period' => $monthNames[$request->month] . ' ' . $request->year,
-                'basic_salary' => $request->basic_salary,
-                'overtime_pay' => $payrollData['overtime_pay'],
-                'attendance_bonus' => $payrollData['attendance_bonus'],
-                'allowances' => $payrollData['allowances'],
-                'leave_deduction' => $payrollData['leave_deduction'],
-                'deductions' => $payrollData['deductions'],
-                'total_salary' => $payrollData['total_salary'],
-                'attendance_rate' => round($payrollData['attendance_rate'], 1),
-                'present_days' => $payrollData['present_days'],
-                'late_days' => $payrollData['late_days'],
-                'total_working_days' => $payrollData['total_working_days'],
-            ]
-        ]);
     }
 
     /**

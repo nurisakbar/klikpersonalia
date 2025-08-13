@@ -246,6 +246,14 @@ class EmployeeService
     }
 
     /**
+     * Default list for select (no query), capped.
+     */
+    public function getDefaultEmployeesForSelect(int $limit = 20): Collection
+    {
+        return $this->employeeRepository->getForSelect($limit);
+    }
+
+    /**
      * Get active employees.
      */
     public function getActiveEmployees(): Collection

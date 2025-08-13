@@ -352,7 +352,7 @@
 </div>
 @endsection
 
-@push('scripts')
+@push('js')
 <script>
 $(document).ready(function() {
     // Handle delete button click
@@ -439,34 +439,8 @@ function setPeriod(period) {
 
 function exportPayrolls() {
     const period = document.getElementById('period').value;
-    
-    // Create export form
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("payrolls.export") }}';
-    
-    const csrfToken = document.createElement('input');
-    csrfToken.type = 'hidden';
-    csrfToken.name = '_token';
-    csrfToken.value = '{{ csrf_token() }}';
-    
-    const periodInput = document.createElement('input');
-    periodInput.type = 'hidden';
-    periodInput.name = 'period';
-    periodInput.value = period;
-    
-    const formatInput = document.createElement('input');
-    formatInput.type = 'hidden';
-    formatInput.name = 'format';
-    formatInput.value = 'pdf';
-    
-    form.appendChild(csrfToken);
-    form.appendChild(periodInput);
-    form.appendChild(formatInput);
-    
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
+    const url = '{{ route("exports.payrolls") }}' + '?format=pdf' + (period ? ('&period=' + encodeURIComponent(period)) : '');
+    window.location.href = url;
 }
 </script>
 @endpush 

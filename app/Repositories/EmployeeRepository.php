@@ -102,6 +102,17 @@ class EmployeeRepository
     }
 
     /**
+     * Get limited employees for select (no status filter).
+     */
+    public function getForSelect(int $limit = 20): Collection
+    {
+        return Employee::currentCompany()
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Get employees by department.
      */
     public function getByDepartment(string $department): Collection

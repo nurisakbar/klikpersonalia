@@ -52,7 +52,7 @@ class ExportService
             ->with(['employee']);
 
         if ($period) {
-            $query->where('payroll_period', $period);
+            $query->where('period', $period);
         }
 
         $payrolls = $query->orderBy('created_at', 'desc')->get();
@@ -196,7 +196,7 @@ class ExportService
             $sheet->setCellValue('D' . $row, $employee->phone);
             $sheet->setCellValue('E' . $row, $employee->position);
             $sheet->setCellValue('F' . $row, $employee->department);
-            $sheet->setCellValue('G' . $row, number_format($employee->base_salary, 0, ',', '.'));
+            $sheet->setCellValue('G' . $row, number_format($employee->basic_salary, 0, ',', '.'));
             $sheet->setCellValue('H' . $row, ucfirst($employee->status));
             $sheet->setCellValue('I' . $row, $employee->join_date ? $employee->join_date->format('d/m/Y') : '-');
             $row++;
@@ -269,14 +269,14 @@ class ExportService
         $row = 6;
         foreach ($payrolls as $payroll) {
             $sheet->setCellValue('A' . $row, $payroll->employee->name);
-            $sheet->setCellValue('B' . $row, $payroll->payroll_period);
-            $sheet->setCellValue('C' . $row, number_format($payroll->base_salary, 0, ',', '.'));
-            $sheet->setCellValue('D' . $row, number_format($payroll->overtime_amount, 0, ',', '.'));
-            $sheet->setCellValue('E' . $row, number_format($payroll->allowances_amount, 0, ',', '.'));
-            $sheet->setCellValue('F' . $row, number_format($payroll->deductions_amount, 0, ',', '.'));
-            $sheet->setCellValue('G' . $row, number_format($payroll->tax_amount, 0, ',', '.'));
-            $sheet->setCellValue('H' . $row, number_format($payroll->bpjs_amount, 0, ',', '.'));
-            $sheet->setCellValue('I' . $row, number_format($payroll->net_salary, 0, ',', '.'));
+            $sheet->setCellValue('B' . $row, $payroll->period);
+            $sheet->setCellValue('C' . $row, number_format((float)$payroll->basic_salary, 0, ',', '.'));
+            $sheet->setCellValue('D' . $row, number_format((float)($payroll->overtime ?? 0), 0, ',', '.'));
+            $sheet->setCellValue('E' . $row, number_format((float)($payroll->allowance ?? 0), 0, ',', '.'));
+            $sheet->setCellValue('F' . $row, number_format((float)($payroll->deduction ?? 0), 0, ',', '.'));
+            $sheet->setCellValue('G' . $row, number_format((float)($payroll->tax_amount ?? 0), 0, ',', '.'));
+            $sheet->setCellValue('H' . $row, number_format((float)($payroll->bpjs_amount ?? 0), 0, ',', '.'));
+            $sheet->setCellValue('I' . $row, number_format((float)$payroll->total_salary, 0, ',', '.'));
             $sheet->setCellValue('J' . $row, ucfirst($payroll->status));
             $row++;
         }
@@ -386,7 +386,7 @@ class ExportService
             'generated_at' => now()->format('d/m/Y H:i')
         ];
 
-        $pdf = PDF::loadView('exports.employees-pdf', $data);
+        $pdf = Pdf::loadView('exports.employees-pdf', $data);
         $pdf->setPaper('A4', 'landscape');
         
         return $pdf->download('employees_' . date('Y-m-d_H-i-s') . '.pdf');
@@ -404,7 +404,7 @@ class ExportService
             'generated_at' => now()->format('d/m/Y H:i')
         ];
 
-        $pdf = PDF::loadView('exports.payrolls-pdf', $data);
+        $pdf = Pdf::loadView('exports.payrolls-pdf', $data);
         $pdf->setPaper('A4', 'landscape');
         
         $filename = 'payroll_' . ($period ? $period . '_' : '') . date('Y-m-d_H-i-s') . '.pdf';
@@ -424,7 +424,7 @@ class ExportService
             'generated_at' => now()->format('d/m/Y H:i')
         ];
 
-        $pdf = PDF::loadView('exports.attendance-pdf', $data);
+        $pdf = Pdf::loadView('exports.attendance-pdf', $data);
         $pdf->setPaper('A4', 'landscape');
         
         return $pdf->download('attendance_' . date('Y-m-d_H-i-s') . '.pdf');
@@ -596,7 +596,7 @@ class ExportService
             'generated_at' => now()->format('d/m/Y H:i')
         ];
 
-        $pdf = PDF::loadView('exports.taxes-pdf', $data);
+        $pdf = Pdf::loadView('exports.taxes-pdf', $data);
         $pdf->setPaper('A4', 'landscape');
         
         $filename = 'taxes_' . ($period ? $period . '_' : '') . date('Y-m-d_H-i-s') . '.pdf';
@@ -615,7 +615,7 @@ class ExportService
             'generated_at' => now()->format('d/m/Y H:i')
         ];
 
-        $pdf = PDF::loadView('exports.bpjs-pdf', $data);
+        $pdf = Pdf::loadView('exports.bpjs-pdf', $data);
         $pdf->setPaper('A4', 'landscape');
         
         $filename = 'bpjs_' . ($period ? $period . '_' : '') . date('Y-m-d_H-i-s') . '.pdf';

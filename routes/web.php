@@ -69,6 +69,8 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     // Employees
     Route::resource('employees', EmployeeController::class);
     Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
+    // Employees search (for AJAX select)
+    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
 
     // Payroll
     Route::resource('payroll', PayrollController::class);
@@ -114,6 +116,7 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     Route::resource('payrolls', PayrollController::class);
     Route::post('/payrolls/{id}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
     Route::post('/payrolls/{id}/reject', [PayrollController::class, 'reject'])->name('payrolls.reject');
+    Route::post('/payrolls/{id}/mark-paid', [PayrollController::class, 'markPaid'])->name('payrolls.mark-paid');
     Route::post('/payrolls/generate-all', [PayrollController::class, 'generateAll'])->name('payrolls.generate-all');
     Route::post('/payrolls/export', [PayrollController::class, 'export'])->name('payrolls.export');
     Route::post('/payrolls/calculate', [PayrollController::class, 'calculate'])->name('payrolls.calculate');
