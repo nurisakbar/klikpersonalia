@@ -68,7 +68,7 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
 
     // Employees
     Route::resource('employees', EmployeeController::class);
-    Route::get('/employees-data', [EmployeeController::class, 'getEmployees'])->name('employees.data');
+    Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
 
     // Payroll
     Route::resource('payroll', PayrollController::class);

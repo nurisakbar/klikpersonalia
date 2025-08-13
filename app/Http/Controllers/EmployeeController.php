@@ -4,11 +4,19 @@ namespace App\Http\Controllers;
 
 use App\DataTables\EmployeeDataTable;
 use App\Models\Employee;
+use App\Http\Requests\EmployeeRequest;
+use App\Http\Resources\EmployeeResource;
+use App\Services\EmployeeService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class EmployeeController extends Controller
 {
+    public function __construct(
+        private EmployeeService $employeeService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -20,32 +28,21 @@ class EmployeeController extends Controller
     /**
      * Get employees data for DataTables.
      */
-    public function getEmployees()
+    public function data(): JsonResponse
     {
-        $employees = Employee::currentCompany()->select([
-            'id',
-            'employee_id',
-            'name',
-            'email',
-            'phone',
-            'department',
-            'position',
-            'join_date',
-            'basic_salary',
-            'status'
-        ]);
+        $employees = $this->employeeService->getEmployeesForDataTables();
 
         return DataTables::of($employees)
             ->addColumn('action', function ($employee) {
                 return '
                     <div class="btn-group" role="group">
-                        <a href="' . route('employees.show', $employee->id) . '" class="btn btn-sm btn-info" title="Detail">
+                        <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $employee->id . '" title="Detail">
                             <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="' . route('employees.edit', $employee->id) . '" class="btn btn-sm btn-warning" title="Edit">
+                        </button>
+                        <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="' . $employee->id . '" title="Edit">
                             <i class="fas fa-edit"></i>
-                        </a>
-                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $employee->id . '" data-name="' . $employee->name . '" title="Hapus">
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $employee->id . '" data-name="' . htmlspecialchars($employee->name) . '" title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -81,54 +78,31 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $departments = ['IT', 'HR', 'Finance', 'Marketing', 'Sales', 'Operations'];
-        $positions = ['Staff', 'Senior Staff', 'Supervisor', 'Manager', 'Senior Manager', 'Director'];
+        $formData = $this->employeeService->getFormData();
         
-        return view('employees.create', compact('departments', 'positions'));
+        return view('employees.create', [
+            'departments' => array_keys($formData['departments']),
+            'positions' => array_keys($formData['positions']),
+            'banks' => $formData['banks']
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(EmployeeRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email',
-            'phone' => 'required|string|max:20',
-            'department' => 'required|string',
-            'position' => 'required|string',
-            'join_date' => 'required|date',
-            'basic_salary' => 'required|numeric|min:0',
-            'address' => 'nullable|string',
-            'emergency_contact' => 'nullable|string',
-            'bank_name' => 'nullable|string',
-            'bank_account' => 'nullable|string',
-        ]);
+        $result = $this->employeeService->createEmployee($request->validated());
 
-        // Generate employee ID
-        $lastEmployee = Employee::orderBy('id', 'desc')->first();
-        $lastId = $lastEmployee ? intval(substr($lastEmployee->employee_id, 3)) : 0;
-        $newId = $lastId + 1;
-        $employeeId = 'EMP' . str_pad($newId, 3, '0', STR_PAD_LEFT);
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
 
-        Employee::create([
-            'employee_id' => $employeeId,
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'join_date' => $request->join_date,
-            'department' => $request->department,
-            'position' => $request->position,
-            'basic_salary' => $request->basic_salary,
-            'status' => 'active',
-            'emergency_contact' => $request->emergency_contact,
-            'bank_name' => $request->bank_name,
-            'bank_account' => $request->bank_account,
-        ]);
-
-        return redirect()->route('employees.index')->with('success', 'Karyawan berhasil ditambahkan!');
+        if ($result['success']) {
+            return redirect()->route('employees.index')->with('success', $result['message']);
+        } else {
+            return redirect()->back()->withInput()->with('error', $result['message']);
+        }
     }
 
     /**
@@ -136,7 +110,26 @@ class EmployeeController extends Controller
      */
     public function show(string $id)
     {
-        $employee = Employee::findOrFail($id);
+        $employee = $this->employeeService->findEmployee($id);
+        
+        if (!$employee) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Karyawan tidak ditemukan.'
+                ], 404);
+            }
+            
+            return redirect()->route('employees.index')->with('error', 'Karyawan tidak ditemukan.');
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => new EmployeeResource($employee)
+            ]);
+        }
+
         return view('employees.show', compact('employee'));
     }
 
@@ -145,72 +138,66 @@ class EmployeeController extends Controller
      */
     public function edit(string $id)
     {
-        $employee = Employee::findOrFail($id);
-        $departments = ['IT', 'HR', 'Finance', 'Marketing', 'Sales', 'Operations'];
-        $positions = ['Staff', 'Senior Staff', 'Supervisor', 'Manager', 'Senior Manager', 'Director'];
-        $statuses = ['active', 'inactive', 'terminated'];
+        $employee = $this->employeeService->findEmployee($id);
+        
+        if (!$employee) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Karyawan tidak ditemukan.'
+                ], 404);
+            }
+            
+            return redirect()->route('employees.index')->with('error', 'Karyawan tidak ditemukan.');
+        }
 
-        return view('employees.edit', compact('employee', 'departments', 'positions', 'statuses'));
+        $formData = $this->employeeService->getFormData();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'employee' => new EmployeeResource($employee),
+                    'form_options' => $formData
+                ]
+            ]);
+        }
+
+        return view('employees.edit', [
+            'employee' => $employee,
+            'departments' => array_keys($formData['departments']),
+            'positions' => array_keys($formData['positions']),
+            'statuses' => array_keys($formData['statuses']),
+            'banks' => $formData['banks']
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(EmployeeRequest $request, string $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $id,
-            'phone' => 'required|string|max:20',
-            'department' => 'required|string',
-            'position' => 'required|string',
-            'join_date' => 'required|date',
-            'basic_salary' => 'required|numeric|min:0',
-            'status' => 'required|string',
-            'address' => 'nullable|string',
-            'emergency_contact' => 'nullable|string',
-            'bank_name' => 'nullable|string',
-            'bank_account' => 'nullable|string',
-        ]);
+        $result = $this->employeeService->updateEmployee($id, $request->validated());
 
-        $employee = Employee::findOrFail($id);
-        $employee->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'join_date' => $request->join_date,
-            'department' => $request->department,
-            'position' => $request->position,
-            'basic_salary' => $request->basic_salary,
-            'status' => $request->status,
-            'emergency_contact' => $request->emergency_contact,
-            'bank_name' => $request->bank_name,
-            'bank_account' => $request->bank_account,
-            'company_id' => auth()->user()->company_id,
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
 
-        return redirect()->route('employees.index')->with('success', 'Data karyawan berhasil diperbarui!');
+        if ($result['success']) {
+            return redirect()->route('employees.index')->with('success', $result['message']);
+        } else {
+            return redirect()->back()->withInput()->with('error', $result['message']);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
-        try {
-            $employee = Employee::findOrFail($id);
-            $employee->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Karyawan berhasil dihapus!'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus karyawan: ' . $e->getMessage()
-            ], 500);
-        }
+        $result = $this->employeeService->deleteEmployee($id);
+        
+        $statusCode = $result['success'] ? 200 : 500;
+        return response()->json($result, $statusCode);
     }
 }

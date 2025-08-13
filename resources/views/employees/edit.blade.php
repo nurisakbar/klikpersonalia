@@ -100,8 +100,9 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Rp</span>
                                     </div>
-                                    <input type="number" class="form-control @error('basic_salary') is-invalid @enderror" id="basic_salary" name="basic_salary" value="{{ old('basic_salary', $employee->basic_salary) }}" placeholder="Masukkan gaji pokok" required>
+                                    <input type="text" class="form-control @error('basic_salary') is-invalid @enderror" id="basic_salary" name="basic_salary" value="{{ old('basic_salary', $employee->basic_salary) }}" placeholder="Masukkan gaji pokok (min: 1.000.000)" required>
                                 </div>
+                                <small class="form-text text-muted">Minimal Rp 1.000.000, maksimal Rp 999.999.999.999</small>
                                 @error('basic_salary')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -157,7 +158,14 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="bank_name">Nama Bank</label>
-                                <input type="text" class="form-control @error('bank_name') is-invalid @enderror" id="bank_name" name="bank_name" value="{{ old('bank_name', $employee->bank_name ?? '') }}" placeholder="Masukkan nama bank">
+                                <select class="form-control @error('bank_name') is-invalid @enderror" id="bank_name" name="bank_name">
+                                    <option value="">Pilih Bank</option>
+                                    @if(isset($banks))
+                                        @foreach($banks as $code => $name)
+                                            <option value="{{ $code }}" {{ old('bank_name', $employee->bank_name) == $code ? 'selected' : '' }}>{{ $name }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
                                 @error('bank_name')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -183,19 +191,43 @@
 <script>
 $(function () {
     // Format input gaji dengan separator ribuan
-    $('#salary').on('input', function() {
+    $('#basic_salary').on('input', function() {
         let value = $(this).val().replace(/[^\d]/g, '');
         if (value) {
-            value = parseInt(value).toLocaleString('id-ID');
-            $(this).val(value);
+            // Convert to number and format with thousand separators
+            let number = parseInt(value);
+            if (!isNaN(number)) {
+                $(this).val(number.toLocaleString('id-ID'));
+            }
         }
     });
 
     // Submit form dengan format angka yang benar
-    $('form').on('submit', function() {
-        let salary = $('#salary').val().replace(/[^\d]/g, '');
-        $('#salary').val(salary);
+    $('form').on('submit', function(e) {
+        // Get raw numeric value from formatted salary
+        let salaryInput = $('#basic_salary');
+        let formattedSalary = salaryInput.val();
+        let rawSalary = formattedSalary.replace(/[^\d]/g, '');
+        
+        // Temporarily set raw value for submission
+        salaryInput.val(rawSalary);
+        
+        // Validate minimum salary
+        if (parseInt(rawSalary) < 1000000) {
+            e.preventDefault();
+            alert('Gaji pokok minimal Rp 1.000.000');
+            // Restore formatted value
+            salaryInput.val(formattedSalary);
+            return false;
+        }
     });
+
+    // Format initial value if exists
+    let initialSalary = $('#basic_salary').val();
+    if (initialSalary && !isNaN(parseInt(initialSalary.replace(/[^\d]/g, '')))) {
+        let value = parseInt(initialSalary.replace(/[^\d]/g, ''));
+        $('#basic_salary').val(value.toLocaleString('id-ID'));
+    }
 });
 </script>
 @endpush 

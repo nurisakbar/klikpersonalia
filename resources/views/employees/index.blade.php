@@ -24,7 +24,6 @@
                     <table class="table table-bordered table-striped" id="employees-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>ID Karyawan</th>
                                 <th>Nama</th>
                                 <th>Email</th>
@@ -39,6 +38,28 @@
                         </thead>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Detail Karyawan</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- Detail content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -72,6 +93,10 @@
 
 <script>
 $(function () {
+    // Global variables
+    let currentEmployeeId = null;
+    let isEditMode = false;
+    
     // Setup CSRF token for AJAX
     $.ajaxSetup({
         headers: {
@@ -88,7 +113,6 @@ $(function () {
             type: 'GET'
         },
         columns: [
-            {data: 'id', name: 'id', width: '50px'},
             {data: 'employee_id', name: 'employee_id', width: '120px'},
             {data: 'name', name: 'name', width: '200px'},
             {data: 'email', name: 'email', width: '200px'},
@@ -107,7 +131,7 @@ $(function () {
                 text: '<i class="fas fa-file-excel"></i> Excel',
                 className: 'btn btn-success btn-sm',
                 exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
                 }
             },
             {
@@ -115,7 +139,7 @@ $(function () {
                 text: '<i class="fas fa-file-pdf"></i> PDF',
                 className: 'btn btn-danger btn-sm',
                 exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
                 }
             },
             {
@@ -123,7 +147,7 @@ $(function () {
                 text: '<i class="fas fa-print"></i> Print',
                 className: 'btn btn-info btn-sm',
                 exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
                 }
             }
         ],
@@ -131,8 +155,118 @@ $(function () {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
         },
         responsive: true,
-        order: [[1, 'asc']]
+        order: [[0, 'asc']]
     });
+
+    // Handle view button click
+    $(document).on('click', '.view-btn', function() {
+        var id = $(this).data('id');
+        loadEmployeeDetail(id);
+    });
+
+    // Handle edit button click
+    $(document).on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        window.location.href = '/employees/' + id + '/edit';
+    });
+
+    // Load employee detail
+    function loadEmployeeDetail(id) {
+        // Show loading
+        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+        $('#detailModal').modal('show');
+
+        $.ajax({
+            url: '/employees/' + id,
+            type: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    let employee = response.data;
+                    let detailHtml = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>ID Karyawan:</strong></td>
+                                        <td>${employee.employee_id}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nama Lengkap:</strong></td>
+                                        <td>${employee.name}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>${employee.email}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Telepon:</strong></td>
+                                        <td>${employee.phone}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Departemen:</strong></td>
+                                        <td>${employee.department}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jabatan:</strong></td>
+                                        <td>${employee.position}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Tanggal Bergabung:</strong></td>
+                                        <td>${employee.join_date_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Gaji Pokok:</strong></td>
+                                        <td>${employee.salary_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>${employee.status_badge}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Kontak Darurat:</strong></td>
+                                        <td>${employee.emergency_contact || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Bank:</strong></td>
+                                        <td>${employee.bank_name || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>No. Rekening:</strong></td>
+                                        <td>${employee.bank_account || '-'}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        ${employee.address ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <strong>Alamat:</strong><br>
+                                <p>${employee.address}</p>
+                            </div>
+                        </div>
+                        ` : ''}
+                    `;
+                    $('#detailContent').html(detailHtml);
+                } else {
+                    $('#detailContent').html('<div class="alert alert-danger">' + response.message + '</div>');
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat memuat detail karyawan';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                $('#detailContent').html('<div class="alert alert-danger">' + message + '</div>');
+            }
+        });
+    }
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {
