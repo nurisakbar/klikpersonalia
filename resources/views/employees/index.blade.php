@@ -20,8 +20,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="employees-table">
+				<table class="table table-bordered table-striped" id="employees-table" style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>ID Karyawan</th>
@@ -36,8 +35,7 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
+				</table>
             </div>
         </div>
     </div>
@@ -124,6 +122,9 @@ $(function () {
             {data: 'status_badge', name: 'status', width: '100px'},
             {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
         ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
             {
@@ -157,6 +158,8 @@ $(function () {
         responsive: true,
         order: [[0, 'asc']]
     });
+
+    // Layout info/pagination sudah diatur global via CSS
 
     // Handle view button click
     $(document).on('click', '.view-btn', function() {

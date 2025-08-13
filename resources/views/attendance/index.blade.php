@@ -20,8 +20,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="attendance-table">
+				<table class="table table-bordered table-striped" id="attendance-table" style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -36,8 +35,7 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
+				</table>
             </div>
         </div>
     </div>
@@ -98,6 +96,9 @@ $(function () {
             {data: 'status_badge', name: 'status', width: '100px'},
             {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
         ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
             {
@@ -131,6 +132,8 @@ $(function () {
         responsive: true,
         order: [[3, 'desc']] // Order by date descending
     });
+
+    // Layout info/pagination sudah diatur global via CSS
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {

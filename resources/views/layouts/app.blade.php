@@ -17,6 +17,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     @stack('css')
+    <style>
+		/* Global DataTables layout adjustments */
+		.dataTables_wrapper .dataTables_info {
+			margin-top: 1.5rem !important;
+		}
+		.dataTables_wrapper .dataTables_paginate {
+			margin-top: -2.5rem !important;
+		}
+	</style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">

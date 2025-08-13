@@ -20,8 +20,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="payroll-table">
+				<table class="table table-bordered table-striped" id="payroll-table" style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -35,8 +34,7 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
+				</table>
             </div>
         </div>
     </div>
@@ -96,6 +94,9 @@ $(function () {
             {data: 'payment_date_formatted', name: 'payment_date', width: '120px'},
             {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
         ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
             {
@@ -129,6 +130,8 @@ $(function () {
         responsive: true,
         order: [[1, 'asc']]
     });
+
+    // Layout info/pagination sudah diatur global via CSS
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {
