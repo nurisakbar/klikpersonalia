@@ -11,7 +11,7 @@
 @section('content')
 <div class="row">
     <div class="col-md-12">
-        <div class="card card-warning">
+        <div class="card card-primary">
             <div class="card-header">
                 <h3 class="card-title">Form Edit Karyawan</h3>
             </div>
@@ -53,7 +53,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="join_date">Tanggal Bergabung <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control @error('join_date') is-invalid @enderror" id="join_date" name="join_date" value="{{ old('join_date', $employee->join_date) }}" required>
+                                <input type="date" class="form-control @error('join_date') is-invalid @enderror" id="join_date" name="join_date" value="{{ old('join_date', optional($employee->join_date)->format('Y-m-d')) }}" required>
                                 @error('join_date')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -174,7 +174,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Update
                     </button>
                     <a href="{{ route('employees.index') }}" class="btn btn-secondary">
