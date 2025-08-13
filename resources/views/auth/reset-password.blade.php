@@ -12,17 +12,7 @@
         <div class="card-body">
             <p class="login-box-msg">Reset your password</p>
 
-            @if ($errors->any())
-                <div class="alert alert-danger alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            {{-- Error messages akan ditampilkan melalui SweetAlert dari guest layout --}}
 
             <form method="POST" action="{{ route('password.store') }}">
                 @csrf

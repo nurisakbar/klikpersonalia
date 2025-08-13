@@ -135,26 +135,13 @@ $(function () {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: 'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
+        SwalHelper.confirm(
+            'Konfirmasi Hapus',
+            'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?'
+        ).then((result) => {
             if (result.isConfirmed) {
                 // Show loading
-                Swal.fire({
-                    title: 'Menghapus...',
-                    text: 'Mohon tunggu sebentar',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                SwalHelper.loading('Menghapus...');
 
                 // Send delete request
                 $.ajax({
@@ -162,20 +149,12 @@ $(function () {
                     type: 'DELETE',
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire(
-                                'Berhasil!',
-                                response.message,
-                                'success'
-                            ).then(() => {
+                            SwalHelper.success('Berhasil!', response.message).then(() => {
                                 // Reload DataTable
                                 table.ajax.reload();
                             });
                         } else {
-                            Swal.fire(
-                                'Gagal!',
-                                response.message,
-                                'error'
-                            );
+                            SwalHelper.error('Gagal!', response.message);
                         }
                     },
                     error: function(xhr) {
@@ -184,38 +163,14 @@ $(function () {
                             message = xhr.responseJSON.message;
                         }
                         
-                        Swal.fire(
-                            'Error!',
-                            message,
-                            'error'
-                        );
+                        SwalHelper.error('Error!', message);
                     }
                 });
             }
         });
     });
 
-    // Success message from session
-    @if(session('success'))
-        Swal.fire({
-            title: 'Berhasil!',
-            text: '{{ session("success") }}',
-            icon: 'success',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
-
-    // Error message from session
-    @if(session('error'))
-        Swal.fire({
-            title: 'Error!',
-            text: '{{ session("error") }}',
-            icon: 'error',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
+    // Session messages sudah ditangani oleh global SwalHelper di layout
 });
 </script>
 @endpush 

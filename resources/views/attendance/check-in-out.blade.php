@@ -404,29 +404,13 @@ function getStatusText(status) {
     return texts[status] || status;
 }
 
-// Show alert
+// Show alert menggunakan SweetAlert
 function showAlert(type, message) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    `;
-    
-    // Insert alert at the top of the card body
-    const cardBody = document.querySelector('.card-body');
-    cardBody.insertAdjacentHTML('afterbegin', alertHtml);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-            alert.remove();
-        }
-    }, 5000);
+    if (type === 'success') {
+        SwalHelper.toastSuccess(message);
+    } else {
+        SwalHelper.toastError(message);
+    }
 }
 
 // Initialize

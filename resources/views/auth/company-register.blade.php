@@ -12,17 +12,7 @@
         <div class="card-body register-card-body">
             <p class="login-box-msg">Register a new company membership</p>
 
-            @if ($errors->any())
-                <div class="alert alert-danger alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            {{-- Error messages akan ditampilkan melalui SweetAlert dari guest layout --}}
 
             <form action="{{ route('company.register') }}" method="POST" id="registrationForm">
                 @csrf

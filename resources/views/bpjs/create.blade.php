@@ -202,7 +202,8 @@ $(document).ready(function() {
 
         if ((type === 'kesehatan' && !isKesehatanActive) || 
             (type === 'ketenagakerjaan' && !isKetenagakerjaanActive)) {
-            $('#calculationPreview').html('<div class="alert alert-warning">This employee is not active for ' + type + ' BPJS</div>');
+            $('#calculationPreview').html('<div class="text-center text-muted">Preview tidak tersedia</div>');
+            SwalHelper.warning('Warning!', 'This employee is not active for ' + type + ' BPJS');
             return;
         }
 

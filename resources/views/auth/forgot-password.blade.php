@@ -12,25 +12,7 @@
         <div class="card-body">
             <p class="login-box-msg">You forgot your password? Here you can easily retrieve a new password.</p>
 
-            @if (session('status'))
-                <div class="alert alert-success alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                    <h5><i class="icon fas fa-check"></i> Success!</h5>
-                    {{ session('status') }}
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="alert alert-danger alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            {{-- Status dan error messages akan ditampilkan melalui SweetAlert dari guest layout --}}
 
             <form method="POST" action="{{ route('password.email') }}">
                 @csrf

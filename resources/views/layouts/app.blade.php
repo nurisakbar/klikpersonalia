@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/css/OverlayScrollbars.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     @stack('css')
 </head>
@@ -443,34 +445,6 @@
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                            <h5><i class="icon fas fa-check"></i> Success!</h5>
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                            <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    @if($errors->any())
-                        <div class="alert alert-danger alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                            <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                            <ul>
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
                     @yield('content')
                 </div>
             </section>
@@ -503,6 +477,135 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/js/OverlayScrollbars.min.js"></script>
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    
+    <!-- Global SweetAlert Helper -->
+    <script>
+        // Global SweetAlert Helper Functions
+        window.SwalHelper = {
+            // Success Alert
+            success: function(title, text = '', timer = 3000) {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'success',
+                    timer: timer,
+                    showConfirmButton: false,
+                    toast: false,
+                    position: 'center'
+                });
+            },
+            
+            // Error Alert
+            error: function(title, text = '', showConfirmButton = true) {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'error',
+                    showConfirmButton: showConfirmButton,
+                    toast: false,
+                    position: 'center'
+                });
+            },
+            
+            // Warning Alert
+            warning: function(title, text = '', showConfirmButton = true) {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'warning',
+                    showConfirmButton: showConfirmButton,
+                    toast: false,
+                    position: 'center'
+                });
+            },
+            
+            // Info Alert
+            info: function(title, text = '', showConfirmButton = true) {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'info',
+                    showConfirmButton: showConfirmButton,
+                    toast: false,
+                    position: 'center'
+                });
+            },
+            
+            // Confirmation Dialog
+            confirm: function(title, text = '', confirmButtonText = 'Ya, Hapus!', cancelButtonText = 'Batal') {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: confirmButtonText,
+                    cancelButtonText: cancelButtonText
+                });
+            },
+            
+            // Toast Success
+            toastSuccess: function(title) {
+                return Swal.fire({
+                    title: title,
+                    icon: 'success',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            },
+            
+            // Toast Error
+            toastError: function(title) {
+                return Swal.fire({
+                    title: title,
+                    icon: 'error',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            },
+            
+            // Loading Alert
+            loading: function(title = 'Memproses...') {
+                return Swal.fire({
+                    title: title,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            
+            // Close Loading
+            close: function() {
+                Swal.close();
+            }
+        };
+
+        // Auto-show alerts from Laravel session
+        @if(session('success'))
+            SwalHelper.success('Berhasil!', '{{ session("success") }}');
+        @endif
+
+        @if(session('error'))
+            SwalHelper.error('Error!', '{{ session("error") }}');
+        @endif
+
+        @if($errors->any())
+            SwalHelper.error('Error!', '{!! implode("\\n", $errors->all()) !!}');
+        @endif
+    </script>
     
     @stack('js')
 </body>

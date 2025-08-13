@@ -326,21 +326,13 @@ $(document).ready(function() {
                         </div>
                     `);
                 } else {
-                    $('#payrollPreview').html(`
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>
-                            ${response.message}
-                        </div>
-                    `);
+                    $('#payrollPreview').html('<div class="text-center text-muted">Preview tidak tersedia</div>');
+                    SwalHelper.warning('Warning!', response.message);
                 }
             },
             error: function() {
-                $('#payrollPreview').html(`
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Error calculating payroll. Please try again.
-                    </div>
-                `);
+                $('#payrollPreview').html('<div class="text-center text-muted">Preview tidak tersedia</div>');
+                SwalHelper.error('Error!', 'Error calculating payroll. Please try again.');
             }
         });
     }
