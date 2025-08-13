@@ -11,14 +11,6 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Data Payroll</h3>
-                <div class="card-tools">
-                    <a href="{{ route('payroll.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Tambah Payroll
-                    </a>
-                </div>
-            </div>
             <div class="card-body">
 				<table class="table table-bordered table-striped" id="payroll-table" style="width: 100%;">
                         <thead>
@@ -98,31 +90,38 @@ $(function () {
         scrollCollapse: true,
         autoWidth: false,
         dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                className: 'btn btn-success btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                }
-            },
-            {
-                extend: 'pdf',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                className: 'btn btn-danger btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="fas fa-print"></i> Print',
-                className: 'btn btn-info btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                }
-            }
+		buttons: [
+			{
+				text: '<i class="fas fa-plus"></i> Tambah Payroll',
+				class: 'btn btn-primary dt-add-btn',
+				action: function () {
+					window.location.href = '{{ route("payroll.create") }}';
+				}
+			},
+			{
+				extend: 'excel',
+				text: '<i class="fas fa-file-excel"></i> Excel',
+				class: 'btn btn-success btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7]
+				}
+			},
+			{
+				extend: 'pdf',
+				text: '<i class="fas fa-file-pdf"></i> PDF',
+				class: 'btn btn-danger',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7]
+				}
+			},
+			{
+				extend: 'print',
+				text: '<i class="fas fa-print"></i> Print',
+				class: 'btn btn-info btn-xs',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7]
+				}
+			}
         ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
@@ -132,6 +131,10 @@ $(function () {
     });
 
     // Layout info/pagination sudah diatur global via CSS
+
+    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
+    var payrollButtons = table.buttons().container();
+    payrollButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {

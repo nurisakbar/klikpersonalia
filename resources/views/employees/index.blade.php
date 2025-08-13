@@ -11,14 +11,6 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Data Karyawan</h3>
-                <div class="card-tools">
-                    <a href="{{ route('employees.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Tambah Karyawan
-                    </a>
-                </div>
-            </div>
             <div class="card-body">
 				<table class="table table-bordered table-striped" id="employees-table" style="width: 100%;">
                         <thead>
@@ -127,30 +119,37 @@ $(function () {
         autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                className: 'btn btn-success btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                }
-            },
-            {
-                extend: 'pdf',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                className: 'btn btn-danger btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="fas fa-print"></i> Print',
-                className: 'btn btn-info btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                }
-            }
+			{
+				text: '<i class="fas fa-plus"></i> Tambah Karyawan',
+				className: 'btn btn-primary btn-sm mr-2',
+				action: function () {
+					window.location.href = '{{ route("employees.create") }}';
+				}
+			},
+			{
+				extend: 'excel',
+				text: '<i class="fas fa-file-excel"></i> Excel',
+				className: 'btn btn-success btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			},
+			{
+				extend: 'pdf',
+				text: '<i class="fas fa-file-pdf"></i> PDF',
+				className: 'btn btn-danger btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			},
+			{
+				extend: 'print',
+				text: '<i class="fas fa-print"></i> Print',
+				className: 'btn btn-info btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			}
         ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
@@ -158,6 +157,10 @@ $(function () {
         responsive: true,
         order: [[0, 'asc']]
     });
+
+    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
+    var employeesButtons = table.buttons().container();
+    employeesButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
 
     // Layout info/pagination sudah diatur global via CSS
 

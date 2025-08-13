@@ -615,6 +615,21 @@
             SwalHelper.error('Error!', '{!! implode("\\n", $errors->all()) !!}');
         @endif
     </script>
+
+    <!-- DataTables Buttons global fix: remove unintended btn-secondary so color classes apply -->
+    <script>
+        (function ($) {
+            // On every DataTable init/draw, ensure dt-buttons don't keep btn-secondary
+            $(document).on('init.dt', function (e, settings) {
+                var $wrapper = $(settings.nTableWrapper);
+                $wrapper.find('.dt-buttons .dt-button').removeClass('btn-secondary');
+            });
+            $(document).on('draw.dt', function (e, settings) {
+                var $wrapper = $(settings.nTableWrapper);
+                $wrapper.find('.dt-buttons .dt-button').removeClass('btn-secondary');
+            });
+        })(jQuery);
+    </script>
     
     @stack('js')
 </body>
