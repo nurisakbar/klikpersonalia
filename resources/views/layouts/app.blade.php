@@ -29,6 +29,39 @@
 		.dataTables_wrapper .dataTables_paginate {
 			margin-top: -2.5rem !important;
 		}
+
+
+
+		/* Header user dropdown styling */
+		.navbar .nav-link.d-flex {
+			color: #6c757d;
+			text-decoration: none;
+		}
+
+		.navbar .nav-link.d-flex:hover {
+			color: #495057;
+		}
+
+		.navbar .nav-link.d-flex img {
+			border: 2px solid #e9ecef;
+		}
+
+		.navbar .nav-link.d-flex:hover img {
+			border-color: #adb5bd;
+		}
+
+		/* Sub menu indentation */
+		.sidebar .nav-treeview {
+			margin-left: 1rem;
+		}
+
+		.sidebar .nav-treeview .nav-link {
+			padding-left: 1rem;
+		}
+
+		.sidebar .nav-treeview .nav-icon {
+			margin-left: 0.5rem;
+		}
 	</style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -84,8 +117,10 @@
                 </li>
                 <!-- User Dropdown Menu -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
-                        <i class="fas fa-user"></i>
+                    <a class="nav-link d-flex align-items-center" data-toggle="dropdown" href="#" style="padding: 0.5rem 1rem;">
+                        <img src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/img/user2-160x160.jpg" class="img-circle elevation-2 mr-2" alt="User Image" style="width: 32px; height: 32px;">
+                        <span class="d-none d-md-inline">{{ Auth::user()->name }}</span>
+                        <i class="fas fa-chevron-down ml-1"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right">
                         <span class="dropdown-item dropdown-header">{{ Auth::user()->name }}</span>
@@ -119,15 +154,6 @@
 
             <!-- Sidebar -->
             <div class="sidebar">
-                <!-- Sidebar user panel (optional) -->
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                    <div class="image">
-                        <img src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
-                    </div>
-                    <div class="info">
-                        <a href="#" class="d-block">{{ Auth::user()->name }}</a>
-                    </div>
-                </div>
 
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
@@ -630,6 +656,8 @@
             });
         })(jQuery);
     </script>
+
+
     
     @stack('js')
 </body>
