@@ -2,6 +2,13 @@
 
 @section('title', 'Check In/Out - Attendance')
 
+@section('title', 'Check In/Out - Attendance - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Check In/Out - Attendance')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Check In Check Out</li>
+@endsection
+
 @section('content')
 <div class="container-fluid">
     <div class="row">

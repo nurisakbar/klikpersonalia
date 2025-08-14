@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Attendance Calendar')
+@section('title', 'Kalender Kehadiran')
+
+@section('title', 'Kalender Kehadiran - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kalender Kehadiran')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Payroll</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -10,7 +17,7 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-calendar-alt mr-2"></i>
-                        Attendance Calendar
+                        Kalender Kehadiran
                     </h3>
                     <div class="card-tools">
                         <div class="btn-group" role="group">
