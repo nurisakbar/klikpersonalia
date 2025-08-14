@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Employee;
 use App\Models\Company;
+use App\Models\User;
 
 class EmployeeSeeder extends Seeder
 {
@@ -20,6 +21,55 @@ class EmployeeSeeder extends Seeder
         if (!$company) {
             $this->command->error('No company found. Please run CompanySeeder first.');
             return;
+        }
+
+        // Get admin user
+        $adminUser = User::where('email', 'admin@klikmedis.com')->first();
+        
+        if (!$adminUser) {
+            $this->command->error('Admin user not found. Please run UserSeeder first.');
+            return;
+        }
+
+        // Check if admin employee already exists
+        $adminEmployee = Employee::where('employee_id', 'EMP001')->first();
+        
+        if ($adminEmployee) {
+            // Update existing admin employee with user_id
+            $adminEmployee->update([
+                'user_id' => $adminUser->id,
+                'name' => 'Administrator',
+                'email' => 'admin@klikmedis.com',
+                'department' => 'IT',
+                'position' => 'System Administrator',
+            ]);
+            $this->command->info('Admin employee updated successfully!');
+        } else {
+            // Create employee for admin user
+            Employee::create([
+                'company_id' => $company->id,
+                'user_id' => $adminUser->id,
+                'employee_id' => 'EMP001',
+                'name' => 'Administrator',
+                'email' => 'admin@klikmedis.com',
+                'phone' => '081234567889',
+                'address' => 'Jl. Admin No. 1, Jakarta Pusat',
+                'join_date' => '2024-01-01',
+                'department' => 'IT',
+                'position' => 'System Administrator',
+                'ptkp_status' => 'TK/0',
+                'basic_salary' => 10000000,
+                'status' => 'active',
+                'emergency_contact' => '081234567880',
+                'bank_name' => 'BCA',
+                'bank_account' => '0000000001',
+                'bpjs_kesehatan_number' => '0001234567889',
+                'bpjs_ketenagakerjaan_number' => '0001234567889',
+                'bpjs_kesehatan_active' => true,
+                'bpjs_ketenagakerjaan_active' => true,
+                'bpjs_effective_date' => '2024-01-01',
+            ]);
+            $this->command->info('Admin employee created successfully!');
         }
 
         $employees = [
@@ -221,6 +271,14 @@ class EmployeeSeeder extends Seeder
         ];
 
         foreach ($employees as $employee) {
+            // Check if employee with this email already exists
+            $existingEmployee = Employee::where('email', $employee['email'])->first();
+            
+            if ($existingEmployee) {
+                $this->command->info("Employee with email {$employee['email']} already exists, skipping...");
+                continue;
+            }
+            
             Employee::create($employee);
         }
 

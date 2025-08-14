@@ -203,24 +203,28 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
+                                @if(in_array(auth()->user()->role, ['super_admin', 'admin', 'hr', 'manager']))
                                 <li class="nav-item">
                                     <a href="{{ route('attendance.index') }}" class="nav-link {{ request()->routeIs('attendance.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Attendance Records</p>
                                     </a>
                                 </li>
+                                @endif
                                 <li class="nav-item">
                                     <a href="{{ route('attendance.check-in-out') }}" class="nav-link {{ request()->routeIs('attendance.check-in-out') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Check In/Out</p>
                                     </a>
                                 </li>
+                                @if(in_array(auth()->user()->role, ['super_admin', 'admin', 'hr', 'manager']))
                                 <li class="nav-item">
                                     <a href="{{ route('attendance.calendar') }}" class="nav-link {{ request()->routeIs('attendance.calendar*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Attendance Calendar</p>
                                     </a>
                                 </li>
+                                @endif
                             </ul>
                         </li>
 

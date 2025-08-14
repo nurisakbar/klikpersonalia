@@ -95,7 +95,7 @@ $(function () {
         buttons: [
 			{
 				text: '<i class="fas fa-plus"></i> Tambah Absensi',
-				class: 'btn btn-primary dt-add-btn',
+				className: 'btn btn-primary btn-sm dt-add-btn mr-2',
 				action: function () {
 					window.location.href = '{{ route("attendance.create") }}';
 				}
@@ -103,7 +103,7 @@ $(function () {
 			{
 				extend: 'excel',
 				text: '<i class="fas fa-file-excel"></i> Excel',
-				class: 'btn btn-success btn-sm',
+				className: 'btn btn-success btn-sm',
 				exportOptions: {
 					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
 				}
@@ -111,7 +111,7 @@ $(function () {
 			{
 				extend: 'pdf',
 				text: '<i class="fas fa-file-pdf"></i> PDF',
-				class: 'btn btn-danger',
+				className: 'btn btn-danger btn-sm',
 				exportOptions: {
 					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
 				}
@@ -119,7 +119,7 @@ $(function () {
 			{
 				extend: 'print',
 				text: '<i class="fas fa-print"></i> Print',
-				class: 'btn btn-info btn-xs',
+				className: 'btn btn-info btn-sm',
 				exportOptions: {
 					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
 				}

@@ -20,7 +20,7 @@
                     </a>
                 </div>
             </div>
-            <form action="{{ route('attendance.update', $attendance->id) }}" method="POST">
+            <form action="{{ route('attendance.update', $attendance->id) }}" method="POST" id="attendanceForm">
                 @csrf
                 @method('PUT')
                 <div class="card-body">
@@ -119,7 +119,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="btnUpdateAttendance">
                         <i class="fas fa-save"></i> Update
                     </button>
                     <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
@@ -170,6 +170,45 @@ $(document).ready(function() {
                 $('#status').val('present');
             }
         }
+    });
+    // Submit via AJAX with SweetAlert feedback
+    $('#attendanceForm').on('submit', function(e) {
+        e.preventDefault();
+        const $btn = $('#btnUpdateAttendance');
+        $btn.prop('disabled', true);
+        SwalHelper.loading('Menyimpan...');
+
+        const formData = $(this).serialize();
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST', // method spoofed with _method=PUT already in form
+            data: formData,
+            headers: { 'Accept': 'application/json' },
+            success: function(response) {
+                SwalHelper.close();
+                if (response.success) {
+                    SwalHelper.success('Berhasil!', response.message).then(() => {
+                        window.location.href = '{{ route('attendance.index') }}';
+                    });
+                } else {
+                    SwalHelper.error('Gagal!', response.message);
+                }
+            },
+            error: function(xhr) {
+                SwalHelper.close();
+                let message = 'Terjadi kesalahan. Mohon periksa kembali input Anda.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    const errs = xhr.responseJSON.errors;
+                    message = Object.values(errs).flat().join('\n');
+                }
+                SwalHelper.error('Validasi Gagal!', message);
+            },
+            complete: function() {
+                $btn.prop('disabled', false);
+            }
+        });
     });
 });
 </script>

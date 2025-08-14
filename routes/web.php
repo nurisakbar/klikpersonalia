@@ -76,16 +76,16 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     Route::resource('payroll', PayrollController::class);
     Route::get('/payroll-data', [PayrollController::class, 'getData'])->name('payroll.data');
 
-    // Attendance
-    Route::resource('attendance', AttendanceController::class);
-    Route::get('/attendance-data', [AttendanceController::class, 'getData'])->name('attendance.data');
-    
-    // Check In/Out System
+    // Attendance - place custom routes BEFORE resource to avoid conflicts with /attendance/{id}
     Route::get('/attendance/check-in-out', [AttendanceController::class, 'checkInOut'])->name('attendance.check-in-out');
     Route::get('/attendance/current', [AttendanceController::class, 'current'])->name('attendance.current');
     Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
+    Route::get('/attendance/calendar', [AttendanceCalendarController::class, 'index'])->name('attendance.calendar');
+    Route::get('/attendance/calendar/data', [AttendanceCalendarController::class, 'getCalendarData'])->name('attendance.calendar.data');
+    Route::get('/attendance-data', [AttendanceController::class, 'data'])->name('attendance.data');
+    Route::resource('attendance', AttendanceController::class);
 
     // Leave Management
     Route::resource('leaves', LeaveController::class);
@@ -100,10 +100,6 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     Route::get('/overtimes/statistics', [OvertimeController::class, 'statistics'])->name('overtimes.statistics');
     Route::post('/overtimes/{id}/approve', [OvertimeController::class, 'approve'])->name('overtimes.approve');
     Route::post('/overtimes/{id}/reject', [OvertimeController::class, 'reject'])->name('overtimes.reject');
-
-    // Attendance Calendar
-    Route::get('/attendance/calendar', [AttendanceCalendarController::class, 'index'])->name('attendance.calendar');
-    Route::get('/attendance/calendar/data', [AttendanceCalendarController::class, 'getCalendarData'])->name('attendance.calendar.data');
 
     // Attendance Reports
     Route::get('/reports', [AttendanceReportController::class, 'index'])->name('reports.index');

@@ -3,6 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\Attendance;
+use App\Services\AttendanceService;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -12,6 +13,10 @@ use Yajra\DataTables\Services\DataTable;
 
 class AttendanceDataTable extends DataTable
 {
+    public function __construct(
+        private AttendanceService $attendanceService
+    ) {}
+
     /**
      * Build the DataTable class.
      *
@@ -29,7 +34,7 @@ class AttendanceDataTable extends DataTable
                         <a href="' . route('attendance.edit', $attendance->id) . '" class="btn btn-sm btn-warning" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $attendance->id . '" data-name="' . $attendance->employee->name . ' - ' . $attendance->formatted_date . '" title="Hapus">
+                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $attendance->id . '" data-name="' . htmlspecialchars($attendance->employee->name . ' - ' . $attendance->date->format('d/m/Y')) . '" title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -86,17 +91,7 @@ class AttendanceDataTable extends DataTable
      */
     public function query(Attendance $model): QueryBuilder
     {
-        return $model->with('employee')->select([
-            'id',
-            'employee_id',
-            'date',
-            'check_in',
-            'check_out',
-            'total_hours',
-            'overtime_hours',
-            'status',
-            'notes'
-        ]);
+        return $this->attendanceService->getAttendancesForDataTables();
     }
 
     /**

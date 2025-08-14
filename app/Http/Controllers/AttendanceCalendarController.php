@@ -26,17 +26,9 @@ class AttendanceCalendarController extends Controller
             return redirect()->back()->with('error', 'Employee not found for this user.');
         }
 
-        // Get current month and year
-        $month = $request->get('month', Carbon::now()->month);
-        $year = $request->get('year', Carbon::now()->year);
-        
-        // Create calendar data
-        $calendarData = $this->generateCalendarData($employee->id, $month, $year);
-        
-        // Get statistics
-        $statistics = $this->getMonthlyStatistics($employee->id, $month, $year);
-
-        return view('attendance.calendar', compact('calendarData', 'statistics', 'month', 'year'));
+        // For FullCalendar, we don't need to pass data here
+        // Data will be loaded via AJAX
+        return view('attendance.calendar');
     }
 
     /**
@@ -48,15 +40,25 @@ class AttendanceCalendarController extends Controller
         $employee = Employee::where('user_id', $user->id)->first();
         
         if (!$employee) {
-            return response()->json(['error' => 'Employee not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found',
+                'events' => [],
+                'statistics' => []
+            ]);
         }
 
-        $month = $request->get('month', Carbon::now()->month);
-        $year = $request->get('year', Carbon::now()->year);
+        $startDate = $request->get('start', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end', Carbon::now()->endOfMonth()->format('Y-m-d'));
         
-        $calendarData = $this->generateCalendarData($employee->id, $month, $year);
+        $events = $this->generateCalendarEvents($employee->id, $startDate, $endDate);
+        $statistics = $this->getStatisticsForPeriod($employee->id, $startDate, $endDate);
         
-        return response()->json($calendarData);
+        return response()->json([
+            'success' => true,
+            'events' => $events,
+            'statistics' => $statistics
+        ]);
     }
 
     /**
@@ -282,5 +284,165 @@ class AttendanceCalendarController extends Controller
         ];
         
         return $classes[$status] ?? 'bg-secondary';
+    }
+
+    /**
+     * Generate calendar events for FullCalendar.
+     */
+    private function generateCalendarEvents($employeeId, $startDate, $endDate)
+    {
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        
+        $events = [];
+        
+        // Get attendance data
+        $attendances = Attendance::where('employee_id', $employeeId)
+            ->whereBetween('date', [$start, $end])
+            ->get();
+        
+        foreach ($attendances as $attendance) {
+            $status = $attendance->status;
+            $title = $this->getStatusText($status);
+            
+            $events[] = [
+                'id' => 'attendance_' . $attendance->id,
+                'title' => $title,
+                'date' => $attendance->date->format('Y-m-d'),
+                'status' => $status,
+                'check_in' => $attendance->check_in ? Carbon::parse($attendance->check_in)->format('H:i') : null,
+                'check_out' => $attendance->check_out ? Carbon::parse($attendance->check_out)->format('H:i') : null,
+                'total_hours' => $attendance->total_hours ? number_format($attendance->total_hours, 2) . ' jam' : null,
+                'overtime_hours' => $attendance->overtime_hours ? number_format($attendance->overtime_hours, 2) . ' jam' : null,
+                'location' => $attendance->check_in_location
+            ];
+        }
+        
+        // Get leave data
+        $leaves = Leave::where('employee_id', $employeeId)
+            ->where('status', 'approved')
+            ->where(function($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start, $end])
+                      ->orWhereBetween('end_date', [$start, $end])
+                      ->orWhere(function($q) use ($start, $end) {
+                          $q->where('start_date', '<=', $start)
+                            ->where('end_date', '>=', $end);
+                      });
+            })
+            ->get();
+        
+        foreach ($leaves as $leave) {
+            $currentDate = $leave->start_date->copy();
+            while ($currentDate->lte($leave->end_date) && $currentDate->lte($end)) {
+                if ($currentDate->gte($start)) {
+                    $events[] = [
+                        'id' => 'leave_' . $leave->id . '_' . $currentDate->format('Y-m-d'),
+                        'title' => ucfirst($leave->leave_type) . ' Leave',
+                        'date' => $currentDate->format('Y-m-d'),
+                        'status' => 'leave',
+                        'check_in' => null,
+                        'check_out' => null,
+                        'total_hours' => null,
+                        'overtime_hours' => null,
+                        'location' => null
+                    ];
+                }
+                $currentDate->addDay();
+            }
+        }
+        
+        // Get overtime data
+        $overtimes = Overtime::where('employee_id', $employeeId)
+            ->where('status', 'approved')
+            ->whereBetween('date', [$start, $end])
+            ->get();
+        
+        foreach ($overtimes as $overtime) {
+            $events[] = [
+                'id' => 'overtime_' . $overtime->id,
+                'title' => ucfirst($overtime->overtime_type) . ' Overtime',
+                'date' => $overtime->date->format('Y-m-d'),
+                'status' => 'overtime',
+                'check_in' => $overtime->start_time,
+                'check_out' => $overtime->end_time,
+                'total_hours' => $overtime->total_hours ? number_format($overtime->total_hours, 2) . ' jam' : null,
+                'overtime_hours' => $overtime->total_hours ? number_format($overtime->total_hours, 2) . ' jam' : null,
+                'location' => null
+            ];
+        }
+        
+        return $events;
+    }
+
+    /**
+     * Get statistics for a specific period.
+     */
+    private function getStatisticsForPeriod($employeeId, $startDate, $endDate)
+    {
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        
+        // Attendance statistics
+        $attendances = Attendance::where('employee_id', $employeeId)
+            ->whereBetween('date', [$start, $end])
+            ->get();
+        
+        $presentDays = $attendances->where('status', 'present')->count();
+        $lateDays = $attendances->where('status', 'late')->count();
+        $absentDays = $this->countWorkingDays($start, $end) - $presentDays - $lateDays;
+        
+        // Leave statistics
+        $leaves = Leave::where('employee_id', $employeeId)
+            ->where('status', 'approved')
+            ->where(function($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start, $end])
+                      ->orWhereBetween('end_date', [$start, $end])
+                      ->orWhere(function($q) use ($start, $end) {
+                          $q->where('start_date', '<=', $start)
+                            ->where('end_date', '>=', $end);
+                      });
+            })
+            ->get();
+        
+        $leaveDays = $leaves->sum('total_days');
+        
+        // Overtime statistics
+        $overtimes = Overtime::where('employee_id', $employeeId)
+            ->where('status', 'approved')
+            ->whereBetween('date', [$start, $end])
+            ->get();
+        
+        $overtimeHours = $overtimes->sum('total_hours');
+        
+        $totalWorkingDays = $this->countWorkingDays($start, $end);
+        $attendanceRate = $totalWorkingDays > 0 
+            ? round((($presentDays + $lateDays) / $totalWorkingDays) * 100, 1)
+            : 0;
+        
+        return [
+            'present_days' => $presentDays,
+            'late_days' => $lateDays,
+            'absent_days' => max(0, $absentDays),
+            'leave_days' => $leaveDays,
+            'overtime_hours' => $overtimeHours,
+            'attendance_rate' => $attendanceRate
+        ];
+    }
+
+    /**
+     * Get status text.
+     */
+    private function getStatusText($status)
+    {
+        $texts = [
+            'present' => 'Hadir',
+            'late' => 'Terlambat',
+            'absent' => 'Tidak Hadir',
+            'half_day' => 'Setengah Hari',
+            'leave' => 'Cuti',
+            'overtime' => 'Lembur'
+        ];
+        
+        return $texts[$status] ?? $status;
     }
 } 

@@ -10,132 +10,59 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-calendar-alt mr-2"></i>
-                        Attendance Calendar - {{ $calendarData['month'] }}
+                        Attendance Calendar
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('attendance.calendar', ['month' => $calendarData['prev_month']]) }}" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </a>
-                        <a href="{{ route('attendance.calendar', ['month' => $calendarData['next_month']]) }}" class="btn btn-sm btn-secondary">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </a>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="todayBtn">
+                                <i class="fas fa-home"></i> Today
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="prevBtn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="nextBtn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="btn-group ml-2" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-info" id="monthBtn">Month</button>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="weekBtn">Week</button>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="dayBtn">Day</button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-success ml-2" onclick="exportCalendar()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <!-- Calendar Legend -->
                     <div class="calendar-legend mb-3">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="d-flex flex-wrap">
-                                    <div class="legend-item mr-3 mb-2">
-                                        <span class="legend-color bg-success"></span>
-                                        <small>Present</small>
-                                    </div>
-                                    <div class="legend-item mr-3 mb-2">
-                                        <span class="legend-color bg-warning"></span>
-                                        <small>Late</small>
-                                    </div>
-                                    <div class="legend-item mr-3 mb-2">
-                                        <span class="legend-color bg-danger"></span>
-                                        <small>Absent</small>
-                                    </div>
-                                    <div class="legend-item mr-3 mb-2">
-                                        <span class="legend-color bg-info"></span>
-                                        <small>Overtime</small>
-                                    </div>
-                                    <div class="legend-item mr-3 mb-2">
-                                        <span class="legend-color bg-warning"></span>
-                                        <small>Leave</small>
-                                    </div>
-                                </div>
+                        <div class="d-flex flex-wrap">
+                            <div class="legend-item mr-3 mb-2">
+                                <span class="legend-color bg-success"></span>
+                                <small>Present</small>
                             </div>
-                            <div class="col-md-6 text-right">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadCalendarData()">
-                                        <i class="fas fa-sync-alt"></i> Refresh
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="exportCalendar()">
-                                        <i class="fas fa-download"></i> Export
-                                    </button>
-                                </div>
+                            <div class="legend-item mr-3 mb-2">
+                                <span class="legend-color bg-warning"></span>
+                                <small>Late</small>
+                            </div>
+                            <div class="legend-item mr-3 mb-2">
+                                <span class="legend-color bg-danger"></span>
+                                <small>Absent</small>
+                            </div>
+                            <div class="legend-item mr-3 mb-2">
+                                <span class="legend-color bg-info"></span>
+                                <small>Overtime</small>
+                            </div>
+                            <div class="legend-item mr-3 mb-2">
+                                <span class="legend-color bg-secondary"></span>
+                                <small>Leave</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Calendar Grid -->
-                    <div class="calendar-container">
-                        <div class="calendar-header">
-                            <div class="calendar-day-header">Sun</div>
-                            <div class="calendar-day-header">Mon</div>
-                            <div class="calendar-day-header">Tue</div>
-                            <div class="calendar-day-header">Wed</div>
-                            <div class="calendar-day-header">Thu</div>
-                            <div class="calendar-day-header">Fri</div>
-                            <div class="calendar-day-header">Sat</div>
-                        </div>
-                        
-                        <div class="calendar-grid" id="calendarGrid">
-                            @php
-                                $firstDay = Carbon\Carbon::create($year, $month, 1);
-                                $lastDay = $firstDay->copy()->endOfMonth();
-                                $startDate = $firstDay->copy()->startOfWeek(Carbon\Carbon::SUNDAY);
-                                $endDate = $lastDay->copy()->endOfWeek(Carbon\Carbon::SATURDAY);
-                                $currentDate = $startDate->copy();
-                            @endphp
-                            
-                            @while($currentDate->lte($endDate))
-                                @php
-                                    $isCurrentMonth = $currentDate->month == $month;
-                                    $isToday = $currentDate->isToday();
-                                    $isWeekend = $currentDate->isWeekend();
-                                    $dateKey = $currentDate->format('Y-m-d');
-                                    $dayData = collect($calendarData['calendar'])->firstWhere('date', $dateKey);
-                                @endphp
-                                
-                                <div class="calendar-day {{ !$isCurrentMonth ? 'other-month' : '' }} {{ $isToday ? 'today' : '' }} {{ $isWeekend ? 'weekend' : '' }}" 
-                                     data-date="{{ $dateKey }}">
-                                    <div class="calendar-day-number">{{ $currentDate->day }}</div>
-                                    
-                                    @if($dayData)
-                                        <div class="calendar-events">
-                                            @foreach($dayData['events'] as $event)
-                                                <div class="calendar-event {{ $event['class'] }}" 
-                                                     data-toggle="tooltip" 
-                                                     title="{{ $event['title'] }}">
-                                                    <i class="{{ $event['icon'] }}"></i>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                        
-                                        @if($dayData['attendance'])
-                                            <div class="calendar-details">
-                                                <small class="text-muted">
-                                                    @if($dayData['attendance']['check_in'])
-                                                        In: {{ $dayData['attendance']['check_in'] }}
-                                                    @endif
-                                                    @if($dayData['attendance']['check_out'])
-                                                        <br>Out: {{ $dayData['attendance']['check_out'] }}
-                                                    @endif
-                                                </small>
-                                            </div>
-                                        @endif
-                                        
-                                        @if($dayData['overtime'])
-                                            <div class="calendar-details">
-                                                <small class="text-info">
-                                                    OT: {{ $dayData['overtime']['total_hours'] }}h
-                                                </small>
-                                            </div>
-                                        @endif
-                                    @endif
-                                </div>
-                                
-                                @php
-                                    $currentDate->addDay();
-                                @endphp
-                            @endwhile
-                        </div>
-                    </div>
+                    <!-- FullCalendar Container -->
+                    <div id="calendar"></div>
                 </div>
             </div>
         </div>
@@ -152,44 +79,32 @@
                 <div class="card-body">
                     <div class="stat-item">
                         <div class="stat-label">Present Days</div>
-                        <div class="stat-value text-success">{{ $statistics['present_days'] }}</div>
+                        <div class="stat-value text-success" id="presentDays">0</div>
                     </div>
                     
                     <div class="stat-item">
                         <div class="stat-label">Late Days</div>
-                        <div class="stat-value text-warning">{{ $statistics['late_days'] }}</div>
+                        <div class="stat-value text-warning" id="lateDays">0</div>
                     </div>
                     
                     <div class="stat-item">
                         <div class="stat-label">Absent Days</div>
-                        <div class="stat-value text-danger">{{ $statistics['absent_days'] }}</div>
+                        <div class="stat-value text-danger" id="absentDays">0</div>
                     </div>
                     
                     <div class="stat-item">
                         <div class="stat-label">Leave Days</div>
-                        <div class="stat-value text-info">{{ $statistics['leave_days'] }}</div>
+                        <div class="stat-value text-info" id="leaveDays">0</div>
                     </div>
                     
                     <div class="stat-item">
                         <div class="stat-label">Overtime Hours</div>
-                        <div class="stat-value text-primary">{{ $statistics['overtime_hours'] }}h</div>
+                        <div class="stat-value text-primary" id="overtimeHours">0h</div>
                     </div>
                     
                     <div class="stat-item">
                         <div class="stat-label">Attendance Rate</div>
-                        <div class="stat-value text-success">{{ $statistics['attendance_rate'] }}%</div>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="stat-item">
-                        <div class="stat-label">Working Days</div>
-                        <div class="stat-value">{{ $statistics['total_working_days'] }}</div>
-                    </div>
-                    
-                    <div class="stat-item">
-                        <div class="stat-label">Weekends</div>
-                        <div class="stat-value">{{ $calendarData['weekends'] }}</div>
+                        <div class="stat-value text-success" id="attendanceRate">0%</div>
                     </div>
                 </div>
             </div>
@@ -203,18 +118,18 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
+                    <div class="quick-actions">
                         <a href="{{ route('attendance.check-in-out') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-sign-in-alt mr-1"></i> Check In/Out
+                            <i class="fas fa-sign-in-alt"></i> Check In/Out
                         </a>
                         <a href="{{ route('leaves.create') }}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-calendar-plus mr-1"></i> Submit Leave
+                            <i class="fas fa-calendar-plus"></i> Submit Leave
                         </a>
                         <a href="{{ route('overtimes.create') }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-clock mr-1"></i> Submit Overtime
+                            <i class="fas fa-clock"></i> Submit Overtime
                         </a>
                         <a href="{{ route('attendance.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-list mr-1"></i> View All Records
+                            <i class="fas fa-list"></i> View All Records
                         </a>
                     </div>
                 </div>
@@ -231,171 +146,48 @@
                 <div class="card-body">
                     <ul class="list-unstyled">
                         <li><i class="fas fa-circle text-success mr-2"></i> Green: Present</li>
-                        <li><i class="fas fa-circle text-warning mr-2"></i> Yellow: Late/Leave</li>
+                        <li><i class="fas fa-circle text-warning mr-2"></i> Yellow: Late</li>
                         <li><i class="fas fa-circle text-danger mr-2"></i> Red: Absent</li>
                         <li><i class="fas fa-circle text-info mr-2"></i> Blue: Overtime</li>
-                        <li><i class="fas fa-circle text-muted mr-2"></i> Gray: Other Month</li>
+                        <li><i class="fas fa-circle text-secondary mr-2"></i> Gray: Leave</li>
                     </ul>
                     <hr>
                     <small class="text-muted">
                         <i class="fas fa-mouse-pointer mr-1"></i>
-                        Hover over events to see details
+                        Click on events to see details
                     </small>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalTitle">Event Details</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="eventModalBody">
+                <!-- Event details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
-@push('scripts')
-<script>
-$(document).ready(function() {
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // Calendar day click handler
-    $('.calendar-day').click(function() {
-        const date = $(this).data('date');
-        const events = $(this).find('.calendar-event');
-        
-        if (events.length > 0) {
-            showDayDetails(date, events);
-        }
-    });
-});
+@push('css')
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 
-function loadCalendarData() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const month = urlParams.get('month') || '{{ date("Y-m") }}';
-    
-    $.get('{{ route("attendance.calendar.data") }}', { month: month })
-        .done(function(data) {
-            // Update calendar with new data
-            updateCalendar(data);
-        })
-        .fail(function() {
-            alert('Failed to load calendar data');
-        });
-}
-
-function updateCalendar(data) {
-    // Implementation for updating calendar with new data
-    console.log('Calendar data updated:', data);
-}
-
-function showDayDetails(date, events) {
-    let details = `<strong>${date}</strong><br>`;
-    
-    events.each(function() {
-        const title = $(this).attr('title');
-        const icon = $(this).find('i').attr('class');
-        details += `<i class="${icon}"></i> ${title}<br>`;
-    });
-    
-    // Show details in a modal or tooltip
-    alert(details);
-}
-
-function exportCalendar() {
-    // Implementation for exporting calendar data
-    alert('Export functionality will be implemented here');
-}
-</script>
-@endpush
-
-@push('styles')
 <style>
-.calendar-container {
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.calendar-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.calendar-day-header {
-    padding: 12px;
-    text-align: center;
-    font-weight: bold;
-    color: #495057;
-    border-right: 1px solid #dee2e6;
-}
-
-.calendar-day-header:last-child {
-    border-right: none;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-}
-
-.calendar-day {
-    min-height: 100px;
-    padding: 8px;
-    border-right: 1px solid #dee2e6;
-    border-bottom: 1px solid #dee2e6;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.calendar-day:hover {
-    background-color: #f8f9fa;
-}
-
-.calendar-day:nth-child(7n) {
-    border-right: none;
-}
-
-.calendar-day.other-month {
-    background-color: #f8f9fa;
-    color: #adb5bd;
-}
-
-.calendar-day.today {
-    background-color: #e3f2fd;
-    border: 2px solid #2196f3;
-}
-
-.calendar-day.weekend {
-    background-color: #fff3e0;
-}
-
-.calendar-day-number {
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.calendar-events {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    margin-bottom: 4px;
-}
-
-.calendar-event {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: white;
-}
-
-.calendar-details {
-    font-size: 10px;
-    line-height: 1.2;
-}
-
 .calendar-legend {
     background: #f8f9fa;
     padding: 15px;
@@ -437,21 +229,347 @@ function exportCalendar() {
     font-size: 16px;
 }
 
+/* Quick Actions styling */
+.quick-actions .btn {
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 12px 18px;
+    font-size: 14px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.quick-actions .btn:last-child {
+    margin-bottom: 0;
+}
+
+.quick-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.quick-actions .btn i {
+    margin-right: 12px;
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .calendar-day {
-        min-height: 80px;
-        padding: 4px;
+    .quick-actions .btn {
+        margin-bottom: 8px;
+        padding: 12px 15px;
+        font-size: 13px;
+    }
+}
+
+/* FullCalendar Custom Styles */
+.fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 2px 4px;
+}
+
+.fc-event:hover {
+    opacity: 0.8;
+}
+
+.fc-toolbar-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.fc-button {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.fc-button:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.fc-button-active {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Event colors */
+.event-present {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.event-late {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.event-absent {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.event-overtime {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.event-leave {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .fc-toolbar {
+        flex-direction: column;
+        gap: 10px;
     }
     
-    .calendar-event {
-        width: 16px;
-        height: 16px;
-        font-size: 8px;
-    }
-    
-    .calendar-details {
-        font-size: 8px;
+    .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
     }
 }
 </style>
+@endpush
+
+@push('js')
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let calendar;
+    let currentEvents = [];
+
+    // Initialize FullCalendar
+    const calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: '',
+            center: '',
+            right: ''
+        },
+        height: 'auto',
+        locale: 'id',
+        firstDay: 1, // Monday
+        selectable: true,
+        selectMirror: true,
+        dayMaxEvents: true,
+        weekends: true,
+        events: function(fetchInfo, successCallback, failureCallback) {
+            loadCalendarEvents(fetchInfo.start, fetchInfo.end, successCallback);
+        },
+        eventClick: function(info) {
+            showEventDetails(info.event);
+        },
+        eventDidMount: function(info) {
+            // Add tooltips
+            $(info.el).tooltip({
+                title: info.event.title,
+                placement: 'top',
+                trigger: 'hover',
+                container: 'body'
+            });
+        },
+        loading: function(isLoading) {
+            if (isLoading) {
+                // Show loading indicator
+                $('#calendar').append('<div class="fc-loading">Loading...</div>');
+            } else {
+                $('.fc-loading').remove();
+            }
+        }
+    });
+
+    calendar.render();
+
+    // Button handlers
+    document.getElementById('todayBtn').addEventListener('click', function() {
+        calendar.today();
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', function() {
+        calendar.prev();
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function() {
+        calendar.next();
+    });
+
+    document.getElementById('monthBtn').addEventListener('click', function() {
+        calendar.changeView('dayGridMonth');
+    });
+
+    document.getElementById('weekBtn').addEventListener('click', function() {
+        calendar.changeView('timeGridWeek');
+    });
+
+    document.getElementById('dayBtn').addEventListener('click', function() {
+        calendar.changeView('timeGridDay');
+    });
+
+    // Load calendar events
+    function loadCalendarEvents(start, end, successCallback) {
+        const startDate = start.toISOString().split('T')[0];
+        const endDate = end.toISOString().split('T')[0];
+
+        fetch(`{{ route('attendance.calendar.data') }}?start=${startDate}&end=${endDate}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const events = formatEvents(data.events);
+                    currentEvents = events;
+                    successCallback(events);
+                    updateStatistics(data.statistics);
+                } else {
+                    successCallback([]);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading calendar events:', error);
+                successCallback([]);
+            });
+    }
+
+    // Format events for FullCalendar
+    function formatEvents(events) {
+        return events.map(event => ({
+            id: event.id,
+            title: event.title,
+            start: event.date,
+            end: event.date,
+            className: `event-${event.status}`,
+            extendedProps: {
+                check_in: event.check_in,
+                check_out: event.check_out,
+                total_hours: event.total_hours,
+                overtime_hours: event.overtime_hours,
+                status: event.status,
+                location: event.location
+            }
+        }));
+    }
+
+    // Show event details modal
+    function showEventDetails(event) {
+        const props = event.extendedProps;
+        const date = new Date(event.start).toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        let details = `
+            <div class="event-details">
+                <h6>${event.title}</h6>
+                <p class="text-muted">${date}</p>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Check In:</strong><br>
+                        <span class="text-primary">${props.check_in || '--:--'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Check Out:</strong><br>
+                        <span class="text-primary">${props.check_out || '--:--'}</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <strong>Total Hours:</strong><br>
+                        <span class="text-success">${props.total_hours || '--:--'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Overtime:</strong><br>
+                        <span class="text-info">${props.overtime_hours || '--:--'}</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <strong>Status:</strong><br>
+                        <span class="badge badge-${getStatusBadgeClass(props.status)}">${getStatusText(props.status)}</span>
+                    </div>
+                </div>
+                ${props.location ? `
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <strong>Location:</strong><br>
+                        <small class="text-muted">${props.location}</small>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+        document.getElementById('eventModalTitle').textContent = event.title;
+        document.getElementById('eventModalBody').innerHTML = details;
+        $('#eventModal').modal('show');
+    }
+
+    // Update statistics
+    function updateStatistics(statistics) {
+        document.getElementById('presentDays').textContent = statistics.present_days || 0;
+        document.getElementById('lateDays').textContent = statistics.late_days || 0;
+        document.getElementById('absentDays').textContent = statistics.absent_days || 0;
+        document.getElementById('leaveDays').textContent = statistics.leave_days || 0;
+        document.getElementById('overtimeHours').textContent = (statistics.overtime_hours || 0) + 'h';
+        document.getElementById('attendanceRate').textContent = (statistics.attendance_rate || 0) + '%';
+    }
+
+    // Helper functions
+    function getStatusBadgeClass(status) {
+        const classes = {
+            'present': 'success',
+            'late': 'warning',
+            'absent': 'danger',
+            'overtime': 'info',
+            'leave': 'secondary'
+        };
+        return classes[status] || 'secondary';
+    }
+
+    function getStatusText(status) {
+        const texts = {
+            'present': 'Hadir',
+            'late': 'Terlambat',
+            'absent': 'Tidak Hadir',
+            'overtime': 'Lembur',
+            'leave': 'Cuti'
+        };
+        return texts[status] || status;
+    }
+
+    // Export calendar function
+    window.exportCalendar = function() {
+        const currentView = calendar.view.type;
+        const currentDate = calendar.getDate();
+        
+        // Create export data
+        const exportData = {
+            view: currentView,
+            date: currentDate.toISOString(),
+            events: currentEvents
+        };
+
+        // For now, just show alert. You can implement actual export later
+        Swal.fire({
+            title: 'Export Calendar',
+            text: 'Export functionality will be implemented here',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    };
+});
+</script>
 @endpush 
