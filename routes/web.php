@@ -56,8 +56,10 @@ Route::post('/register/company', [App\Http\Controllers\Auth\CompanyRegistrationC
 Route::post('/check-company-email', [App\Http\Controllers\Auth\CompanyRegistrationController::class, 'checkCompanyEmail'])->name('company.check-email');
 Route::post('/check-owner-email', [App\Http\Controllers\Auth\CompanyRegistrationController::class, 'checkOwnerEmail'])->name('owner.check-email');
 
+
+
 // Protected routes (require authentication)
-Route::middleware(['auth', 'ensure.company'])->group(function () {
+Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -66,20 +68,19 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Employees
-    Route::resource('employees', EmployeeController::class);
-    Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
-    // Employees search (for AJAX select)
+    // Employee Management
     Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
+    Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
+    Route::resource('employees', EmployeeController::class);
 
-    // Payroll
-    Route::resource('payroll', PayrollController::class);
-    Route::get('/payroll-data', [PayrollController::class, 'getData'])->name('payroll.data');
+    // Payroll Management
+    Route::get('/payrolls/generate', [PayrollController::class, 'generate'])->name('payrolls.generate');
+    Route::post('/payrolls/generate', [PayrollController::class, 'generatePayroll'])->name('payrolls.generate.store');
+    Route::get('/payrolls-data', [PayrollController::class, 'data'])->name('payrolls.data');
+    Route::resource('payrolls', PayrollController::class);
 
-    // Attendance - place custom routes BEFORE resource to avoid conflicts with /attendance/{id}
+    // Attendance Management
     Route::get('/attendance/check-in-out', [AttendanceController::class, 'checkInOut'])->name('attendance.check-in-out');
-    Route::get('/attendance/current', [AttendanceController::class, 'current'])->name('attendance.current');
-    Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
     Route::get('/attendance/calendar', [AttendanceCalendarController::class, 'index'])->name('attendance.calendar');
@@ -88,11 +89,23 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     Route::resource('attendance', AttendanceController::class);
 
     // Leave Management
-    Route::resource('leaves', LeaveController::class);
     Route::get('/leaves/approval', [LeaveController::class, 'approval'])->name('leaves.approval');
+    Route::get('/leaves/approval-data', [LeaveController::class, 'approvalData'])->name('leaves.approval.data');
+    Route::get('/leaves/approval-debug', [LeaveController::class, 'approvalData'])->name('leaves.approval.debug');
     Route::get('/leaves/balance', [LeaveController::class, 'balance'])->name('leaves.balance');
+    Route::get('/leaves-data', [LeaveController::class, 'data'])->name('leaves.data');
     Route::post('/leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('/leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
+    Route::resource('leaves', LeaveController::class);
+    
+
+    
+    // Leave API Routes for AJAX
+    Route::get('/api/leaves', [LeaveController::class, 'apiIndex'])->name('api.leaves.index');
+    Route::get('/api/leaves/{id}', [LeaveController::class, 'apiShow'])->name('api.leaves.show');
+    Route::post('/api/leaves', [LeaveController::class, 'apiStore'])->name('api.leaves.store');
+    Route::put('/api/leaves/{id}', [LeaveController::class, 'apiUpdate'])->name('api.leaves.update');
+    Route::delete('/api/leaves/{id}', [LeaveController::class, 'apiDestroy'])->name('api.leaves.destroy');
 
     // Overtime Management
     Route::resource('overtimes', OvertimeController::class);
@@ -109,7 +122,6 @@ Route::middleware(['auth', 'ensure.company'])->group(function () {
     Route::post('/reports/export', [AttendanceReportController::class, 'export'])->name('reports.export');
 
     // Payroll Management
-    Route::resource('payrolls', PayrollController::class);
     Route::post('/payrolls/{id}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
     Route::post('/payrolls/{id}/reject', [PayrollController::class, 'reject'])->name('payrolls.reject');
     Route::post('/payrolls/{id}/mark-paid', [PayrollController::class, 'markPaid'])->name('payrolls.mark-paid');

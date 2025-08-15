@@ -245,12 +245,6 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('leaves.create') }}" class="nav-link {{ request()->routeIs('leaves.create') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Submit Leave Request</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
                                     <a href="{{ route('leaves.balance') }}" class="nav-link {{ request()->routeIs('leaves.balance') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Leave Balance</p>
@@ -664,5 +658,8 @@
 
     
     @stack('js')
+    
+    <!-- Include Sweet Alert Component -->
+    @include('components.sweet-alert')
 </body>
 </html>

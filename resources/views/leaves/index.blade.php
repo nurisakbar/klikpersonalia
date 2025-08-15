@@ -19,6 +19,11 @@
                         <a href="{{ route('leaves.balance') }}" class="btn btn-info btn-sm">
                             <i class="fas fa-chart-pie mr-1"></i> Leave Balance
                         </a>
+                        @if(in_array(auth()->user()->role, ['admin', 'hr', 'manager']))
+                        <a href="{{ route('leaves.approval') }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-check-circle mr-1"></i> Leave Approval
+                        </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -90,45 +95,56 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cancel Leave Request</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to cancel this leave request?</p>
-                <p><strong id="deleteLeaveName"></strong></p>
-                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Yes, Cancel Leave Request</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+
 @endsection
 
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Handle delete button click
+    // Handle delete button click with AJAX
     $('.delete-btn').click(function() {
         const leaveId = $(this).data('id');
         const leaveName = $(this).data('name');
         
-        $('#deleteLeaveName').text(leaveName);
-        $('#deleteForm').attr('action', '{{ url("leaves") }}/' + leaveId);
-        $('#deleteModal').modal('show');
+        SwalHelper.confirmDelete(
+            'Konfirmasi Pembatalan Cuti',
+            `Apakah Anda yakin ingin membatalkan permintaan cuti: <strong>${leaveName}</strong>?`,
+            'Ya, Batalkan!',
+            'Tidak'
+        ).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Membatalkan permintaan cuti...');
+                
+                // Send AJAX request
+                $.ajax({
+                    url: `{{ url('leaves') }}/${leaveId}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        SwalHelper.closeLoading();
+                        SwalHelper.toastSuccess('Permintaan cuti berhasil dibatalkan!');
+                        
+                        // Reload page after 1.5 seconds
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    },
+                    error: function(xhr) {
+                        SwalHelper.closeLoading();
+                        let message = 'Terjadi kesalahan saat membatalkan permintaan cuti.';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.toastError(message);
+                    }
+                });
+            }
+        });
     });
 });
 </script>
