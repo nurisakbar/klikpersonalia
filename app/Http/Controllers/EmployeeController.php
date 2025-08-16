@@ -74,6 +74,28 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Search employees for AJAX select (name/email/employee_id)
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $query = trim((string)$request->get('q', ''));
+        $results = $query === ''
+            ? $this->employeeService->getDefaultEmployeesForSelect(20)
+            : $this->employeeService->searchEmployees($query)->take(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $results->map(function ($emp) {
+                return [
+                    'id' => $emp->id,
+                    'text' => $emp->employee_id . ' - ' . $emp->name . ' (' . $emp->department . ')',
+                    'basic_salary' => $emp->basic_salary,
+                ];
+            }),
+        ]);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

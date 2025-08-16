@@ -11,17 +11,8 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Data Absensi</h3>
-                <div class="card-tools">
-                    <a href="{{ route('attendance.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Tambah Absensi
-                    </a>
-                </div>
-            </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="attendance-table">
+				<table class="table table-bordered table-striped" id="attendance-table" style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -36,8 +27,7 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
+				</table>
             </div>
         </div>
     </div>
@@ -98,32 +88,42 @@ $(function () {
             {data: 'status_badge', name: 'status', width: '100px'},
             {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
         ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                className: 'btn btn-success btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                }
-            },
-            {
-                extend: 'pdf',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                className: 'btn btn-danger btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="fas fa-print"></i> Print',
-                className: 'btn btn-info btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                }
-            }
+			{
+				text: '<i class="fas fa-plus"></i> Tambah Absensi',
+				className: 'btn btn-primary btn-sm dt-add-btn mr-2',
+				action: function () {
+					window.location.href = '{{ route("attendance.create") }}';
+				}
+			},
+			{
+				extend: 'excel',
+				text: '<i class="fas fa-file-excel"></i> Excel',
+				className: 'btn btn-success btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			},
+			{
+				extend: 'pdf',
+				text: '<i class="fas fa-file-pdf"></i> PDF',
+				className: 'btn btn-danger btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			},
+			{
+				extend: 'print',
+				text: '<i class="fas fa-print"></i> Print',
+				className: 'btn btn-info btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			}
         ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
@@ -132,31 +132,24 @@ $(function () {
         order: [[3, 'desc']] // Order by date descending
     });
 
+    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
+    var attendanceButtons = table.buttons().container();
+    attendanceButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
+
+    // Layout info/pagination sudah diatur global via CSS
+
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: 'Apakah Anda yakin ingin menghapus absensi "' + name + '" ?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
+        SwalHelper.confirm(
+            'Konfirmasi Hapus',
+            'Apakah Anda yakin ingin menghapus absensi "' + name + '" ?'
+        ).then((result) => {
             if (result.isConfirmed) {
                 // Show loading
-                Swal.fire({
-                    title: 'Menghapus...',
-                    text: 'Mohon tunggu sebentar',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                SwalHelper.loading('Menghapus...');
 
                 // Send delete request
                 $.ajax({
@@ -164,20 +157,12 @@ $(function () {
                     type: 'DELETE',
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire(
-                                'Berhasil!',
-                                response.message,
-                                'success'
-                            ).then(() => {
+                            SwalHelper.success('Berhasil!', response.message).then(() => {
                                 // Reload DataTable
                                 table.ajax.reload();
                             });
                         } else {
-                            Swal.fire(
-                                'Gagal!',
-                                response.message,
-                                'error'
-                            );
+                            SwalHelper.error('Gagal!', response.message);
                         }
                     },
                     error: function(xhr) {
@@ -186,38 +171,14 @@ $(function () {
                             message = xhr.responseJSON.message;
                         }
                         
-                        Swal.fire(
-                            'Error!',
-                            message,
-                            'error'
-                        );
+                        SwalHelper.error('Error!', message);
                     }
                 });
             }
         });
     });
 
-    // Success message from session
-    @if(session('success'))
-        Swal.fire({
-            title: 'Berhasil!',
-            text: '{{ session("success") }}',
-            icon: 'success',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
-
-    // Error message from session
-    @if(session('error'))
-        Swal.fire({
-            title: 'Error!',
-            text: '{{ session("error") }}',
-            icon: 'error',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
+    // Session messages sudah ditangani oleh global SwalHelper di layout
 });
 </script>
 @endpush 

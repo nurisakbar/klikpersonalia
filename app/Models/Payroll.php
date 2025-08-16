@@ -25,6 +25,8 @@ class Payroll extends Model
         'status',
         'payment_date',
         'notes',
+        'generated_by',
+        'generated_at',
     ];
 
     protected $casts = [
@@ -37,6 +39,7 @@ class Payroll extends Model
         'bpjs_amount' => 'decimal:2',
         'total_salary' => 'decimal:2',
         'payment_date' => 'date',
+        'generated_at' => 'datetime',
     ];
 
     /**
@@ -159,7 +162,25 @@ class Payroll extends Model
      */
     public function getFormattedPeriodAttribute()
     {
-        return $this->period;
+        if (!$this->period) {
+            return '-';
+        }
+
+        $parts = explode('-', $this->period);
+        if (count($parts) !== 2) {
+            return $this->period;
+        }
+
+        $year = $parts[0];
+        $month = (int) $parts[1];
+
+        $monthNames = [
+            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+            5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+            9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+        ];
+
+        return $monthNames[$month] . ' ' . $year;
     }
 
     /**
@@ -203,11 +224,27 @@ class Payroll extends Model
     }
 
     /**
+     * Check if payroll is paid.
+     */
+    public function isPaid()
+    {
+        return $this->status === 'paid';
+    }
+
+    /**
      * Check if payroll is rejected.
      */
     public function isRejected()
     {
         return $this->status === 'rejected';
+    }
+
+    /**
+     * Check if payroll is draft.
+     */
+    public function isDraft()
+    {
+        return $this->status === 'draft';
     }
 
     /**

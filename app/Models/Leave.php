@@ -196,7 +196,7 @@ class Leave extends Model
     /**
      * Approve the leave request.
      */
-    public function approve($approvedBy, $notes = null)
+    public function approve(string $approvedBy, ?string $notes = null)
     {
         $this->update([
             'status' => 'approved',
@@ -209,7 +209,7 @@ class Leave extends Model
     /**
      * Reject the leave request.
      */
-    public function reject($approvedBy, $notes = null)
+    public function reject(string $approvedBy, ?string $notes = null)
     {
         $this->update([
             'status' => 'rejected',
@@ -246,7 +246,7 @@ class Leave extends Model
     /**
      * Get leave summary for employee.
      */
-    public static function getSummary($employeeId, $year = null)
+    public static function getSummary(string $employeeId, ?int $year = null)
     {
         $query = self::where('employee_id', $employeeId);
         

@@ -1,6 +1,52 @@
 @extends('layouts.app')
 
-@section('title', 'Generate Payroll')
+@section('title', 'Tambah Payroll - Aplikasi Payroll KlikMedis')
+
+@push('css')
+<style>
+    /* Custom Select2 Bootstrap 4 Styling */
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.5em + 0.75rem + 2px) !important;
+        padding: 0.375rem 0.75rem !important;
+        font-size: 1rem !important;
+        font-weight: 400 !important;
+        line-height: 1.5 !important;
+        color: #495057 !important;
+        background-color: #fff !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.25rem !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-selection--single:focus {
+        border-color: #80bdff !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        color: #495057 !important;
+        line-height: 1.5 !important;
+        padding-left: 0 !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+        height: calc(1.5em + 0.75rem) !important;
+        right: 0.75rem !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-dropdown {
+        border: 1px solid #ced4da !important;
+        border-radius: 0.25rem !important;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+</style>
+@endpush
 
 @section('content')
 <div class="container-fluid">
@@ -27,6 +73,7 @@
                                 <!-- Employee Selection -->
                                 <div class="form-group">
                                     <label for="employee_id">Employee <span class="text-danger">*</span></label>
+                                    <!-- Debug: {{ count($employees) }} employees available for company: {{ auth()->user()->company_id }} -->
                                     <select name="employee_id" id="employee_id" class="form-control @error('employee_id') is-invalid @enderror" required>
                                         <option value="">Select Employee</option>
                                         @foreach($employees as $employee)
@@ -211,31 +258,55 @@
 </div>
 @endsection
 
-@push('scripts')
+@push('js')
 <script>
 $(document).ready(function() {
+    console.log('Payroll create page loaded');
+    console.log('Employee select element:', $('#employee_id').length);
+    console.log('Employee options count:', $('#employee_id option').length);
+    console.log('CSRF Token:', '{{ csrf_token() }}');
+    console.log('User company ID:', '{{ auth()->user()->company_id }}');
+    console.log('User name:', '{{ auth()->user()->name }}');
+    
+    // Initialize select2 for employees (using static data)
+    $('#employee_id').select2({
+        theme: 'bootstrap4',
+        placeholder: 'Pilih Karyawan',
+        allowClear: true,
+        minimumInputLength: 0,
+        width: '100%',
+        dropdownParent: $('#employee_id').parent()
+    });
+    
+    console.log('Select2 initialized');
+
     // Update basic salary when employee is selected
-    $('#employee_id').change(function() {
+    $('#employee_id').on('select2:select', function (e) {
         const selectedOption = $(this).find('option:selected');
         const salary = selectedOption.data('salary');
         if (salary) {
             $('#basic_salary').val(salary);
-            updatePayrollPreview();
         }
+        updatePayrollPreview();
     });
 
     // Update preview when any field changes
-    $('#basic_salary, #allowances, #deductions, #month, #year').change(function() {
+    // Bind change to actual inputs used in this form
+    $('#basic_salary, #allowance, #deduction, #period').change(function() {
         updatePayrollPreview();
     });
 
     function updatePayrollPreview() {
         const employeeId = $('#employee_id').val();
-        const month = $('#month').val();
-        const year = $('#year').val();
+        const period = $('#period').val();
+        const [yearStr, monthStr] = period ? period.split('-') : [null, null];
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
         const basicSalary = parseFloat($('#basic_salary').val()) || 0;
-        const allowances = parseFloat($('#allowances').val()) || 0;
-        const deductions = parseFloat($('#deductions').val()) || 0;
+        const allowances = parseFloat($('#allowance').val()) || 0;
+        const deductions = parseFloat($('#deduction').val()) || 0;
+        
+        console.log('Parsed values:', { period, yearStr, monthStr, year, month });
 
         if (!employeeId || !month || !year) {
             $('#payrollPreview').html(`
@@ -255,19 +326,23 @@ $(document).ready(function() {
             </div>
         `);
 
+        // Debug data being sent
+        const requestData = {
+            _token: '{{ csrf_token() }}',
+            employee_id: employeeId,
+            month: month,
+            year: year,
+            basic_salary: basicSalary,
+            allowances: allowances,
+            deductions: deductions
+        };
+        console.log('Sending data:', requestData);
+        
         // Fetch payroll calculation from server
         $.ajax({
             url: '{{ route("payrolls.calculate") }}',
             method: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                employee_id: employeeId,
-                month: month,
-                year: year,
-                basic_salary: basicSalary,
-                allowances: allowances,
-                deductions: deductions
-            },
+            data: requestData,
             success: function(response) {
                 if (response.success) {
                     const data = response.data;
@@ -326,21 +401,15 @@ $(document).ready(function() {
                         </div>
                     `);
                 } else {
-                    $('#payrollPreview').html(`
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>
-                            ${response.message}
-                        </div>
-                    `);
+                    $('#payrollPreview').html('<div class="text-center text-muted">Preview tidak tersedia</div>');
+                    SwalHelper.warning('Warning!', response.message);
                 }
             },
-            error: function() {
-                $('#payrollPreview').html(`
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Error calculating payroll. Please try again.
-                    </div>
-                `);
+            error: function(xhr, status, error) {
+                console.log('AJAX Error:', {xhr: xhr, status: status, error: error});
+                console.log('Response Text:', xhr.responseText);
+                $('#payrollPreview').html('<div class="text-center text-muted">Preview tidak tersedia</div>');
+                SwalHelper.error('Error!', 'Error calculating payroll. Please try again.');
             }
         });
     }

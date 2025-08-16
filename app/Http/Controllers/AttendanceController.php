@@ -5,117 +5,39 @@ namespace App\Http\Controllers;
 use App\DataTables\AttendanceDataTable;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Http\Requests\AttendanceRequest;
+use App\Http\Resources\AttendanceResource;
+use App\Services\AttendanceService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
+    public function __construct(
+        private AttendanceService $attendanceService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index(AttendanceDataTable $dataTable)
     {
+        // Temporarily disabled role check for testing
+        // if (!in_array(auth()->user()->role, ['super_admin', 'admin', 'hr', 'manager'])) {
+        //     abort(403, 'Unauthorized access.');
+        // }
+        
         return $dataTable->render('attendance.index');
-    }
-
-    /**
-     * Display check-in/out interface.
-     */
-    public function checkInOut()
-    {
-        return view('attendance.check-in-out');
-    }
-
-    /**
-     * Get current attendance status for the logged-in user.
-     */
-    public function current()
-    {
-        $user = auth()->user();
-        $today = Carbon::today();
-
-        // Find employee associated with the user
-        $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employee not found for this user.'
-            ]);
-        }
-
-        $attendance = Attendance::where('employee_id', $employee->id)
-            ->where('date', $today)
-            ->first();
-
-        return response()->json([
-            'success' => true,
-            'employee_id' => $employee->id,
-            'attendance' => $attendance ? [
-                'check_in' => $attendance->check_in ? Carbon::parse($attendance->check_in)->format('H:i') : null,
-                'check_out' => $attendance->check_out ? Carbon::parse($attendance->check_out)->format('H:i') : null,
-                'total_hours' => $attendance->total_hours ? number_format($attendance->total_hours, 2) : null,
-                'overtime_hours' => $attendance->overtime_hours ? number_format($attendance->overtime_hours, 2) : null,
-                'status' => $attendance->status
-            ] : null
-        ]);
-    }
-
-    /**
-     * Get attendance history for the logged-in user.
-     */
-    public function history()
-    {
-        $user = auth()->user();
-        
-        // Find employee associated with the user
-        $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employee not found for this user.'
-            ]);
-        }
-        
-        $attendance = Attendance::where('employee_id', $employee->id)
-            ->orderBy('date', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($attendance) {
-                return [
-                    'date' => $attendance->date->format('d/m/Y'),
-                    'check_in' => $attendance->check_in ? Carbon::parse($attendance->check_in)->format('H:i') : null,
-                    'check_out' => $attendance->check_out ? Carbon::parse($attendance->check_out)->format('H:i') : null,
-                    'total_hours' => $attendance->total_hours ? number_format($attendance->total_hours, 2) : null,
-                    'overtime_hours' => $attendance->overtime_hours ? number_format($attendance->overtime_hours, 2) : null,
-                    'status' => $attendance->status
-                ];
-            });
-
-        return response()->json([
-            'success' => true,
-            'attendance' => $attendance
-        ]);
     }
 
     /**
      * Get attendance data for DataTables.
      */
-    public function getData()
+    public function data(): JsonResponse
     {
-        $attendances = Attendance::with('employee')->select([
-            'id',
-            'employee_id',
-            'date',
-            'check_in',
-            'check_out',
-            'total_hours',
-            'overtime_hours',
-            'status',
-            'notes'
-        ]);
+        $attendances = $this->attendanceService->getAttendancesForDataTables();
 
         return DataTables::of($attendances)
             ->addColumn('action', function ($attendance) {
@@ -127,7 +49,7 @@ class AttendanceController extends Controller
                         <a href="' . route('attendance.edit', $attendance->id) . '" class="btn btn-sm btn-warning" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $attendance->id . '" data-name="' . $attendance->employee->name . ' - ' . $attendance->date->format('d/m/Y') . '" title="Hapus">
+                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $attendance->id . '" data-name="' . htmlspecialchars($attendance->employee->name . ' - ' . $attendance->date->format('d/m/Y')) . '" title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -184,57 +106,34 @@ class AttendanceController extends Controller
      */
     public function create()
     {
-        $employees = Employee::active()->get();
+        // Temporarily disabled role check for testing
+        // if (!in_array(auth()->user()->role, ['super_admin', 'admin', 'hr', 'manager'])) {
+        //     abort(403, 'Unauthorized access.');
+        // }
+        
+        $employees = Employee::active()->currentCompany()->get();
         return view('attendance.create', compact('employees'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(AttendanceRequest $request)
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'date' => 'required|date',
-            'check_in' => 'nullable|date_format:H:i',
-            'check_out' => 'nullable|date_format:H:i|after:check_in',
-            'status' => 'required|in:present,absent,late,half_day,leave,holiday',
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $result = $this->attendanceService->createAttendance($request->validated());
 
-        // Check if attendance already exists for this employee and date
-        $existingAttendance = Attendance::where('employee_id', $request->employee_id)
-            ->where('date', $request->date)
-            ->first();
-
-        if ($existingAttendance) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['date' => 'Absensi untuk karyawan ini pada tanggal tersebut sudah ada.']);
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json($result, $result['success'] ? 200 : 422);
         }
 
-        $attendance = Attendance::create([
-            'employee_id' => $request->employee_id,
-            'date' => $request->date,
-            'check_in' => $request->check_in,
-            'check_out' => $request->check_out,
-            'status' => $request->status,
-            'notes' => $request->notes,
-            'check_in_location' => $request->check_in_location,
-            'check_out_location' => $request->check_out_location,
-            'check_in_ip' => $request->ip(),
-            'check_out_ip' => $request->ip(),
-            'check_in_device' => $request->user_agent(),
-            'check_out_device' => $request->user_agent(),
-        ]);
-
-        // Calculate total hours if check-in and check-out are provided
-        if ($attendance->check_in && $attendance->check_out) {
-            $attendance->calculateTotalHours();
+        if ($result['success']) {
+            return redirect()->route('attendance.index')
+                ->with('success', $result['message']);
         }
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Data absensi berhasil ditambahkan!');
+        return redirect()->back()
+            ->withInput()
+            ->withErrors(['error' => $result['message']]);
     }
 
     /**
@@ -251,216 +150,146 @@ class AttendanceController extends Controller
      */
     public function edit(string $id)
     {
+        // Temporarily disabled role check for testing
+        // if (!in_array(auth()->user()->role, ['super_admin', 'admin', 'hr', 'manager'])) {
+        //     abort(403, 'Unauthorized access.');
+        // }
+        
         $attendance = Attendance::findOrFail($id);
-        $employees = Employee::active()->get();
+        $employees = Employee::active()->currentCompany()->get();
         return view('attendance.edit', compact('attendance', 'employees'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(AttendanceRequest $request, string $id)
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'date' => 'required|date',
-            'check_in' => 'nullable|date_format:H:i',
-            'check_out' => 'nullable|date_format:H:i|after:check_in',
-            'status' => 'required|in:present,absent,late,half_day,leave,holiday',
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $result = $this->attendanceService->updateAttendance($id, $request->validated());
 
-        $attendance = Attendance::findOrFail($id);
-
-        // Check if attendance already exists for this employee and date (excluding current record)
-        $existingAttendance = Attendance::where('employee_id', $request->employee_id)
-            ->where('date', $request->date)
-            ->where('id', '!=', $id)
-            ->first();
-
-        if ($existingAttendance) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['date' => 'Absensi untuk karyawan ini pada tanggal tersebut sudah ada.']);
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json($result, $result['success'] ? 200 : 422);
         }
 
-        $attendance->update([
-            'employee_id' => $request->employee_id,
-            'date' => $request->date,
-            'check_in' => $request->check_in,
-            'check_out' => $request->check_out,
-            'status' => $request->status,
-            'notes' => $request->notes,
-        ]);
-
-        // Calculate total hours if check-in and check-out are provided
-        if ($attendance->check_in && $attendance->check_out) {
-            $attendance->calculateTotalHours();
+        if ($result['success']) {
+            return redirect()->route('attendance.index')
+                ->with('success', $result['message']);
         }
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Data absensi berhasil diperbarui!');
+        return redirect()->back()
+            ->withInput()
+            ->withErrors(['error' => $result['message']]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
-        try {
-            $attendance = Attendance::findOrFail($id);
-            $attendance->delete();
-            
+        $result = $this->attendanceService->deleteAttendance($id);
+
+        if ($result['success']) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data absensi berhasil dihapus!'
+                'message' => $result['message']
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus data absensi: ' . $e->getMessage()
-            ], 500);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message']
+        ], 500);
+    }
+
+    /**
+     * Display check-in/out interface.
+     */
+    public function checkInOut()
+    {
+        // Check if user has employee record
+        $employee = Employee::where('user_id', auth()->user()->id)->first();
+        if (!$employee) {
+            abort(403, 'Employee record not found. Please contact administrator.');
+        }
+        
+        return view('attendance.check-in-out');
+    }
+
+    /**
+     * Get current attendance status for the logged-in user.
+     */
+    public function current(): JsonResponse
+    {
+        $result = $this->attendanceService->getCurrentAttendance();
+        return response()->json($result);
+    }
+
+    /**
+     * Get attendance history for the logged-in user.
+     */
+    public function history(): JsonResponse
+    {
+        $result = $this->attendanceService->getAttendanceHistory();
+        return response()->json($result);
     }
 
     /**
      * Check-in employee.
      */
-    public function checkIn(Request $request)
+    public function checkIn(Request $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-        ]);
+        try {
+            $request->validate([
+                'employee_id' => 'required|exists:employees,id',
+                'location' => 'nullable|string|max:255'
+            ]);
 
-        $user = auth()->user();
-        
-        // Find employee associated with the user
-        $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+            $result = $this->attendanceService->performCheckIn(
+                $request->employee_id,
+                $request->location
+            );
+
+            return response()->json($result, $result['success'] ? 200 : 422);
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Employee not found for this user.'
-            ]);
-        }
-
-        // Verify that the employee_id matches the logged-in user's employee record
-        if ($employee->id != $request->employee_id) {
+                'message' => 'Data tidak valid: ' . implode(', ', $e->errors())
+            ], 422);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access.'
-            ]);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        $today = Carbon::today();
-
-        // Check if already checked in today
-        $existingAttendance = Attendance::where('employee_id', $employee->id)
-            ->where('date', $today)
-            ->first();
-
-        if ($existingAttendance && $existingAttendance->check_in) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah melakukan check-in hari ini.'
-            ]);
-        }
-
-        $checkInTime = Carbon::now();
-        $startTime = Carbon::parse('08:00');
-        $status = $checkInTime->gt($startTime) ? 'late' : 'present';
-
-        if ($existingAttendance) {
-            $existingAttendance->update([
-                'check_in' => $checkInTime,
-                'status' => $status,
-                'check_in_location' => $request->location ?? 'Location not available',
-                'check_in_ip' => $request->ip(),
-                'check_in_device' => $request->user_agent(),
-            ]);
-        } else {
-            Attendance::create([
-                'employee_id' => $employee->id,
-                'company_id' => $employee->company_id,
-                'date' => $today,
-                'check_in' => $checkInTime,
-                'status' => $status,
-                'check_in_location' => $request->location ?? 'Location not available',
-                'check_in_ip' => $request->ip(),
-                'check_in_device' => $request->user_agent(),
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Check-in berhasil! Waktu: ' . $checkInTime->format('H:i:s')
-        ]);
     }
 
     /**
      * Check-out employee.
      */
-    public function checkOut(Request $request)
+    public function checkOut(Request $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-        ]);
+        try {
+            $request->validate([
+                'employee_id' => 'required|exists:employees,id',
+                'location' => 'nullable|string|max:255'
+            ]);
 
-        $user = auth()->user();
-        
-        // Find employee associated with the user
-        $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+            $result = $this->attendanceService->performCheckOut(
+                $request->employee_id,
+                $request->location
+            );
+
+            return response()->json($result, $result['success'] ? 200 : 422);
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Employee not found for this user.'
-            ]);
-        }
-
-        // Verify that the employee_id matches the logged-in user's employee record
-        if ($employee->id != $request->employee_id) {
+                'message' => 'Data tidak valid: ' . implode(', ', $e->errors())
+            ], 422);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access.'
-            ]);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        $today = Carbon::today();
-
-        $attendance = Attendance::where('employee_id', $employee->id)
-            ->where('date', $today)
-            ->first();
-
-        if (!$attendance || !$attendance->check_in) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda belum melakukan check-in hari ini.'
-            ]);
-        }
-
-        if ($attendance->check_out) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah melakukan check-out hari ini.'
-            ]);
-        }
-
-        $checkOutTime = Carbon::now();
-        
-        $attendance->update([
-            'check_out' => $checkOutTime,
-            'check_out_location' => $request->location ?? 'Location not available',
-            'check_out_ip' => $request->ip(),
-            'check_out_device' => $request->user_agent(),
-        ]);
-
-        // Calculate total hours
-        $attendance->calculateTotalHours();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Check-out berhasil! Waktu: ' . $checkOutTime->format('H:i:s')
-        ]);
     }
 }

@@ -6,12 +6,12 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
                         <i class="fas fa-check-circle mr-2"></i>
                         Leave Approval
-                    </h3>
+                    </h6>
                     <div class="card-tools">
                         <a href="{{ route('leaves.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Back to Leave List
@@ -19,291 +19,366 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($pendingLeaves->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Employee</th>
-                                        <th>Leave Type</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Total Days</th>
-                                        <th>Reason</th>
-                                        <th>Submitted</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($pendingLeaves as $leave)
-                                        <tr>
-                                            <td>
-                                                <div>
-                                                    <strong>{{ $leave->employee->name }}</strong><br>
-                                                    <small class="text-muted">{{ $leave->employee->employee_id }}</small>
-                                                </div>
-                                            </td>
-                                            <td>{!! $leave->type_badge !!}</td>
-                                            <td>{{ $leave->formatted_start_date }}</td>
-                                            <td>{{ $leave->formatted_end_date }}</td>
-                                            <td>{{ $leave->total_days }} days</td>
-                                            <td>
-                                                <div class="text-truncate" style="max-width: 200px;" title="{{ $leave->reason }}">
-                                                    {{ $leave->reason }}
-                                                </div>
-                                            </td>
-                                            <td>{{ $leave->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <button type="button" class="btn btn-sm btn-success approve-btn" 
-                                                            data-id="{{ $leave->id }}" 
-                                                            data-employee="{{ $leave->employee->name }}"
-                                                            data-type="{{ $leave->leave_type }}"
-                                                            data-days="{{ $leave->total_days }}"
-                                                            title="Approve">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-danger reject-btn" 
-                                                            data-id="{{ $leave->id }}" 
-                                                            data-employee="{{ $leave->employee->name }}"
-                                                            data-type="{{ $leave->leave_type }}"
-                                                            data-days="{{ $leave->total_days }}"
-                                                            title="Reject">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                    <a href="{{ route('leaves.show', $leave->id) }}" class="btn btn-sm btn-info" title="View Details">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="d-flex justify-content-center">
-                            {{ $pendingLeaves->links() }}
-                        </div>
-                    @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                            <h5 class="text-success">No Pending Leave Requests</h5>
-                            <p class="text-muted">All leave requests have been processed.</p>
-                        </div>
-                    @endif
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="leave-approval-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Total Days</th>
+                                    <th>Reason</th>
+                                    <th>Submitted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Approve Modal -->
-<div class="modal fade" id="approveModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-check mr-2"></i> Approve Leave Request
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="approveForm" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        You are about to approve a leave request for <strong id="approveEmployeeName"></strong>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Leave Type:</strong> <span id="approveLeaveType"></span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Total Days:</strong> <span id="approveTotalDays"></span></p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="approval_notes">Approval Notes (Optional)</label>
-                        <textarea name="approval_notes" id="approval_notes" rows="3" class="form-control" placeholder="Add any notes or comments..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check mr-1"></i> Approve Leave Request
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- CSRF Token for AJAX -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-times mr-2"></i> Reject Leave Request
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="rejectForm" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        You are about to reject a leave request for <strong id="rejectEmployeeName"></strong>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Leave Type:</strong> <span id="rejectLeaveType"></span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Total Days:</strong> <span id="rejectTotalDays"></span></p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="rejection_notes">Rejection Reason <span class="text-danger">*</span></label>
-                        <textarea name="approval_notes" id="rejection_notes" rows="3" class="form-control" placeholder="Please provide a reason for rejection..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times mr-1"></i> Reject Leave Request
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
 
-@push('scripts')
+@push('css')
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+
+<style>
+/* Custom DataTable Pagination Styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border: 1px solid #dee2e6 !important;
+    background: #fff !important;
+    color: #007bff !important;
+    padding: 0.375rem 0.75rem !important;
+    margin: 0 2px !important;
+    border-radius: 0.25rem !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #e9ecef !important;
+    border-color: #adb5bd !important;
+    color: #0056b3 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #007bff !important;
+    border-color: #007bff !important;
+    color: #fff !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    background: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d !important;
+    cursor: not-allowed !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 0.5rem !important;
+    color: #6c757d !important;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+    padding: 0.375rem 0.75rem !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+    padding: 0.375rem 0.75rem !important;
+}
+
+/* Button styling */
+.dt-buttons .btn {
+    margin-right: 0.25rem !important;
+}
+
+/* Table styling */
+#leave-approval-table {
+    border-collapse: collapse !important;
+}
+
+#leave-approval-table th {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    font-weight: 600 !important;
+}
+
+#leave-approval-table td {
+    border-color: #dee2e6 !important;
+    vertical-align: middle !important;
+}
+
+/* Action buttons styling */
+.btn-group .btn {
+    margin-right: 2px !important;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0 !important;
+}
+</style>
+@endpush
+
+@push('js')
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-$(document).ready(function() {
-    // Handle approve button click
-    $('.approve-btn').click(function() {
-        const leaveId = $(this).data('id');
-        const employeeName = $(this).data('employee');
-        const leaveType = $(this).data('type');
-        const totalDays = $(this).data('days');
-        
-        $('#approveEmployeeName').text(employeeName);
-        $('#approveLeaveType').text(leaveType.charAt(0).toUpperCase() + leaveType.slice(1));
-        $('#approveTotalDays').text(totalDays + ' days');
-        $('#approveForm').attr('action', '{{ url("leaves") }}/' + leaveId + '/approve');
-        $('#approveModal').modal('show');
-    });
+$(function () {
+    // Global variables
+    let table;
     
-    // Handle reject button click
-    $('.reject-btn').click(function() {
-        const leaveId = $(this).data('id');
-        const employeeName = $(this).data('employee');
-        const leaveType = $(this).data('type');
-        const totalDays = $(this).data('days');
-        
-        $('#rejectEmployeeName').text(employeeName);
-        $('#rejectLeaveType').text(leaveType.charAt(0).toUpperCase() + leaveType.slice(1));
-        $('#rejectTotalDays').text(totalDays + ' days');
-        $('#rejectForm').attr('action', '{{ url("leaves") }}/' + leaveId + '/reject');
-        $('#rejectModal').modal('show');
+    // Setup CSRF token for AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
     });
-    
-    // Handle form submissions
-    $('#approveForm').submit(function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const submitBtn = form.find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        
-        submitBtn.html('<i class="fas fa-spinner fa-spin mr-1"></i> Processing...').prop('disabled', true);
-        
-        $.ajax({
-            url: form.attr('action'),
-            method: 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    $('#approveModal').modal('hide');
-                    showAlert('success', response.message);
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showAlert('error', response.message);
+
+    console.log('Starting Leave Approval DataTable initialization...');
+
+    // Initialize DataTable with server-side processing
+    table = $('#leave-approval-table').DataTable({
+        processing: true,
+        serverSide: false, // Changed to false for testing
+        ajax: {
+            url: '{{ route("leaves.approval.data") }}',
+            type: 'GET',
+            dataSrc: 'data', // Added for client-side processing
+            error: function (xhr, error, thrown) {
+                console.error('DataTable AJAX Error:', error);
+                console.error('XHR Status:', xhr.status);
+                console.error('XHR Response:', xhr.responseText);
+                SwalHelper.toastError('Error loading data: ' + error);
+            }
+        },
+        columns: [
+            {data: 'employee_info', name: 'employee.name', width: '200px'},
+            {data: 'leave_type_badge', name: 'leave_type', width: '150px'},
+            {data: 'start_date_formatted', name: 'start_date', width: '120px'},
+            {data: 'end_date_formatted', name: 'end_date', width: '120px'},
+            {data: 'total_days', name: 'total_days', width: '100px'},
+            {data: 'reason', name: 'reason', width: '250px'},
+            {data: 'created_at_formatted', name: 'created_at', width: '150px'},
+            {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
+        ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        pageLength: 10,
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             },
-            error: function() {
-                showAlert('error', 'An error occurred. Please try again.');
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5, 6]
+                }
             },
-            complete: function() {
-                submitBtn.html(originalText).prop('disabled', false);
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print',
+                className: 'btn btn-info btn-sm',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5, 6]
+                }
+            }
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+        },
+        responsive: true,
+        order: [[6, 'desc']],
+        initComplete: function () {
+            console.log('DataTable initialization completed successfully');
+        },
+        drawCallback: function () {
+            console.log('DataTable draw completed');
+        }
+    });
+
+    console.log('DataTable initialized:', table);
+
+    // Handle approve button click (delegated event)
+    $(document).on('click', '.approve-btn', function() {
+        const leaveId = $(this).data('id');
+        const employeeName = $(this).data('employee');
+        const leaveType = $(this).data('type');
+        const totalDays = $(this).data('days');
+        
+        console.log('Approve button clicked for leave ID:', leaveId);
+        
+        Swal.fire({
+            title: 'Konfirmasi Approval Cuti',
+            html: `
+                <div class="text-left">
+                    <p><strong>Karyawan:</strong> ${employeeName}</p>
+                    <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                    <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                    <div class="form-group mt-3">
+                        <label for="approval_notes">Catatan Approval (Opsional)</label>
+                        <textarea id="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Setujui!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true,
+            preConfirm: () => {
+                return {
+                    notes: document.getElementById('approval_notes').value
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Menyetujui permintaan cuti...');
+                
+                // Send AJAX request
+                $.ajax({
+                    url: `{{ url('leaves') }}/${leaveId}/approve`,
+                    method: 'POST',
+                    data: {
+                        approval_notes: result.value.notes
+                    },
+                    success: function(response) {
+                        SwalHelper.close();
+                        if (response.success) {
+                            SwalHelper.toastSuccess(response.message);
+                            setTimeout(function() {
+                                table.ajax.reload();
+                            }, 1500);
+                        } else {
+                            SwalHelper.toastError(response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        SwalHelper.close();
+                        let message = 'Terjadi kesalahan saat menyetujui permintaan cuti.';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.toastError(message);
+                    }
+                });
             }
         });
     });
     
-    $('#rejectForm').submit(function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const submitBtn = form.find('button[type="submit"]');
-        const originalText = submitBtn.html();
+    // Handle reject button click (delegated event)
+    $(document).on('click', '.reject-btn', function() {
+        const leaveId = $(this).data('id');
+        const employeeName = $(this).data('employee');
+        const leaveType = $(this).data('type');
+        const totalDays = $(this).data('days');
         
-        submitBtn.html('<i class="fas fa-spinner fa-spin mr-1"></i> Processing...').prop('disabled', true);
+        console.log('Reject button clicked for leave ID:', leaveId);
         
-        $.ajax({
-            url: form.attr('action'),
-            method: 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    $('#rejectModal').modal('hide');
-                    showAlert('success', response.message);
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showAlert('error', response.message);
+        Swal.fire({
+            title: 'Konfirmasi Penolakan Cuti',
+            html: `
+                <div class="text-left">
+                    <p><strong>Karyawan:</strong> ${employeeName}</p>
+                    <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                    <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                    <div class="form-group mt-3">
+                        <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
+                        <textarea id="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Tolak!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true,
+            preConfirm: () => {
+                const notes = document.getElementById('rejection_notes').value;
+                if (!notes.trim()) {
+                    Swal.showValidationMessage('Alasan penolakan harus diisi');
+                    return false;
                 }
-            },
-            error: function() {
-                showAlert('error', 'An error occurred. Please try again.');
-            },
-            complete: function() {
-                submitBtn.html(originalText).prop('disabled', false);
+                return {
+                    notes: notes
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Menolak permintaan cuti...');
+                
+                // Send AJAX request
+                $.ajax({
+                    url: `{{ url('leaves') }}/${leaveId}/reject`,
+                    method: 'POST',
+                    data: {
+                        approval_notes: result.value.notes
+                    },
+                    success: function(response) {
+                        SwalHelper.close();
+                        if (response.success) {
+                            SwalHelper.toastSuccess(response.message);
+                            setTimeout(function() {
+                                table.ajax.reload();
+                            }, 1500);
+                        } else {
+                            SwalHelper.toastError(response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        SwalHelper.close();
+                        let message = 'Terjadi kesalahan saat menolak permintaan cuti.';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.toastError(message);
+                    }
+                });
             }
         });
     });
 });
-
-function showAlert(type, message) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    `;
-    
-    // Insert alert at the top of the card body
-    const cardBody = document.querySelector('.card-body');
-    cardBody.insertAdjacentHTML('afterbegin', alertHtml);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-            alert.remove();
-        }
-    }, 5000);
-}
 </script>
 @endpush 

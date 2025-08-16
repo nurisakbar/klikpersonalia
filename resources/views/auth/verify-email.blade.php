@@ -9,13 +9,7 @@
         Terima kasih telah mendaftar! Sebelum memulai, dapatkah Anda memverifikasi alamat email Anda dengan mengklik tautan yang baru saja kami kirimkan ke email Anda? Jika Anda tidak menerima email tersebut, kami akan dengan senang hati mengirimkan email lain kepada Anda.
     </p>
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="alert alert-success alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h5><i class="icon fas fa-check"></i> Success!</h5>
-            Tautan verifikasi baru telah dikirim ke alamat email yang Anda berikan saat pendaftaran.
-        </div>
-    @endif
+    {{-- Status messages akan ditampilkan melalui SweetAlert dari guest layout --}}
 
     <div class="row">
         <div class="col-12">

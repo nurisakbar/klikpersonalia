@@ -11,17 +11,8 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Data Payroll</h3>
-                <div class="card-tools">
-                    <a href="{{ route('payroll.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Tambah Payroll
-                    </a>
-                </div>
-            </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="payroll-table">
+				<table class="table table-bordered table-striped" id="payroll-table" style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -35,8 +26,7 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
+				</table>
             </div>
         </div>
     </div>
@@ -96,32 +86,42 @@ $(function () {
             {data: 'payment_date_formatted', name: 'payment_date', width: '120px'},
             {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
         ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
         dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                className: 'btn btn-success btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                }
-            },
-            {
-                extend: 'pdf',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                className: 'btn btn-danger btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="fas fa-print"></i> Print',
-                className: 'btn btn-info btn-sm',
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                }
-            }
+		buttons: [
+			{
+				text: '<i class="fas fa-plus"></i> Tambah Payroll',
+				class: 'btn btn-primary dt-add-btn',
+				action: function () {
+					window.location.href = '{{ route("payroll.create") }}';
+				}
+			},
+			{
+				extend: 'excel',
+				text: '<i class="fas fa-file-excel"></i> Excel',
+				class: 'btn btn-success btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7]
+				}
+			},
+			{
+				extend: 'pdf',
+				text: '<i class="fas fa-file-pdf"></i> PDF',
+				class: 'btn btn-danger',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7]
+				}
+			},
+			{
+				extend: 'print',
+				text: '<i class="fas fa-print"></i> Print',
+				class: 'btn btn-info btn-xs',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7]
+				}
+			}
         ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
@@ -130,31 +130,24 @@ $(function () {
         order: [[1, 'asc']]
     });
 
+    // Layout info/pagination sudah diatur global via CSS
+
+    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
+    var payrollButtons = table.buttons().container();
+    payrollButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
+
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: 'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
+        SwalHelper.confirm(
+            'Konfirmasi Hapus',
+            'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?'
+        ).then((result) => {
             if (result.isConfirmed) {
                 // Show loading
-                Swal.fire({
-                    title: 'Menghapus...',
-                    text: 'Mohon tunggu sebentar',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                SwalHelper.loading('Menghapus...');
 
                 // Send delete request
                 $.ajax({
@@ -162,20 +155,12 @@ $(function () {
                     type: 'DELETE',
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire(
-                                'Berhasil!',
-                                response.message,
-                                'success'
-                            ).then(() => {
+                            SwalHelper.success('Berhasil!', response.message).then(() => {
                                 // Reload DataTable
                                 table.ajax.reload();
                             });
                         } else {
-                            Swal.fire(
-                                'Gagal!',
-                                response.message,
-                                'error'
-                            );
+                            SwalHelper.error('Gagal!', response.message);
                         }
                     },
                     error: function(xhr) {
@@ -184,38 +169,14 @@ $(function () {
                             message = xhr.responseJSON.message;
                         }
                         
-                        Swal.fire(
-                            'Error!',
-                            message,
-                            'error'
-                        );
+                        SwalHelper.error('Error!', message);
                     }
                 });
             }
         });
     });
 
-    // Success message from session
-    @if(session('success'))
-        Swal.fire({
-            title: 'Berhasil!',
-            text: '{{ session("success") }}',
-            icon: 'success',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
-
-    // Error message from session
-    @if(session('error'))
-        Swal.fire({
-            title: 'Error!',
-            text: '{{ session("error") }}',
-            icon: 'error',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
+    // Session messages sudah ditangani oleh global SwalHelper di layout
 });
 </script>
 @endpush 
