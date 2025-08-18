@@ -23,10 +23,10 @@ class PayrollDataTable extends DataTable
             ->addColumn('action', function ($payroll) {
                 return '
                     <div class="btn-group" role="group">
-                        <a href="' . route('payroll.show', $payroll->id) . '" class="btn btn-sm btn-info" title="Detail">
+                        <a href="' . route('payrolls.show', $payroll->id) . '" class="btn btn-sm btn-info" title="Detail">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="' . route('payroll.edit', $payroll->id) . '" class="btn btn-sm btn-warning" title="Edit">
+                        <a href="' . route('payrolls.edit', $payroll->id) . '" class="btn btn-sm btn-warning" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $payroll->id . '" data-name="' . $payroll->employee->name . ' - ' . $payroll->period . '" title="Hapus">

@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
 
     // Attendance Management
     Route::get('/attendance/check-in-out', [AttendanceController::class, 'checkInOut'])->name('attendance.check-in-out');
+    Route::get('/attendance/current', [AttendanceController::class, 'current'])->name('attendance.current');
+    Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
     Route::get('/attendance/calendar', [AttendanceCalendarController::class, 'index'])->name('attendance.calendar');

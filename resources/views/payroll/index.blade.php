@@ -72,7 +72,7 @@ $(function () {
         processing: true,
         serverSide: true,
         ajax: {
-            url: '{{ route("payroll.data") }}',
+            url: '{{ route("payrolls.data") }}',
             type: 'GET'
         },
         columns: [
@@ -95,7 +95,7 @@ $(function () {
 				text: '<i class="fas fa-plus"></i> Tambah Payroll',
 				class: 'btn btn-primary dt-add-btn',
 				action: function () {
-					window.location.href = '{{ route("payroll.create") }}';
+					window.location.href = '{{ route("payrolls.create") }}';
 				}
 			},
 			{

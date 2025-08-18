@@ -4,7 +4,7 @@
 @section('page-title', 'Tambah Payroll')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('payroll.index') }}">Payroll</a></li>
+<li class="breadcrumb-item"><a href="{{ route('payrolls.index') }}">Payroll</a></li>
 <li class="breadcrumb-item active">Tambah</li>
 @endsection
 
@@ -15,7 +15,7 @@
             <div class="card-header">
                 <h3 class="card-title">Form Tambah Payroll</h3>
             </div>
-            <form action="{{ route('payroll.store') }}" method="POST">
+            <form action="{{ route('payrolls.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
                     <div class="row">
@@ -152,7 +152,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Simpan
                     </button>
-                    <a href="{{ route('payroll.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('payrolls.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Kembali
                     </a>
                 </div>

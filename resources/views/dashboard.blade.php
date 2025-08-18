@@ -221,8 +221,8 @@
         </div>
     </div>
     <div class="card-footer clearfix">
-        <a href="{{ route('payroll.index') }}" class="btn btn-sm btn-info float-left">Lihat Semua Payroll</a>
-        <a href="{{ route('payroll.create') }}" class="btn btn-sm btn-secondary float-right">Buat Payroll Baru</a>
+        <a href="{{ route('payrolls.index') }}" class="btn btn-sm btn-info float-left">Lihat Semua Payroll</a>
+        <a href="{{ route('payrolls.create') }}" class="btn btn-sm btn-secondary float-right">Buat Payroll Baru</a>
     </div>
 </div>
 @endsection
