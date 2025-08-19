@@ -189,43 +189,7 @@
 let currentAttendance = null;
 let employeeId = null;
 
-// SweetAlert Helper
-const SwalHelper = {
-    confirm: (title, text, confirmText = 'Ya', cancelText = 'Batal') => {
-        return Swal.fire({
-            title: title,
-            text: text,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: confirmText,
-            cancelButtonText: cancelText
-        });
-    },
-    toastSuccess: (message) => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: message,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
-    },
-    toastError: (message) => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: message,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 5000
-        });
-    }
-};
+// Use Global SweetAlert Helper
 
 // Get employee ID for the current user
 async function getEmployeeId() {

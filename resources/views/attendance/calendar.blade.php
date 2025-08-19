@@ -570,12 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         // For now, just show alert. You can implement actual export later
-        Swal.fire({
-            title: 'Export Calendar',
-            text: 'Export functionality will be implemented here',
-            icon: 'info',
-            confirmButtonText: 'OK'
-        });
+        SwalHelper.info('Export Calendar', 'Export functionality will be implemented here');
     };
 });
 </script>

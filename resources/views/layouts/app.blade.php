@@ -14,8 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/css/OverlayScrollbars.min.css">
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Global SweetAlert Component -->
+    @include('components.sweet-alert')
     <!-- Select2 (for AJAX employee select) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
@@ -508,124 +508,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/js/OverlayScrollbars.min.js"></script>
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
-    <!-- Global SweetAlert Helper -->
+    <!-- Session Messages Handler -->
     <script>
-        // Global SweetAlert Helper Functions
-        window.SwalHelper = {
-            // Success Alert
-            success: function(title, text = '', timer = 3000) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'success',
-                    timer: timer,
-                    showConfirmButton: false,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Error Alert
-            error: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'error',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Warning Alert
-            warning: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Info Alert
-            info: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'info',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Confirmation Dialog
-            confirm: function(title, text = '', confirmButtonText = 'Ya, Hapus!', cancelButtonText = 'Batal') {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: confirmButtonText,
-                    cancelButtonText: cancelButtonText
-                });
-            },
-            
-            // Toast Success
-            toastSuccess: function(title) {
-                return Swal.fire({
-                    title: title,
-                    icon: 'success',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            },
-            
-            // Toast Error
-            toastError: function(title) {
-                return Swal.fire({
-                    title: title,
-                    icon: 'error',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            },
-            
-            // Loading Alert
-            loading: function(title = 'Memproses...') {
-                return Swal.fire({
-                    title: title,
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    allowEnterKey: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-            },
-            
-            // Close Loading
-            close: function() {
-                Swal.close();
-            }
-        };
-
         // Auto-show alerts from Laravel session
         @if(session('success'))
             SwalHelper.success('Berhasil!', '{{ session("success") }}');
@@ -658,8 +545,5 @@
 
     
     @stack('js')
-    
-    <!-- Include Sweet Alert Component -->
-    @include('components.sweet-alert')
 </body>
 </html>

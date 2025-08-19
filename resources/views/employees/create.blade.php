@@ -205,11 +205,7 @@ $(function () {
         
         // Validate minimum salary
         if (parseInt(rawSalary) < 1000000) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'Gaji pokok minimal Rp 1.000.000'
-            });
+            SwalHelper.error('Error!', 'Gaji pokok minimal Rp 1.000.000');
             return false;
         }
 
@@ -232,21 +228,12 @@ $(function () {
             },
             success: function(response) {
                 if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
+                    SwalHelper.success('Berhasil!', response.message, 2000);
+                    setTimeout(() => {
                         window.location.href = '{{ route("employees.index") }}';
-                    });
+                    }, 2000);
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: response.message
-                    });
+                    SwalHelper.error('Gagal!', response.message);
                     $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan');
                 }
             },
@@ -264,11 +251,7 @@ $(function () {
                     message = errorMessages.join('\n');
                 }
                 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: message
-                });
+                SwalHelper.error('Error!', message);
                 $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan');
             }
         });

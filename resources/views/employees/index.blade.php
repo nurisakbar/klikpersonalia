@@ -78,8 +78,8 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
 
 <script>
 $(function () {
@@ -281,25 +281,10 @@ $(function () {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: 'Apakah Anda yakin ingin menghapus karyawan "' + name + '" ?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus karyawan "' + name + '" ?', function(result) {
             if (result.isConfirmed) {
                 // Show loading
-                Swal.fire({
-                    title: 'Menghapus...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                SwalHelper.loading('Menghapus...');
 
                 // Send delete request
                 $.ajax({
@@ -310,22 +295,11 @@ $(function () {
                     },
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            }).then(() => {
-                                // Reload DataTable
-                                table.ajax.reload();
-                            });
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal!',
-                                text: response.message
-                            });
+                            SwalHelper.error('Gagal!', response.message);
                         }
                     },
                     error: function(xhr) {
@@ -334,11 +308,7 @@ $(function () {
                             message = xhr.responseJSON.message;
                         }
                         
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: message
-                        });
+                        SwalHelper.error('Error!', message);
                     }
                 });
             }

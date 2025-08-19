@@ -13,8 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icheck-bootstrap/3.0.1/icheck-bootstrap.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Global SweetAlert Component -->
+    @include('components.sweet-alert')
     
     @stack('css')
 </head>
@@ -27,63 +27,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-    
-    <!-- Global SweetAlert Helper -->
+    <!-- Session Messages Handler -->
     <script>
-        // Global SweetAlert Helper Functions
-        window.SwalHelper = {
-            // Success Alert
-            success: function(title, text = '', timer = 3000) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'success',
-                    timer: timer,
-                    showConfirmButton: false,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Error Alert
-            error: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'error',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Warning Alert
-            warning: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Info Alert
-            info: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'info',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            }
-        };
-
         // Auto-show alerts from Laravel session
         @if(session('success'))
             SwalHelper.success('Berhasil!', '{{ session("success") }}');
