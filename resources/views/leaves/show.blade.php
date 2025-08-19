@@ -1,42 +1,36 @@
 @extends('layouts.app')
 
-@section('title', 'Leave Details')
+@section('title', 'Rincian Cuti - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Rincian Cuti')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Rincian Cuti</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        Leave Request Details
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('leaves.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to Leave List
-                        </a>
-                    </div>
-                </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <table class="table table-borderless">
                                 <tr>
-                                    <td width="40%"><strong>Leave Type:</strong></td>
+                                    <td width="40%"><strong>Jenis Cuti:</strong></td>
                                     <td>{!! $leave->type_badge !!}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Start Date:</strong></td>
+                                    <td><strong>Tanggal Mulai:</strong></td>
                                     <td>{{ $leave->formatted_start_date }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>End Date:</strong></td>
+                                    <td><strong>Tanggal Selesai:</strong></td>
                                     <td>{{ $leave->formatted_end_date }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Total Days:</strong></td>
-                                    <td>{{ $leave->total_days }} days</td>
+                                    <td><strong>Total Hari:</strong></td>
+                                    <td>{{ $leave->total_days }} hari</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Status:</strong></td>
@@ -47,24 +41,24 @@
                         <div class="col-md-6">
                             <table class="table table-borderless">
                                 <tr>
-                                    <td width="40%"><strong>Submitted:</strong></td>
+                                    <td width="40%"><strong>Dibuat:</strong></td>
                                     <td>{{ $leave->created_at->format('d/m/Y H:i') }}</td>
                                 </tr>
                                 @if($leave->approved_at)
                                 <tr>
-                                    <td><strong>Processed:</strong></td>
+                                    <td><strong>Dilakukan:</strong></td>
                                     <td>{{ $leave->approved_at->format('d/m/Y H:i') }}</td>
                                 </tr>
                                 @endif
                                 @if($leave->approver)
                                 <tr>
-                                    <td><strong>Processed By:</strong></td>
+                                    <td><strong>Dilakukan Oleh:</strong></td>
                                     <td>{{ $leave->approver->name }}</td>
                                 </tr>
                                 @endif
                                 @if($leave->approval_notes)
                                 <tr>
-                                    <td><strong>Notes:</strong></td>
+                                    <td><strong>Catatan:</strong></td>
                                     <td>{{ $leave->approval_notes }}</td>
                                 </tr>
                                 @endif
@@ -75,7 +69,7 @@
                     <hr>
 
                     <div class="form-group">
-                        <label><strong>Reason for Leave:</strong></label>
+                        <label><strong>Alasan Cuti:</strong></label>
                         <div class="p-3 bg-light rounded">
                             {{ $leave->reason }}
                         </div>
@@ -83,10 +77,10 @@
 
                     @if($leave->attachment)
                     <div class="form-group">
-                        <label><strong>Attachment:</strong></label>
-                        <div class="p-3 bg-light rounded">
+                        <label><strong>Lampiran:</strong></label>
+                        <div>
                             <a href="{{ Storage::url($leave->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-download mr-1"></i> Download Attachment
+                                <i class="fas fa-download mr-1"></i> Unduh Lampiran
                             </a>
                             <small class="text-muted ml-2">
                                 {{ pathinfo($leave->attachment, PATHINFO_EXTENSION) }} file
@@ -98,12 +92,12 @@
                     @if($leave->status === 'pending')
                     <div class="mt-4">
                         <a href="{{ route('leaves.edit', $leave->id) }}" class="btn btn-warning">
-                            <i class="fas fa-edit mr-1"></i> Edit Leave Request
+                            <i class="fas fa-edit mr-1"></i> Edit Permintaan Cuti
                         </a>
                         <button type="button" class="btn btn-danger delete-btn" 
                                 data-id="{{ $leave->id }}" 
                                 data-name="{{ $leave->leave_type }} leave from {{ $leave->formatted_start_date }} to {{ $leave->formatted_end_date }}">
-                            <i class="fas fa-trash mr-1"></i> Cancel Leave Request
+                            <i class="fas fa-trash mr-1"></i> Batalkan Permintaan Cuti
                         </button>
                     </div>
                     @endif
@@ -117,7 +111,7 @@
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="fas fa-user mr-2"></i>
-                        Employee Information
+                        Informasi Karyawan
                     </h5>
                 </div>
                 <div class="card-body">
@@ -128,23 +122,23 @@
                     </div>
                     <table class="table table-borderless">
                         <tr>
-                            <td><strong>Name:</strong></td>
+                            <td><strong>Nama:</strong></td>
                             <td>{{ $leave->employee->name }}</td>
                         </tr>
                         <tr>
-                            <td><strong>Employee ID:</strong></td>
+                            <td><strong>ID Karyawan:</strong></td>
                             <td>{{ $leave->employee->employee_id }}</td>
                         </tr>
                         <tr>
-                            <td><strong>Department:</strong></td>
+                            <td><strong>Departemen:</strong></td>
                             <td>{{ $leave->employee->department }}</td>
                         </tr>
                         <tr>
-                            <td><strong>Position:</strong></td>
+                            <td><strong>Jabatan:</strong></td>
                             <td>{{ $leave->employee->position }}</td>
                         </tr>
                         <tr>
-                            <td><strong>Join Date:</strong></td>
+                            <td><strong>Tanggal Bergabung:</strong></td>
                             <td>{{ $leave->employee->join_date->format('d/m/Y') }}</td>
                         </tr>
                     </table>
@@ -156,7 +150,7 @@
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="fas fa-clock mr-2"></i>
-                        Leave Timeline
+                        Timeline Cuti
                     </h5>
                 </div>
                 <div class="card-body">
@@ -164,7 +158,7 @@
                         <div class="timeline-item">
                             <div class="timeline-marker bg-primary"></div>
                             <div class="timeline-content">
-                                <h6 class="timeline-title">Leave Request Submitted</h6>
+                                <h6 class="timeline-title">Permintaan Cuti Dibuat</h6>
                                 <p class="timeline-text">{{ $leave->created_at->format('d/m/Y H:i') }}</p>
                             </div>
                         </div>
@@ -173,7 +167,7 @@
                         <div class="timeline-item">
                             <div class="timeline-marker bg-success"></div>
                             <div class="timeline-content">
-                                <h6 class="timeline-title">Leave Request Approved</h6>
+                                <h6 class="timeline-title">Permintaan Cuti Disetujui</h6>
                                 <p class="timeline-text">{{ $leave->approved_at->format('d/m/Y H:i') }}</p>
                                 @if($leave->approver)
                                 <small class="text-muted">by {{ $leave->approver->name }}</small>
@@ -186,7 +180,7 @@
                         <div class="timeline-item">
                             <div class="timeline-marker bg-danger"></div>
                             <div class="timeline-content">
-                                <h6 class="timeline-title">Leave Request Rejected</h6>
+                                <h6 class="timeline-title">Permintaan Cuti Ditolak</h6>
                                 <p class="timeline-text">{{ $leave->approved_at->format('d/m/Y H:i') }}</p>
                                 @if($leave->approver)
                                 <small class="text-muted">by {{ $leave->approver->name }}</small>
@@ -199,8 +193,8 @@
                         <div class="timeline-item">
                             <div class="timeline-marker bg-warning"></div>
                             <div class="timeline-content">
-                                <h6 class="timeline-title">Pending Approval</h6>
-                                <p class="timeline-text">Waiting for manager/HR approval</p>
+                                <h6 class="timeline-title">Menunggu Persetujuan</h6>
+                                <p class="timeline-text">Menunggu persetujuan manager/HR</p>
                             </div>
                         </div>
                         @endif
@@ -216,22 +210,22 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Cancel Leave Request</h5>
+                <h5 class="modal-title">Batalkan Permintaan Cuti</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to cancel this leave request?</p>
+                <p>Apakah Anda yakin ingin membatalkan permintaan cuti ini?</p>
                 <p><strong id="deleteLeaveName"></strong></p>
-                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Tindakan ini tidak dapat dibatalkan.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Yes, Cancel Leave Request</button>
+                    <button type="submit" class="btn btn-danger">Ya, Batalkan Permintaan Cuti</button>
                 </form>
             </div>
         </div>

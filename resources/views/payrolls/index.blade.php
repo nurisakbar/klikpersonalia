@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Payroll Management')
+@section('title', 'Kelola Payroll - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Payroll')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Payroll</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -8,10 +13,6 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-money-bill-wave mr-2"></i>
-                        Payroll Management
-                    </h3>
                     <div class="card-tools">
                         <div class="btn-group" role="group">
                             <a href="{{ route('payrolls.create') }}" class="btn btn-primary btn-sm">

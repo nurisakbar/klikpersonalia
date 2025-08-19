@@ -94,7 +94,7 @@ $(function () {
         dom: 'Bfrtip',
         buttons: [
 			{
-				text: '<i class="fas fa-plus"></i> Tambah Absensi',
+				text: '<i class="fas fa-plus"></i> Tambah',
 				className: 'btn btn-primary btn-sm dt-add-btn mr-2',
 				action: function () {
 					window.location.href = '{{ route("attendance.create") }}';

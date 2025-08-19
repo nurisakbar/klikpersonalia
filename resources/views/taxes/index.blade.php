@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Tax Management')
+@section('title', 'Kelola Pajak - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Pajak')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Pajak</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -8,15 +13,12 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-calculator"></i> Tax Management
-                    </h3>
                     <div class="card-tools">
                         <a href="{{ route('taxes.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> New Tax Calculation
+                            <i class="fas fa-plus"></i> Tambah Pajak
                         </a>
                         <a href="{{ route('taxes.report') }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-chart-bar"></i> Tax Report
+                            <i class="fas fa-chart-bar"></i> Laporan Pajak
                         </a>
                     </div>
                 </div>
@@ -24,14 +26,14 @@
                     <!-- Filters -->
                     <div class="row mb-3">
                         <div class="col-md-3">
-                            <label for="period">Tax Period</label>
+                            <label for="period">Periode Pajak</label>
                             <input type="month" class="form-control" id="period" name="period" 
                                    value="{{ request('period') }}" onchange="applyFilters()">
                         </div>
                         <div class="col-md-3">
-                            <label for="employee_id">Employee</label>
+                            <label for="employee_id">Karyawan</label>
                             <select class="form-control" id="employee_id" name="employee_id" onchange="applyFilters()">
-                                <option value="">All Employees</option>
+                                <option value="">Semua Karyawan</option>
                                 @foreach($employees as $employee)
                                     <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>
                                         {{ $employee->name }}
@@ -42,18 +44,18 @@
                         <div class="col-md-3">
                             <label for="status">Status</label>
                             <select class="form-control" id="status" name="status" onchange="applyFilters()">
-                                <option value="">All Status</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="calculated" {{ request('status') == 'calculated' ? 'selected' : '' }}>Calculated</option>
-                                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                                <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
+                                <option value="">Semua Status</option>
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Menunggu</option>
+                                <option value="calculated" {{ request('status') == 'calculated' ? 'selected' : '' }}>Dihitung</option>
+                                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Dibayar</option>
+                                <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label>&nbsp;</label>
                             <div>
                                 <button type="button" class="btn btn-secondary" onclick="clearFilters()">
-                                    <i class="fas fa-times"></i> Clear Filters
+                                    <i class="fas fa-times"></i> Bersihkan Filter
                                 </button>
                             </div>
                         </div>
@@ -64,13 +66,13 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="card-title">Bulk Tax Calculation</h5>
+                                    <h5 class="card-title">Hitung Pajak Bulk</h5>
                                 </div>
                                 <div class="card-body">
                                     <form action="{{ route('taxes.calculate-for-payroll') }}" method="POST" class="form-inline">
                                         @csrf
                                         <div class="form-group mr-3">
-                                            <label for="month" class="mr-2">Month:</label>
+                                            <label for="month" class="mr-2">Bulan:</label>
                                             <select name="month" id="month" class="form-control" required>
                                                 @for($i = 1; $i <= 12; $i++)
                                                     <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
@@ -78,7 +80,7 @@
                                             </select>
                                         </div>
                                         <div class="form-group mr-3">
-                                            <label for="year" class="mr-2">Year:</label>
+                                            <label for="year" class="mr-2">Tahun:</label>
                                             <select name="year" id="year" class="form-control" required>
                                                 @for($i = date('Y'); $i >= date('Y') - 5; $i--)
                                                     <option value="{{ $i }}">{{ $i }}</option>
@@ -86,7 +88,7 @@
                                             </select>
                                         </div>
                                         <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-calculator"></i> Calculate Tax for All Employees
+                                            <i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan
                                         </button>
                                     </form>
                                 </div>
@@ -99,10 +101,10 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>Employee</th>
-                                    <th>Tax Period</th>
-                                    <th>Taxable Income</th>
-                                    <th>PTKP Status</th>
+                                    <th>Karyawan</th>
+                                    <th>Periode Pajak</th>
+                                    <th>Pendapatan Kena Pajak</th>
+                                    <th>Status PTKP</th>
                                     <th>Tax Amount</th>
                                     <th>Tax Rate</th>
                                     <th>Status</th>

@@ -126,7 +126,7 @@ $(function () {
         dom: 'Bfrtip',
         buttons: [
 			{
-				text: '<i class="fas fa-plus"></i> Tambah Karyawan',
+				text: '<i class="fas fa-plus"></i> Tambah',
 				className: 'btn btn-primary btn-sm mr-2',
 				action: function () {
 					window.location.href = '{{ route("employees.create") }}';

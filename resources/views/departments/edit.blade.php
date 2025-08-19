@@ -1,13 +1,18 @@
 @extends('layouts.app')
-@section('title', 'Edit Departemen')
+
+@section('title', 'Perbarui Departemen - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Perbarui Departemen')
+
+@section('breadcrumb')
+<li class="breadcrumb-item"><a href="{{ route('departments.index') }}">Departemen</a></li>
+<li class="breadcrumb-item active">Perbarui</li>
+@endsection
+
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Edit Departemen</h3>
-                </div>
                 <div class="card-body">
                     <form id="editDepartmentForm" action="{{ route('departments.update', $department->id) }}" method="POST">
                         @csrf
@@ -42,9 +47,9 @@
                             </div>
                             <small class="form-text text-muted">Departemen aktif dapat digunakan untuk karyawan baru</small>
                         </div>
-                        <div class="card-footer">
+                        <div>
                             <button type="submit" class="btn btn-primary" id="submitBtn">
-                                <i class="fas fa-save mr-1"></i> Update
+                                <i class="fas fa-save mr-1"></i> Perbarui
                             </button>
                             <a href="{{ route('departments.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-times mr-1"></i> Batal

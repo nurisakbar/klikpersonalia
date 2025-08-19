@@ -1,5 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Kelola Jabatan')
+
+@section('title', 'Kelola Jabatan - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Jabatan')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Jabatan</li>
+@endsection
+
 @section('content')
 <div class="container-fluid">
     <div class="row">
@@ -79,7 +86,7 @@ $(function () {
         dom: 'Bfrtip',
         buttons: [
             {
-                text: '<i class="fas fa-plus"></i> Tambah Jabatan',
+                text: '<i class="fas fa-plus"></i> Tambah',
                 className: 'btn btn-primary btn-sm mr-2',
                 action: function () {
                     window.location.href = '{{ route("positions.create") }}';

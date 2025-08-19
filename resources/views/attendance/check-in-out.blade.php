@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Check In/Out - Attendance')
+@section('title', 'Datang/Pulang - Kehadiran')
 
-@section('title', 'Check In/Out - Attendance - Aplikasi Payroll KlikMedis')
-@section('page-title', 'Check In/Out - Attendance')
+@section('title', 'Datang/Pulang - Kehadiran - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Datang/Pulang - Kehadiran')
 
 @section('breadcrumb')
-<li class="breadcrumb-item active">Check In Check Out</li>
+<li class="breadcrumb-item active">Datang Pulang</li>
 @endsection
 
 @section('content')
@@ -14,12 +14,6 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-clock mr-2"></i>
-                        Check In/Out System
-                    </h3>
-                </div>
                 <div class="card-body">
                     <!-- Current Time Display -->
                     <div class="row mb-4">
@@ -37,15 +31,15 @@
                         </div>
                     </div>
 
-                    <!-- Check In/Out Buttons -->
+                    <!-- Datang/Pulang Buttons -->
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card bg-success text-white">
                                 <div class="card-body text-center">
-                                    <h4><i class="fas fa-sign-in-alt mr-2"></i>Check In</h4>
+                                    <h4><i class="fas fa-sign-in-alt mr-2"></i>Datang</h4>
                                     <p class="mb-3">Catat waktu kedatangan Anda</p>
                                      <button type="button" class="btn btn-light btn-lg" id="checkInBtn" onclick="performCheckIn()">
-                                        <i class="fas fa-play mr-2"></i>Check In Sekarang
+                                        <i class="fas fa-play mr-2"></i>Datang Sekarang
                                     </button>
                                     <div id="checkInStatus" class="mt-2"></div>
                                 </div>
@@ -83,7 +77,7 @@
                                                     <i class="fas fa-clock"></i>
                                                 </span>
                                                 <div class="info-box-content">
-                                                    <span class="info-box-text">Waktu Check In</span>
+                                                    <span class="info-box-text">Waktu Datang</span>
                                                     <span class="info-box-number" id="checkInTime">--:--</span>
                                                 </div>
                                             </div>
@@ -143,7 +137,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>Tanggal</th>
-                                                    <th>Check In</th>
+                                                    <th>Datang</th>
                                                     <th>Check Out</th>
                                                     <th>Total Jam</th>
                                                     <th>Lembur</th>

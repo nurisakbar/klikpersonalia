@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Overtime Management')
+@section('title', 'Kelola Lembur - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Lembur')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Lembur</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -8,16 +13,12 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-clock mr-2"></i>
-                        Overtime Management
-                    </h3>
                     <div class="card-tools">
                         <a href="{{ route('overtimes.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus mr-1"></i> Submit Overtime Request
+                            <i class="fas fa-plus mr-1"></i> Ajukan Permintaan Lembur
                         </a>
                         <a href="{{ route('overtimes.statistics') }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-chart-bar mr-1"></i> Overtime Statistics
+                            <i class="fas fa-chart-bar mr-1"></i> Statistik Lembur
                         </a>
                     </div>
                 </div>
@@ -27,14 +28,14 @@
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Overtime Type</th>
-                                        <th>Date</th>
-                                        <th>Start Time</th>
-                                        <th>End Time</th>
-                                        <th>Total Hours</th>
+                                        <th>Jenis Lembur</th>
+                                        <th>Tanggal</th>
+                                        <th>Waktu Mulai</th>
+                                        <th>Waktu Selesai</th>
+                                        <th>Total Jam</th>
                                         <th>Status</th>
-                                        <th>Submitted</th>
-                                        <th>Actions</th>
+                                        <th>Dibuat</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -46,7 +47,7 @@
                                             <td>{{ $overtime->formatted_date }}</td>
                                             <td>{{ $overtime->start_time }}</td>
                                             <td>{{ $overtime->end_time }}</td>
-                                            <td>{{ $overtime->total_hours }} hours</td>
+                                            <td>{{ $overtime->total_hours }} jam</td>
                                             <td>{!! $overtime->status_badge !!}</td>
                                             <td>{{ $overtime->created_at->format('d/m/Y H:i') }}</td>
                                             <td>
@@ -79,10 +80,10 @@
                     @else
                         <div class="text-center py-4">
                             <i class="fas fa-clock fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Overtime Requests Found</h5>
-                            <p class="text-muted">You haven't submitted any overtime requests yet.</p>
+                            <h5 class="text-muted">Tidak Ada Permintaan Lembur</h5>
+                            <p class="text-muted">Anda belum mengajukan permintaan lembur.</p>
                             <a href="{{ route('overtimes.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus mr-1"></i> Submit Your First Overtime Request
+                                <i class="fas fa-plus mr-1"></i> Ajukan Permintaan Lembur Pertama
                             </a>
                         </div>
                     @endif
@@ -97,22 +98,22 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Cancel Overtime Request</h5>
+                <h5 class="modal-title">Batalkan Permintaan Lembur</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to cancel this overtime request?</p>
+                <p>Apakah Anda yakin ingin membatalkan permintaan lembur ini?</p>
                 <p><strong id="deleteOvertimeName"></strong></p>
-                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Tindakan ini tidak dapat dibatalkan.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Yes, Cancel Overtime Request</button>
+                    <button type="submit" class="btn btn-danger">Ya, Batalkan Permintaan Lembur</button>
                 </form>
             </div>
         </div>

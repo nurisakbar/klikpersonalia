@@ -1,36 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Leave Approval')
+@section('title', 'Persetujuan Cuti - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Persetujuan Cuti')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Persetujuan Cuti</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        Leave Approval
-                    </h6>
-                    <div class="card-tools">
-                        <a href="{{ route('leaves.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to Leave List
-                        </a>
-                    </div>
-                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="leave-approval-table" style="width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>Employee</th>
-                                    <th>Leave Type</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Total Days</th>
-                                    <th>Reason</th>
-                                    <th>Submitted</th>
-                                    <th>Actions</th>
+                                    <th>Karyawan</th>
+                                    <th>Jenis Cuti</th>
+                                    <th>Tanggal Mulai</th>
+                                    <th>Tanggal Selesai</th>
+                                    <th>Total Hari</th>
+                                    <th>Alasan</th>
+                                    <th>Dibuat</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                         </table>

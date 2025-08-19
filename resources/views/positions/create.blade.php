@@ -1,11 +1,18 @@
 @extends('layouts.app')
-@section('title', 'Tambah Jabatan')
+
+@section('title', 'Tambah Jabatan - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Tambah Jabatan')
+
+@section('breadcrumb')
+<li class="breadcrumb-item"><a href="{{ route('positions.index') }}">Jabatan</a></li>
+<li class="breadcrumb-item active">Tambah</li>
+@endsection
+
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                </div>
                 <div class="card-body">
                     <form id="createPositionForm" action="{{ route('positions.store') }}" method="POST">
                         @csrf
@@ -39,7 +46,7 @@
                             </div>
                             <small class="form-text text-muted">Jabatan aktif dapat digunakan untuk karyawan baru</small>
                         </div>
-                        <div class="card-footer">
+                        <div>
                             <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="fas fa-save mr-1"></i> Simpan
                             </button>

@@ -13,17 +13,6 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-plus mr-2"></i>
-                        Tambah Absensi Baru
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('attendance.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Kembali
-                        </a>
-                    </div>
-                </div>
             <form action="{{ route('attendance.store') }}" method="POST" id="attendanceForm">
                 @csrf
                 <div class="card-body">
@@ -104,16 +93,15 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                </div>
 
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-primary" id="btnSaveAttendance">
-                        <i class="fas fa-save mr-1"></i> Simpan
-                    </button>
-                    <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-times mr-1"></i> Batal
-                    </a>
+                    <div>
+                        <button type="submit" class="btn btn-primary" id="btnSaveAttendance">
+                            <i class="fas fa-save mr-1"></i> Simpan
+                        </button>
+                        <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>

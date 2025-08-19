@@ -1,13 +1,15 @@
 @extends('layouts.app')
-@section('title', 'Kelola Departemen')
+@section('title', 'Kelola Departemen - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Departemen')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Departemen</li>
+@endsection
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Daftar Departemen</h3>
-                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="departments-table">
@@ -85,7 +87,7 @@ $(function () {
         dom: 'Bfrtip',
         buttons: [
             {
-                text: '<i class="fas fa-plus"></i> Tambah Departemen',
+                text: '<i class="fas fa-plus"></i> Tambah',
                 className: 'btn btn-primary btn-sm mr-2',
                 action: function () {
                     window.location.href = '{{ route("departments.create") }}';
