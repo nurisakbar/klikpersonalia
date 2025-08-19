@@ -9,17 +9,21 @@
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Form Tambah Absensi</h3>
-                <div class="card-tools">
-                    <a href="{{ route('attendance.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                    </a>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus mr-2"></i>
+                        Tambah Absensi Baru
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{{ route('attendance.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                    </div>
                 </div>
-            </div>
             <form action="{{ route('attendance.store') }}" method="POST" id="attendanceForm">
                 @csrf
                 <div class="card-body">
@@ -101,12 +105,14 @@
                         </div>
                     </div>
                 </div>
+                </div>
+
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary" id="btnSaveAttendance">
-                        <i class="fas fa-save"></i> Simpan
+                        <i class="fas fa-save mr-1"></i> Simpan
                     </button>
                     <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Batal
+                        <i class="fas fa-times mr-1"></i> Batal
                     </a>
                 </div>
             </form>
@@ -116,6 +122,9 @@
 @endsection
 
 @push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <script>
 $(document).ready(function() {
     // Auto-calculate total hours when check-in and check-out are filled
@@ -158,39 +167,37 @@ $(document).ready(function() {
     $('#attendanceForm').on('submit', function(e) {
         e.preventDefault();
         const $btn = $('#btnSaveAttendance');
-        $btn.prop('disabled', true);
-        SwalHelper.loading('Menyimpan...');
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
 
-        const formData = $(this).serialize();
+        const formData = new FormData(this);
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
-            errorHandled: true, // Mark as manually handled
+            errorHandled: true,
             data: formData,
-            headers: { 'Accept': 'application/json' },
+            processData: false,
+            contentType: false,
             success: function(response) {
-                SwalHelper.close();
                 if (response.success) {
-                    SwalHelper.success('Berhasil!', response.message).then(() => {
+                    SwalHelper.success('Berhasil!', response.message, 2000);
+                    setTimeout(() => {
                         window.location.href = '{{ route('attendance.index') }}';
-                    });
+                    }, 2000);
                 } else {
                     SwalHelper.error('Gagal!', response.message);
+                    $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
                 }
             },
             error: function(xhr) {
-                SwalHelper.close();
-                let message = 'Terjadi kesalahan. Mohon periksa kembali input Anda.';
+                let message = 'Terjadi kesalahan saat menyimpan data';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     message = xhr.responseJSON.message;
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                     const errs = xhr.responseJSON.errors;
                     message = Object.values(errs).flat().join('\n');
                 }
-                SwalHelper.error('Validasi Gagal!', message);
-            },
-            complete: function() {
-                $btn.prop('disabled', false);
+                SwalHelper.error('Error!', message);
+                $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
             }
         });
     });

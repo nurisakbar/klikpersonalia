@@ -210,12 +210,7 @@ $(function () {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Approve Overtime Request',
-            'Are you sure you want to approve this overtime request?<br><strong>' + name + '</strong>',
-            'Yes, Approve',
-            'Cancel'
-        ).then((result) => {
+        SwalHelper.confirm('Approve Overtime Request', 'Are you sure you want to approve this overtime request?<br><strong>' + name + '</strong>', function(result) {
             if (result.isConfirmed) {
                 SwalHelper.loading('Approving...');
                 
@@ -228,9 +223,10 @@ $(function () {
                     },
                     success: function(response) {
                         if (response.success) {
-                            SwalHelper.success('Approved!', response.message).then(() => {
+                            SwalHelper.success('Approved!', response.message, 2000);
+                            setTimeout(() => {
                                 location.reload();
-                            });
+                            }, 2000);
                         } else {
                             SwalHelper.error('Error!', response.message);
                         }
@@ -286,9 +282,10 @@ $(function () {
                 if (response.success) {
                     $('#rejectionModal').modal('hide');
                     $('#rejection_reason').val('');
-                    SwalHelper.success('Rejected!', response.message).then(() => {
+                    SwalHelper.success('Rejected!', response.message, 2000);
+                    setTimeout(() => {
                         location.reload();
-                    });
+                    }, 2000);
                 } else {
                     SwalHelper.error('Error!', response.message);
                 }

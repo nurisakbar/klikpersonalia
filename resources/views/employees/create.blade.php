@@ -9,12 +9,21 @@
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Form Tambah Karyawan</h3>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+                        <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus mr-2"></i>
+                        Tambah Karyawan Baru
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{{ route('employees.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                    </div>
+                </div>
             <form id="createEmployeeForm" action="{{ route('employees.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
@@ -158,12 +167,13 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="fas fa-save"></i> Simpan
+                        <i class="fas fa-save mr-1"></i> Simpan
                     </button>
                     <a href="{{ route('employees.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Kembali
+                        <i class="fas fa-times mr-1"></i> Batal
                     </a>
                 </div>
             </form>
@@ -173,6 +183,9 @@
 @endsection
 
 @push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <script>
 $(function () {
     // Setup CSRF token for AJAX
@@ -220,13 +233,10 @@ $(function () {
         $.ajax({
             url: $(this).attr('action'),
             type: 'POST',
-            errorHandled: true, // Mark as manually handled
+            errorHandled: true,
             data: formData,
             processData: false,
             contentType: false,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
             success: function(response) {
                 if (response.success) {
                     SwalHelper.success('Berhasil!', response.message, 2000);
@@ -235,7 +245,7 @@ $(function () {
                     }, 2000);
                 } else {
                     SwalHelper.error('Gagal!', response.message);
-                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan');
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
                 }
             },
             error: function(xhr) {
@@ -243,7 +253,6 @@ $(function () {
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     message = xhr.responseJSON.message;
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // Handle validation errors
                     let errors = xhr.responseJSON.errors;
                     let errorMessages = [];
                     for (let field in errors) {
@@ -253,7 +262,7 @@ $(function () {
                 }
                 
                 SwalHelper.error('Error!', message);
-                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan');
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
             }
         });
     });

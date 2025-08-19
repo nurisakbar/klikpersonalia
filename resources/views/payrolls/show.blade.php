@@ -251,11 +251,7 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Reject Payroll',
-            `Are you sure you want to reject payroll for ${name}?`,
-            'Ya, Reject!'
-        ).then((result) => {
+        SwalHelper.confirmDelete('Reject Payroll', `Are you sure you want to reject payroll for ${name}?`, function(result) {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `/payrolls/${id}/reject`,
@@ -287,11 +283,7 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Delete Payroll',
-            `Are you sure you want to delete payroll for ${name}?`,
-            'Ya, Hapus!'
-        ).then((result) => {
+        SwalHelper.confirmDelete('Delete Payroll', `Are you sure you want to delete payroll for ${name}?`, function(result) {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `/payrolls/${id}`,
@@ -323,11 +315,7 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Mark as Paid',
-            `Are you sure you want to mark payroll for ${name} as paid?`,
-            'Ya, Mark as Paid!'
-        ).then((result) => {
+        SwalHelper.confirm('Mark as Paid', `Are you sure you want to mark payroll for ${name} as paid?`, function(result) {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `/payrolls/${id}/mark-paid`,

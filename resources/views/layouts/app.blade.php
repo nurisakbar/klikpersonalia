@@ -174,6 +174,31 @@
                             </a>
                         </li>
 
+                        <!-- Master Data Management -->
+                        <li class="nav-item {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-database"></i>
+                                <p>
+                                    Master Data
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Kelola Departemen</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('positions.index') }}" class="nav-link {{ request()->routeIs('positions.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Kelola Jabatan</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
                         <!-- Payroll Management -->
                         <li class="nav-item {{ request()->routeIs('payrolls.*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">

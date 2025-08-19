@@ -240,32 +240,17 @@ $(function () {
         
         console.log('Approve button clicked for leave ID:', leaveId);
         
-        Swal.fire({
-            title: 'Konfirmasi Approval Cuti',
-            html: `
-                <div class="text-left">
-                    <p><strong>Karyawan:</strong> ${employeeName}</p>
-                    <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
-                    <p><strong>Total Hari:</strong> ${totalDays} hari</p>
-                    <div class="form-group mt-3">
-                        <label for="approval_notes">Catatan Approval (Opsional)</label>
-                        <textarea id="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
-                    </div>
+        SwalHelper.confirm('Konfirmasi Approval Cuti', `
+            <div class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="approval_notes">Catatan Approval (Opsional)</label>
+                    <textarea id="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
                 </div>
-            `,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Setujui!',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            reverseButtons: true,
-            preConfirm: () => {
-                return {
-                    notes: document.getElementById('approval_notes').value
-                };
-            }
-        }).then((result) => {
+            </div>
+        `, function(result) {
             if (result.isConfirmed) {
                 // Show loading
                 SwalHelper.loading('Menyetujui permintaan cuti...');
@@ -313,37 +298,17 @@ $(function () {
         
         console.log('Reject button clicked for leave ID:', leaveId);
         
-        Swal.fire({
-            title: 'Konfirmasi Penolakan Cuti',
-            html: `
-                <div class="text-left">
-                    <p><strong>Karyawan:</strong> ${employeeName}</p>
-                    <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
-                    <p><strong>Total Hari:</strong> ${totalDays} hari</p>
-                    <div class="form-group mt-3">
-                        <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
-                        <textarea id="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
-                    </div>
+        SwalHelper.confirmDelete('Konfirmasi Penolakan Cuti', `
+            <div class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
+                    <textarea id="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
                 </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Tolak!',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            reverseButtons: true,
-            preConfirm: () => {
-                const notes = document.getElementById('rejection_notes').value;
-                if (!notes.trim()) {
-                    Swal.showValidationMessage('Alasan penolakan harus diisi');
-                    return false;
-                }
-                return {
-                    notes: notes
-                };
-            }
-        }).then((result) => {
+            </div>
+        `, function(result) {
             if (result.isConfirmed) {
                 // Show loading
                 SwalHelper.loading('Menolak permintaan cuti...');
