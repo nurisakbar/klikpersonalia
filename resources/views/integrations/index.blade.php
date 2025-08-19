@@ -236,6 +236,7 @@ $(document).ready(function() {
         $.ajax({
             url: `/integrations/${integrationId}/test-connection`,
             method: 'POST',
+            errorHandled: true, // Mark as manually handled
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
@@ -273,6 +274,7 @@ $(document).ready(function() {
         $.ajax({
             url: `/integrations/${currentIntegrationId}/sync-now`,
             method: 'POST',
+            errorHandled: true, // Mark as manually handled
             data: {
                 sync_type: syncType,
                 _token: $('meta[name="csrf-token"]').attr('content')

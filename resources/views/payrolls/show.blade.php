@@ -224,6 +224,7 @@ $(document).ready(function() {
                 $.ajax({
                     url: `/payrolls/${id}/approve`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
@@ -259,6 +260,7 @@ $(document).ready(function() {
                 $.ajax({
                     url: `/payrolls/${id}/reject`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
@@ -294,6 +296,7 @@ $(document).ready(function() {
                 $.ajax({
                     url: `/payrolls/${id}`,
                     method: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
@@ -329,6 +332,7 @@ $(document).ready(function() {
                 $.ajax({
                     url: `/payrolls/${id}/mark-paid`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         _token: '{{ csrf_token() }}'
                     },

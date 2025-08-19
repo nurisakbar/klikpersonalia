@@ -365,6 +365,7 @@ function validateFile(type) {
     $.ajax({
         url: '/import/validate',
         method: 'POST',
+        errorHandled: true, // Mark as manually handled
         data: formData,
         processData: false,
         contentType: false,

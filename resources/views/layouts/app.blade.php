@@ -525,6 +525,27 @@
         @if($errors->any())
             SwalHelper.error('Error!', '{!! implode("\\n", $errors->all()) !!}');
         @endif
+        
+        // Clear any lingering session messages after showing them
+        @if(session('success') || session('error') || $errors->any())
+            // Clear session messages after a short delay
+            setTimeout(function() {
+                // This will prevent the alert from showing again on page refresh
+                if (typeof window.history.replaceState === 'function') {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }, 100);
+        @endif
+        
+        // Clear any stored alerts or errors
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('swal-error');
+            localStorage.removeItem('swal-success');
+        }
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('swal-error');
+            sessionStorage.removeItem('swal-success');
+        }
     </script>
 
     <!-- DataTables Buttons global fix: remove unintended btn-secondary so color classes apply -->

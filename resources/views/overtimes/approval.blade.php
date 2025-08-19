@@ -222,6 +222,7 @@ $(function () {
                 $.ajax({
                     url: '/overtimes/' + id + '/approve',
                     type: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
@@ -276,6 +277,7 @@ $(function () {
         $.ajax({
             url: url,
             type: 'POST',
+            errorHandled: true, // Mark as manually handled
             data: {
                 _token: '{{ csrf_token() }}',
                 rejection_reason: reason

@@ -120,6 +120,7 @@ $(document).ready(function() {
                 $.ajax({
                     url: `{{ url('leaves') }}/${leaveId}`,
                     method: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },

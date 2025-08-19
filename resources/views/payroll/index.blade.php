@@ -153,6 +153,7 @@ $(function () {
                 $.ajax({
                     url: '/payroll/' + id,
                     type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
                     success: function(response) {
                         if (response.success) {
                             SwalHelper.success('Berhasil!', response.message).then(() => {

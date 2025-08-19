@@ -220,6 +220,7 @@ $(function () {
         $.ajax({
             url: $(this).attr('action'),
             type: 'POST',
+            errorHandled: true, // Mark as manually handled
             data: formData,
             processData: false,
             contentType: false,

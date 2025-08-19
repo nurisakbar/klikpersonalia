@@ -7,6 +7,12 @@
 <script>
 // Global Sweet Alert Helper
 window.SwalHelper = {
+    // Clear any existing alerts on initialization
+    _clearExistingAlerts: function() {
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+    },
     // Success Toast
     toastSuccess: function(message, duration = 3000) {
         Swal.fire({
@@ -197,8 +203,28 @@ window.SwalHelper = {
     }
 };
 
+// Clear any existing alerts when page loads
+$(document).ready(function() {
+    SwalHelper._clearExistingAlerts();
+});
+
 // Global AJAX Error Handler
 $(document).ajaxError(function(event, xhr, settings, error) {
+    // Skip if error is already handled manually
+    if (settings.errorHandled) {
+        return;
+    }
+    
+    // Skip DataTables AJAX requests (they handle their own errors)
+    if (settings.url && settings.url.includes('data')) {
+        return;
+    }
+    
+    // Skip if it's a form submission (let form handle its own errors)
+    if (settings.data && settings.data instanceof FormData) {
+        return;
+    }
+    
     let message = 'Terjadi kesalahan. Silakan coba lagi.';
     
     if (xhr.responseJSON && xhr.responseJSON.message) {

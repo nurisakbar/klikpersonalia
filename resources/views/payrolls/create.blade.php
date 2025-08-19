@@ -342,6 +342,7 @@ $(document).ready(function() {
         $.ajax({
             url: '{{ route("payrolls.calculate") }}',
             method: 'POST',
+            errorHandled: true, // Mark as manually handled
             data: requestData,
             success: function(response) {
                 if (response.success) {

@@ -182,6 +182,7 @@ $(document).ready(function() {
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST', // method spoofed with _method=PUT already in form
+            errorHandled: true, // Mark as manually handled
             data: formData,
             headers: { 'Accept': 'application/json' },
             success: function(response) {

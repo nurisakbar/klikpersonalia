@@ -100,7 +100,13 @@ $(function () {
         serverSide: true,
         ajax: {
             url: '{{ route("employees.data") }}',
-            type: 'GET'
+            type: 'GET',
+            error: function(xhr, error, thrown) {
+                // Handle DataTable errors silently or show a user-friendly message
+                console.log('DataTable error:', error);
+                // You can show a toast notification here if needed
+                // SwalHelper.toastError('Gagal memuat data karyawan');
+            }
         },
         columns: [
             {data: 'employee_id', name: 'employee_id', width: '120px'},
@@ -185,6 +191,7 @@ $(function () {
         $.ajax({
             url: '/employees/' + id,
             type: 'GET',
+            errorHandled: true, // Mark as manually handled
             headers: {
                 'Accept': 'application/json'
             },
@@ -290,6 +297,7 @@ $(function () {
                 $.ajax({
                     url: '/employees/' + id,
                     type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },

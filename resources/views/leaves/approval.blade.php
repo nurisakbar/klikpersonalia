@@ -274,6 +274,7 @@ $(function () {
                 $.ajax({
                     url: `{{ url('leaves') }}/${leaveId}/approve`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         approval_notes: result.value.notes
                     },
@@ -351,6 +352,7 @@ $(function () {
                 $.ajax({
                     url: `{{ url('leaves') }}/${leaveId}/reject`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         approval_notes: result.value.notes
                     },
