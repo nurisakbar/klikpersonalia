@@ -61,6 +61,22 @@ class Employee extends Model
     }
 
     /**
+     * Get the department that owns the employee.
+     */
+    public function departmentRelation()
+    {
+        return $this->belongsTo(Department::class, 'department', 'name');
+    }
+
+    /**
+     * Get the position that owns the employee.
+     */
+    public function positionRelation()
+    {
+        return $this->belongsTo(Position::class, 'position', 'name');
+    }
+
+    /**
      * Get the payrolls for the employee.
      */
     public function payrolls()

@@ -1,12 +1,9 @@
 @extends('layouts.app')
-
 @section('title', 'Dashboard - Aplikasi Payroll KlikMedis')
 @section('page-title', 'Dashboard')
-
 @section('breadcrumb')
 <li class="breadcrumb-item active">Dashboard</li>
 @endsection
-
 @section('content')
 <!-- Info boxes -->
 <div class="row">
@@ -71,21 +68,10 @@
         </div>
     </div>
 </div>
-
 <div class="row">
     <div class="col-md-8">
         <!-- AREA CHART -->
         <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Grafik Kehadiran Bulanan</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <button type="button" class="btn btn-tool" data-card-widget="remove">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
             </div>
             <div class="card-body">
                 <div class="chart">
@@ -93,36 +79,17 @@
                 </div>
             </div>
         </div>
-
         <!-- DONUT CHART -->
         <div class="card card-danger">
-            <div class="card-header">
-                <h3 class="card-title">Distribusi Departemen</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <button type="button" class="btn btn-tool" data-card-widget="remove">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
             </div>
             <div class="card-body">
                 <canvas id="donutChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
             </div>
         </div>
     </div>
-
     <div class="col-md-4">
         <!-- PRODUCT LIST -->
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Karyawan Terbaru</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                </div>
             </div>
             <div class="card-body p-0">
                 <ul class="products-list product-list-in-card pl-2 pr-2">
@@ -152,7 +119,6 @@
                 <a href="{{ route('employees.index') }}" class="uppercase">Lihat Semua Karyawan</a>
             </div>
         </div>
-
         <!-- Calendar -->
         <div class="card bg-gradient-success">
             <div class="card-header border-0">
@@ -172,7 +138,6 @@
         </div>
     </div>
 </div>
-
 <!-- TABLE: LATEST ORDERS -->
 <div class="card">
     <div class="card-header border-transparent">
@@ -226,14 +191,12 @@
     </div>
 </div>
 @endsection
-
 @push('js')
 <!-- ChartJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
 $(function () {
     'use strict'
-
     // Area Chart
     var areaChartCanvas = $('#areaChart').get(0).getContext('2d')
     var areaChartData = {
@@ -252,7 +215,6 @@ $(function () {
             }
         ]
     }
-
     var areaChartOptions = {
         maintainAspectRatio: false,
         responsive: true,
@@ -272,13 +234,11 @@ $(function () {
             }]
         }
     }
-
     new Chart(areaChartCanvas, {
         type: 'line',
         data: areaChartData,
         options: areaChartOptions
     })
-
     // Donut Chart
     var donutChartCanvas = $('#donutChart').get(0).getContext('2d')
     var donutData = {
