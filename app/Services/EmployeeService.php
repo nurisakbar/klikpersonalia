@@ -177,7 +177,7 @@ class EmployeeService
             if ($this->hasRelatedRecords($employee)) {
                 return [
                     'success' => false,
-                    'message' => 'Tidak dapat menghapus karyawan karena memiliki data terkait (payroll, absensi, dll).',
+                    'message' => 'Tidak dapat menghapus karyawan karena memiliki data terkait (payroll, absensi, cuti, pajak, BPJS). Silakan hapus data terkait terlebih dahulu.',
                     'data' => null
                 ];
             }

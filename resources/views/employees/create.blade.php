@@ -15,7 +15,7 @@
             <div class="card-header">
                 <h3 class="card-title">Form Tambah Karyawan</h3>
             </div>
-            <form action="{{ route('employees.store') }}" method="POST">
+            <form id="createEmployeeForm" action="{{ route('employees.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
                     <div class="row">
@@ -159,7 +159,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="fas fa-save"></i> Simpan
                     </button>
                     <a href="{{ route('employees.index') }}" class="btn btn-secondary">
@@ -175,6 +175,13 @@
 @push('js')
 <script>
 $(function () {
+    // Setup CSRF token for AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     // Format input gaji dengan separator ribuan
     $('#basic_salary').on('input', function() {
         let value = $(this).val().replace(/[^\d]/g, '');
@@ -187,24 +194,84 @@ $(function () {
         }
     });
 
-    // Submit form dengan format angka yang benar
-    $('form').on('submit', function(e) {
+    // Handle form submission with AJAX
+    $('#createEmployeeForm').on('submit', function(e) {
+        e.preventDefault();
+        
         // Get raw numeric value from formatted salary
         let salaryInput = $('#basic_salary');
         let formattedSalary = salaryInput.val();
         let rawSalary = formattedSalary.replace(/[^\d]/g, '');
         
-        // Temporarily set raw value for submission
-        salaryInput.val(rawSalary);
-        
         // Validate minimum salary
         if (parseInt(rawSalary) < 1000000) {
-            e.preventDefault();
-            alert('Gaji pokok minimal Rp 1.000.000');
-            // Restore formatted value
-            salaryInput.val(formattedSalary);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Gaji pokok minimal Rp 1.000.000'
+            });
             return false;
         }
+
+        // Show loading
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+        // Prepare form data
+        let formData = new FormData(this);
+        formData.set('basic_salary', rawSalary); // Set raw salary value
+
+        // Send AJAX request
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '{{ route("employees.index") }}';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: response.message
+                    });
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan');
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat menyimpan data';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    // Handle validation errors
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessages = [];
+                    for (let field in errors) {
+                        errorMessages.push(errors[field][0]);
+                    }
+                    message = errorMessages.join('\n');
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: message
+                });
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan');
+            }
+        });
     });
 
     // Format initial value if exists

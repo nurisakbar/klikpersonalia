@@ -281,26 +281,51 @@ $(function () {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Konfirmasi Hapus',
-            'Apakah Anda yakin ingin menghapus karyawan "' + name + '" ?'
-        ).then((result) => {
+        Swal.fire({
+            title: 'Konfirmasi Hapus',
+            text: 'Apakah Anda yakin ingin menghapus karyawan "' + name + '" ?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
             if (result.isConfirmed) {
                 // Show loading
-                SwalHelper.loading('Menghapus...');
+                Swal.fire({
+                    title: 'Menghapus...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
                 // Send delete request
                 $.ajax({
                     url: '/employees/' + id,
                     type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     success: function(response) {
                         if (response.success) {
-                            SwalHelper.success('Berhasil!', response.message).then(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
                                 // Reload DataTable
                                 table.ajax.reload();
                             });
                         } else {
-                            SwalHelper.error('Gagal!', response.message);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message
+                            });
                         }
                     },
                     error: function(xhr) {
@@ -309,7 +334,11 @@ $(function () {
                             message = xhr.responseJSON.message;
                         }
                         
-                        SwalHelper.error('Error!', message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: message
+                        });
                     }
                 });
             }
