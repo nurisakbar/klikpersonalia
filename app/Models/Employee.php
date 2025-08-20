@@ -160,6 +160,22 @@ class Employee extends Model
     }
 
     /**
+     * Get the employee's department name.
+     */
+    public function getDepartmentAttribute($value)
+    {
+        return $value ?? 'Tidak Diketahui';
+    }
+
+    /**
+     * Get the employee's position name.
+     */
+    public function getPositionAttribute($value)
+    {
+        return $value ?? 'Tidak Diketahui';
+    }
+
+    /**
      * Get the employee's status badge.
      */
     public function getStatusBadgeAttribute()
