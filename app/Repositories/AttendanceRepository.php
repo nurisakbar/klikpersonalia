@@ -29,9 +29,9 @@ class AttendanceRepository
     /**
      * Get attendances for DataTables
      */
-    public function getForDataTables()
+    public function getForDataTables($request = null)
     {
-        return $this->model
+        $query = $this->model
             ->currentCompany()
             ->with('employee')
             ->select([
@@ -45,6 +45,36 @@ class AttendanceRepository
                 'status',
                 'notes'
             ]);
+
+        // Apply date filter
+        if ($request && $request->get('date_filter')) {
+            $dateFilter = $request->get('date_filter');
+            if (preg_match('/^(\d{4})-(\d{2})$/', $dateFilter, $matches)) {
+                $year = $matches[1];
+                $month = $matches[2];
+                $query->whereYear('date', $year)
+                      ->whereMonth('date', $month);
+            }
+        }
+
+        // Apply status filter
+        if ($request && $request->get('status_filter')) {
+            $query->where('status', $request->get('status_filter'));
+        }
+
+        // Apply global search
+        if ($request && $request->get('search') && $request->get('search')['value']) {
+            $searchValue = $request->get('search')['value'];
+            $query->where(function($q) use ($searchValue) {
+                $q->whereHas('employee', function($employeeQuery) use ($searchValue) {
+                    $employeeQuery->where('name', 'like', '%' . $searchValue . '%')
+                                 ->orWhere('employee_id', 'like', '%' . $searchValue . '%')
+                                 ->orWhere('department', 'like', '%' . $searchValue . '%');
+                });
+            });
+        }
+
+        return $query;
     }
 
     /**

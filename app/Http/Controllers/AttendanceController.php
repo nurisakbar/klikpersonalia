@@ -22,7 +22,7 @@ class AttendanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(AttendanceDataTable $dataTable)
+    public function index(AttendanceDataTable $dataTable, Request $request)
     {
         // Temporarily disabled role check for testing
         // if (!in_array(auth()->user()->role, ['super_admin', 'admin', 'hr', 'manager'])) {
@@ -35,9 +35,9 @@ class AttendanceController extends Controller
     /**
      * Get attendance data for DataTables.
      */
-    public function data(): JsonResponse
+    public function data(Request $request): JsonResponse
     {
-        $attendances = $this->attendanceService->getAttendancesForDataTables();
+        $attendances = $this->attendanceService->getAttendancesForDataTables($request);
 
         return DataTables::of($attendances)
             ->addColumn('action', function ($attendance) {

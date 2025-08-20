@@ -8,14 +8,64 @@
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-				<table class="table table-bordered table-striped" id="attendance-table" style="width: 100%;">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Filter Section -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="date_filter">Periode Tanggal:</label>
+                            <select id="date_filter" class="form-control form-control-sm">
+                                <option value="">Semua Periode</option>
+                                @php
+                                    $currentYear = date('Y');
+                                    $currentMonth = date('m');
+                                @endphp
+                                @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
+                                    @for($month = 1; $month <= 12; $month++)
+                                        @php
+                                            $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
+                                            $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
+                                        @endphp
+                                        <option value="{{ $periodValue }}" {{ $currentYear . '-' . $currentMonth == $periodValue ? 'selected' : '' }}>
+                                            {{ $periodLabel }}
+                                        </option>
+                                    @endfor
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status_filter">Status:</label>
+                            <select id="status_filter" class="form-control form-control-sm">
+                                <option value="">Semua Status</option>
+                                <option value="present">Hadir</option>
+                                <option value="absent">Tidak Hadir</option>
+                                <option value="late">Terlambat</option>
+                                <option value="half_day">Setengah Hari</option>
+                                <option value="leave">Cuti</option>
+                                <option value="holiday">Libur</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>&nbsp;</label>
+                            <div>
+                                <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-filter mr-1"></i> Terapkan Filter
+                                </button>
+                                <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-undo mr-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DataTable -->
+                    <table class="table table-bordered table-striped" id="attendance-table" style="width: 100%;">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Nama Karyawan</th>
                                 <th>Departemen</th>
                                 <th>Tanggal</th>
@@ -27,7 +77,8 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-				</table>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -44,6 +95,9 @@
 @endpush
 
 @push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <!-- DataTables & Plugins -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
@@ -55,9 +109,6 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
-
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(function () {
@@ -74,10 +125,14 @@ $(function () {
         serverSide: true,
         ajax: {
             url: '{{ route("attendance.data") }}',
-            type: 'GET'
+            type: 'GET',
+            data: function(d) {
+                d.date_filter = $('#date_filter').val();
+                d.status_filter = $('#status_filter').val();
+            }
         },
         columns: [
-            {data: 'id', name: 'id', width: '50px'},
+            {data: null, name: 'row_number', width: '50px', orderable: false, searchable: false, render: function (data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; }},
             {data: 'employee_name', name: 'employee_name', width: '200px'},
             {data: 'employee_department', name: 'employee_department', width: '150px'},
             {data: 'date_formatted', name: 'date', width: '100px'},
@@ -93,37 +148,37 @@ $(function () {
         autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
-			{
-				text: '<i class="fas fa-plus"></i> Tambah',
-				className: 'btn btn-primary btn-sm dt-add-btn mr-2',
-				action: function () {
-					window.location.href = '{{ route("attendance.create") }}';
+            {
+                text: '<i class="fas fa-plus"></i> Tambah',
+                className: 'btn btn-primary btn-sm mr-2',
+                action: function () {
+					window.location.href = '{{ route("employees.create") }}';
 				}
-			},
-			{
-				extend: 'excel',
-				text: '<i class="fas fa-file-excel"></i> Excel',
-				className: 'btn btn-success btn-sm',
-				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-				}
-			},
-			{
-				extend: 'pdf',
-				text: '<i class="fas fa-file-pdf"></i> PDF',
-				className: 'btn btn-danger btn-sm',
-				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-				}
-			},
-			{
-				extend: 'print',
-				text: '<i class="fas fa-print"></i> Print',
-				className: 'btn btn-info btn-sm',
-				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-				}
-			}
+            },
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8]
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8]
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print',
+                className: 'btn btn-info btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8]
+                }
+            }
         ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
@@ -132,23 +187,37 @@ $(function () {
         order: [[3, 'desc']] // Order by date descending
     });
 
-    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
-    var attendanceButtons = table.buttons().container();
-    attendanceButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
+    // Apply filter
+    $('#apply_filter').on('click', function() {
+        table.ajax.reload();
+    });
 
-    // Layout info/pagination sudah diatur global via CSS
+    // Reset filter
+    $('#reset_filter').on('click', function() {
+        $('#date_filter').val('');
+        $('#status_filter').val('');
+        table.ajax.reload();
+    });
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus absensi "' + name + '" ?', function(result) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Konfirmasi Hapus',
+            text: 'Apakah Anda yakin ingin menghapus absensi "' + name + '" ?',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading
                 SwalHelper.loading('Menghapus...');
 
-                // Send delete request
                 $.ajax({
                     url: '/attendance/' + id,
                     type: 'DELETE',
@@ -156,7 +225,6 @@ $(function () {
                     success: function(response) {
                         if (response.success) {
                             SwalHelper.success('Berhasil!', response.message, 2000);
-                            // Reload DataTable
                             table.ajax.reload();
                         } else {
                             SwalHelper.error('Gagal!', response.message);
@@ -174,8 +242,6 @@ $(function () {
             }
         });
     });
-
-    // Session messages sudah ditangani oleh global SwalHelper di layout
 });
 </script>
 @endpush 

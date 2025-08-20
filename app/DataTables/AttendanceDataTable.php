@@ -124,7 +124,7 @@ class AttendanceDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('ID')->width(50),
+            Column::make('row_number')->title('No')->width(50),
             Column::make('employee_name')->title('Nama Karyawan')->width(200),
             Column::make('employee_department')->title('Departemen')->width(150),
             Column::make('date_formatted')->title('Tanggal')->width(100),
