@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\PayrollDataTable;
 use App\Models\Payroll;
 use App\Models\Employee;
 use App\Models\Attendance;
@@ -9,11 +10,14 @@ use App\Models\Leave;
 use App\Models\Overtime;
 use App\Models\Company;
 use App\Services\PayrollService;
-use Illuminate\Http\Request;
 use App\Http\Requests\PayrollRequest;
+use App\Http\Resources\PayrollResource;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
 
 class PayrollController extends Controller
 {
@@ -21,25 +25,111 @@ class PayrollController extends Controller
     /**
      * Display a listing of payrolls.
      */
-    public function index(Request $request)
+    public function index(PayrollDataTable $dataTable, Request $request)
     {
-        $user = Auth::user();
-        
-        // Check if user has permission
-        if (!in_array($user->role, ['admin', 'hr'])) {
-            return redirect()->back()->with('error', 'You do not have permission to view payrolls.');
-        }
-
-        $period = $request->get('period', Carbon::now()->format('Y-m'));
+        // Get filter parameters
         $status = $request->get('status', '');
-        
-        // Use service to get payrolls
-        $payrolls = $this->payrollService->getPaginatedPayrolls($period, $status, 15);
+        $period = $request->get('period', date('Y-m'));
         
         // Get summary statistics
-        $summary = $this->payrollService->getPayrollSummary($period);
+        $summary = $this->payrollService->getPayrollSummary($period, $status);
         
-        return view('payrolls.index', compact('payrolls', 'summary', 'period', 'status'));
+        return $dataTable->render('payrolls.index', compact('status', 'period', 'summary'));
+    }
+
+    /**
+     * Get payrolls data for DataTables.
+     */
+    public function data(Request $request): JsonResponse
+    {
+        $payrolls = $this->payrollService->getPayrollsForDataTables($request);
+
+        return DataTables::of($payrolls)
+            ->addColumn('action', function ($payroll) {
+                $buttons = '<div class="btn-group" role="group">';
+                $buttons .= '<button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $payroll->id . '" title="Detail"><i class="fas fa-eye"></i></button>';
+                
+                if ($payroll->status === 'draft') {
+                    $buttons .= '<button type="button" class="btn btn-sm btn-warning edit-btn" data-id="' . $payroll->id . '" title="Edit"><i class="fas fa-edit"></i></button>';
+                    $buttons .= '<button type="button" class="btn btn-sm btn-success approve-btn" data-id="' . $payroll->id . '" data-name="' . htmlspecialchars($payroll->employee->name) . '" title="Approve"><i class="fas fa-check"></i></button>';
+                    $buttons .= '<button type="button" class="btn btn-sm btn-danger reject-btn" data-id="' . $payroll->id . '" data-name="' . htmlspecialchars($payroll->employee->name) . '" title="Reject"><i class="fas fa-times"></i></button>';
+                    $buttons .= '<button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $payroll->id . '" data-name="' . htmlspecialchars($payroll->employee->name . ' - ' . $payroll->period) . '" title="Delete"><i class="fas fa-trash"></i></button>';
+                }
+                
+                $buttons .= '</div>';
+                return $buttons;
+            })
+            ->addColumn('employee_name', function ($payroll) {
+                return $payroll->employee->name;
+            })
+            ->addColumn('employee_department', function ($payroll) {
+                return $payroll->employee->department;
+            })
+            ->addColumn('period_formatted', function ($payroll) {
+                // Convert period format to readable format
+                if (preg_match('/^(\d{4})-(\d{2})$/', $payroll->period, $matches)) {
+                    $year = $matches[1];
+                    $month = $matches[2];
+                    $monthName = date('F', mktime(0, 0, 0, $month, 1));
+                    return $monthName . ' ' . $year;
+                }
+                return $payroll->period;
+            })
+            ->addColumn('status_badge', function ($payroll) {
+                $statusClass = [
+                    'draft' => 'badge badge-warning',
+                    'approved' => 'badge badge-success',
+                    'paid' => 'badge badge-info',
+                    'rejected' => 'badge badge-danger'
+                ];
+                
+                $statusText = [
+                    'draft' => 'Draft',
+                    'approved' => 'Disetujui',
+                    'paid' => 'Dibayar',
+                    'rejected' => 'Ditolak'
+                ];
+                
+                return '<span class="' . $statusClass[$payroll->status] . '">' . $statusText[$payroll->status] . '</span>';
+            })
+            ->addColumn('salary_formatted', function ($payroll) {
+                return 'Rp ' . number_format($payroll->basic_salary, 0, ',', '.');
+            })
+            ->addColumn('overtime_formatted', function ($payroll) {
+                return 'Rp ' . number_format($payroll->overtime ?? 0, 0, ',', '.');
+            })
+            ->addColumn('bonus_formatted', function ($payroll) {
+                return 'Rp ' . number_format($payroll->bonus ?? 0, 0, ',', '.');
+            })
+            ->addColumn('deductions_formatted', function ($payroll) {
+                $totalDeductions = ($payroll->deduction ?? 0) + ($payroll->tax_amount ?? 0) + ($payroll->bpjs_amount ?? 0);
+                return 'Rp ' . number_format($totalDeductions, 0, ',', '.');
+            })
+            ->addColumn('total_formatted', function ($payroll) {
+                return 'Rp ' . number_format($payroll->total_salary, 0, ',', '.');
+            })
+            ->addColumn('generated_info', function ($payroll) {
+                $generatedAt = $payroll->generated_at ? $payroll->generated_at->format('d/m/Y H:i') : '-';
+                $generatedBy = $payroll->generatedBy->name ?? '-';
+                return $generatedAt . '<br><small class="text-muted">by ' . $generatedBy . '</small>';
+            })
+            ->filterColumn('employee_name', function($query, $keyword) {
+                $query->whereHas('employee', function($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%")
+                      ->orWhere('employee_id', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('employee_department', function($query, $keyword) {
+                $query->whereHas('employee', function($q) use ($keyword) {
+                    $q->where('department', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('period_formatted', function($query, $keyword) {
+                // Search in both formatted and original period
+                $query->where('period', 'like', "%{$keyword}%");
+            })
+            ->rawColumns(['action', 'status_badge', 'salary_formatted', 'overtime_formatted', 'bonus_formatted', 'deductions_formatted', 'total_formatted', 'generated_info'])
+            ->make(true);
     }
 
     /**
@@ -67,6 +157,10 @@ class PayrollController extends Controller
     public function store(PayrollRequest $request)
     {
         $result = $this->payrollService->generateSingle($request->validated());
+
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
 
         if ($result['success']) {
             return redirect()->route('payrolls.index')->with('success', $result['message']);
@@ -115,7 +209,18 @@ class PayrollController extends Controller
             return redirect()->route('payrolls.index')->with('error', 'Payroll not found.');
         }
 
-        return view('payrolls.edit', compact('payroll'));
+        // Get employees for dropdown
+        $employees = $this->payrollService->getActiveEmployees();
+        
+        // Status options
+        $statuses = [
+            'draft' => 'Draft',
+            'approved' => 'Approved',
+            'paid' => 'Paid',
+            'rejected' => 'Rejected'
+        ];
+
+        return view('payrolls.edit', compact('payroll', 'employees', 'statuses'));
     }
 
     /**
@@ -127,21 +232,26 @@ class PayrollController extends Controller
         
         // Check if user has permission
         if (!in_array($user->role, ['admin', 'hr'])) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'You do not have permission to edit payrolls.'], 403);
+            }
             return redirect()->back()->with('error', 'You do not have permission to edit payrolls.');
         }
 
         $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'status' => 'required|in:draft,approved,paid,rejected',
             'basic_salary' => 'required|numeric|min:0',
             'allowance' => 'nullable|numeric|min:0',
-            'overtime' => 'nullable|numeric|min:0',
-            'bonus' => 'nullable|numeric|min:0',
             'deduction' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'bpjs_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
 
         $result = $this->payrollService->updatePayroll($id, $request->all());
+
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
 
         if ($result['success']) {
             return redirect()->route('payrolls.index')->with('success', $result['message']);
@@ -152,25 +262,12 @@ class PayrollController extends Controller
     /**
      * Remove the specified payroll from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
-        $user = Auth::user();
-        
-        // Check if user has permission
-        if (!in_array($user->role, ['admin', 'hr'])) {
-            return redirect()->back()->with('error', 'You do not have permission to delete payrolls.');
-        }
-
         $result = $this->payrollService->deletePayroll($id);
-
-        if ($request->expectsJson()) {
-            return response()->json($result);
-        }
-
-        if ($result['success']) {
-            return redirect()->route('payrolls.index')->with('success', $result['message']);
-        }
-        return redirect()->back()->with('error', $result['message']);
+        
+        $statusCode = $result['success'] ? 200 : 422;
+        return response()->json($result, $statusCode);
     }
 
     /**
@@ -245,7 +342,10 @@ class PayrollController extends Controller
         
         // Check if user has permission
         if (!in_array($user->role, ['admin', 'hr'])) {
-            return redirect()->back()->with('error', 'You do not have permission to generate payrolls.');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki izin untuk generate payroll.']);
+            }
+            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk generate payroll.');
         }
 
         $request->validate([
@@ -255,6 +355,7 @@ class PayrollController extends Controller
 
         $month = $request->month;
         $year = $request->year;
+        $period = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
 
         // Get all active employees
         $employees = Employee::where('company_id', $user->company_id)
@@ -267,13 +368,12 @@ class PayrollController extends Controller
         foreach ($employees as $employee) {
             // Check if payroll already exists
             $existingPayroll = Payroll::where('employee_id', $employee->id)
-                ->where('month', $month)
-                ->where('year', $year)
+                ->where('period', $period)
                 ->where('company_id', $user->company_id)
                 ->first();
 
             if ($existingPayroll) {
-                $errors[] = "Payroll already exists for {$employee->name}";
+                $errors[] = "Payroll sudah ada untuk {$employee->name}";
                 continue;
             }
 
@@ -284,8 +384,7 @@ class PayrollController extends Controller
             Payroll::create([
                 'employee_id' => $employee->id,
                 'company_id' => $user->company_id,
-                'month' => $month,
-                'year' => $year,
+                'period' => $period,
                 'basic_salary' => $employee->basic_salary,
                 'allowances' => 0,
                 'deductions' => 0,
@@ -293,7 +392,7 @@ class PayrollController extends Controller
                 'leave_deduction' => $payrollData['leave_deduction'],
                 'attendance_bonus' => $payrollData['attendance_bonus'],
                 'total_salary' => $payrollData['total_salary'],
-                'status' => 'pending',
+                'status' => 'draft',
                 'generated_by' => $user->id,
                 'generated_at' => now(),
             ]);
@@ -301,9 +400,13 @@ class PayrollController extends Controller
             $generatedCount++;
         }
 
-        $message = "Successfully generated {$generatedCount} payrolls.";
+        $message = "Berhasil generate {$generatedCount} payroll.";
         if (!empty($errors)) {
-            $message .= " Errors: " . implode(', ', $errors);
+            $message .= " Error: " . implode(', ', $errors);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
         }
 
         return redirect()->route('payrolls.index')

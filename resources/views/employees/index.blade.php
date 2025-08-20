@@ -15,6 +15,7 @@
 				<table class="table table-bordered table-striped" id="employees-table" style="width: 100%;">
                         <thead>
                             <tr>
+                                <th>No</th>
                                 <th>ID Karyawan</th>
                                 <th>Nama</th>
                                 <th>Email</th>
@@ -109,6 +110,10 @@ $(function () {
             }
         },
         columns: [
+            {data: null, name: 'row_number', width: '50px', orderable: false, searchable: false, 
+             render: function (data, type, row, meta) {
+                 return meta.row + meta.settings._iDisplayStart + 1;
+             }},
             {data: 'employee_id', name: 'employee_id', width: '120px'},
             {data: 'name', name: 'name', width: '200px'},
             {data: 'email', name: 'email', width: '200px'},
@@ -137,7 +142,7 @@ $(function () {
 				text: '<i class="fas fa-file-excel"></i> Excel',
 				className: 'btn btn-success btn-sm',
 				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 				}
 			},
 			{
@@ -145,7 +150,7 @@ $(function () {
 				text: '<i class="fas fa-file-pdf"></i> PDF',
 				className: 'btn btn-danger btn-sm',
 				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 				}
 			},
 			{
@@ -153,7 +158,7 @@ $(function () {
 				text: '<i class="fas fa-print"></i> Print',
 				className: 'btn btn-info btn-sm',
 				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 				}
 			}
         ],
@@ -161,7 +166,7 @@ $(function () {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
         },
         responsive: true,
-        order: [[0, 'asc']]
+        order: [[2, 'asc']]
     });
 
     // Pastikan tombol Add tidak memakai btn-secondary (force primary)

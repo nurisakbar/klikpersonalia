@@ -87,13 +87,17 @@ class PayrollRepository
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
-    public function getSummaryStatistics(?string $period = null): array
+    public function getSummaryStatistics(?string $period = null, ?string $status = null): array
     {
         $user = Auth::user();
         $query = Payroll::where('company_id', $user->company_id);
         
         if ($period) {
             $query->where('period', 'LIKE', $period . '%');
+        }
+        
+        if ($status) {
+            $query->where('status', $status);
         }
         
         $payrolls = $query->get();
@@ -108,6 +112,39 @@ class PayrollRepository
             'total_bonus' => $payrolls->sum('bonus'),
             'total_deductions' => $payrolls->sum('deduction'),
         ];
+    }
+
+    /**
+     * Get payrolls for DataTables
+     */
+    public function getForDataTables($request = null)
+    {
+        $user = Auth::user();
+        $query = Payroll::with(['employee', 'generatedBy'])
+            ->where('company_id', $user->company_id);
+        
+        // Apply filters if request is provided
+        if ($request) {
+            if ($request->get('period')) {
+                $query->where('period', 'LIKE', $request->get('period') . '%');
+            }
+            
+            if ($request->get('status')) {
+                $query->where('status', $request->get('status'));
+            }
+            
+            // Search by employee name or ID
+            if ($request->get('search') && $request->get('search')['value']) {
+                $searchValue = $request->get('search')['value'];
+                $query->whereHas('employee', function($q) use ($searchValue) {
+                    $q->where('name', 'like', "%{$searchValue}%")
+                      ->orWhere('employee_id', 'like', "%{$searchValue}%")
+                      ->orWhere('department', 'like', "%{$searchValue}%");
+                });
+            }
+        }
+        
+        return $query->orderBy('created_at', 'desc');
     }
 }
 

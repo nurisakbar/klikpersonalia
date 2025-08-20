@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Generate Payroll - Aplikasi Payroll KlikMedis')
-@section('page-title', 'Generate Payroll')
+@section('title', 'Perbarui Payroll - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Perbarui Payroll')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('payrolls.index') }}">Payroll</a></li>
-<li class="breadcrumb-item active">Generate</li>
+<li class="breadcrumb-item active">Perbarui</li>
 @endsection
 
 @push('css')
@@ -81,8 +81,9 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('payrolls.store') }}" method="POST" id="payrollForm">
+                    <form action="{{ route('payrolls.update', $payroll->id) }}" method="POST" id="payrollForm">
                         @csrf
+                        @method('PUT')
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -94,7 +95,7 @@
                                         @foreach($employees as $employee)
                                             <option value="{{ $employee->id }}" 
                                                     data-salary="{{ $employee->basic_salary }}"
-                                                    {{ old('employee_id') == $employee->id ? 'selected' : '' }}>
+                                                    {{ old('employee_id', $payroll->employee_id) == $employee->id ? 'selected' : '' }}>
                                                 {{ $employee->name }} - {{ $employee->department }} ({{ $employee->employee_id }})
                                             </option>
                                         @endforeach
@@ -104,28 +105,24 @@
                                     @enderror
                                 </div>
 
-                                <!-- Period Selection -->
+                                <!-- Period Display (Read-only) -->
                                 <div class="form-group">
-                                    <label for="period">Period <span class="text-danger">*</span></label>
-                                    <select name="period" id="period" class="form-control @error('period') is-invalid @enderror" required>
-                                        @php
-                                            $currentYear = date('Y');
-                                            $currentMonth = date('m');
-                                            $selectedPeriod = $currentPeriod ?? $currentYear . '-' . $currentMonth;
-                                        @endphp
-                                        @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
-                                            @for($month = 1; $month <= 12; $month++)
-                                                @php
-                                                    $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
-                                                    $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
-                                                @endphp
-                                                <option value="{{ $periodValue }}" {{ $selectedPeriod == $periodValue ? 'selected' : '' }}>
-                                                    {{ $periodLabel }}
-                                                </option>
-                                            @endfor
-                                        @endfor
+                                    <label for="period">Period</label>
+                                    <input type="text" class="form-control" value="{{ $payroll->period }}" readonly>
+                                    <small class="form-text text-muted">Period cannot be changed after creation</small>
+                                </div>
+
+                                <!-- Status Selection -->
+                                <div class="form-group">
+                                    <label for="status">Status <span class="text-danger">*</span></label>
+                                    <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                                        @foreach($statuses as $value => $label)
+                                            <option value="{{ $value }}" {{ old('status', $payroll->status) == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
-                                    @error('period')
+                                    @error('status')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -139,8 +136,8 @@
                                         </div>
                                         <input type="number" name="basic_salary" id="basic_salary" 
                                                class="form-control @error('basic_salary') is-invalid @enderror" 
-                                               value="{{ old('basic_salary') }}" 
-                                               min="0" step="1000" required>
+                                               value="{{ old('basic_salary', $payroll->basic_salary) }}" 
+                                               step="1000" min="0" required>
                                     </div>
                                     @error('basic_salary')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -156,8 +153,8 @@
                                         </div>
                                         <input type="number" name="allowance" id="allowance" 
                                                class="form-control @error('allowance') is-invalid @enderror" 
-                                               value="{{ old('allowance', 0) }}" 
-                                               min="0" step="1000">
+                                               value="{{ old('allowance', $payroll->allowance) }}" 
+                                               step="1000" min="0">
                                     </div>
                                     @error('allowance')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -173,8 +170,8 @@
                                         </div>
                                         <input type="number" name="deduction" id="deduction" 
                                                class="form-control @error('deduction') is-invalid @enderror" 
-                                               value="{{ old('deduction', 0) }}" 
-                                               min="0" step="1000">
+                                               value="{{ old('deduction', $payroll->deduction) }}" 
+                                               step="1000" min="0">
                                     </div>
                                     @error('deduction')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -186,7 +183,7 @@
                                     <label for="notes">Notes</label>
                                     <textarea name="notes" id="notes" rows="3" 
                                               class="form-control @error('notes') is-invalid @enderror" 
-                                              placeholder="Enter any additional notes...">{{ old('notes') }}</textarea>
+                                              placeholder="Enter any additional notes...">{{ old('notes', $payroll->notes) }}</textarea>
                                     @error('notes')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -204,9 +201,26 @@
                                     </div>
                                     <div class="card-body">
                                         <div id="salaryCalculation">
-                                            <div class="text-center text-white-50 py-4">
-                                                <i class="fas fa-user fa-3x mb-3"></i>
-                                                <p class="mb-0">Select an employee to see calculation preview</p>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span>Basic Salary:</span>
+                                                        <span>Rp {{ number_format($payroll->basic_salary, 0, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span>Allowance:</span>
+                                                        <span>Rp {{ number_format($payroll->allowance, 0, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span>Deduction:</span>
+                                                        <span>Rp {{ number_format($payroll->deduction, 0, ',', '.') }}</span>
+                                                    </div>
+                                                    <hr class="my-3">
+                                                    <div class="d-flex justify-content-between">
+                                                        <strong>Total Salary:</strong>
+                                                        <strong>Rp {{ number_format($payroll->total_salary, 0, ',', '.') }}</strong>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -259,7 +273,7 @@
                             <div class="col-12">
                                 <div class="form-group">
                                     <button type="submit" class="btn btn-primary" id="submitBtn">
-                                        <i class="fas fa-save mr-1"></i> Generate Payroll
+                                        <i class="fas fa-save mr-1"></i> Update Payroll
                                     </button>
                                     <a href="{{ route('payrolls.index') }}" class="btn btn-secondary">
                                         <i class="fas fa-times mr-1"></i> Cancel
@@ -296,57 +310,49 @@ $(function () {
         allowClear: true
     });
 
-    $('#period').select2({
+    $('#status').select2({
         theme: 'bootstrap4',
-        placeholder: 'Select Period',
+        placeholder: 'Select Status',
         allowClear: true
     });
 
-    // Auto-calculate salary preview
-    function calculateSalary() {
+    // Auto-calculate total salary
+    function calculateTotal() {
         const basicSalary = parseFloat($('#basic_salary').val()) || 0;
         const allowance = parseFloat($('#allowance').val()) || 0;
         const deduction = parseFloat($('#deduction').val()) || 0;
-        
+
         const totalSalary = basicSalary + allowance - deduction;
-        
-        if (basicSalary > 0) {
-            const calculationHtml = `
-                <div class="row">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Basic Salary:</span>
-                            <span>Rp ${basicSalary.toLocaleString('id-ID')}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Allowance:</span>
-                            <span>Rp ${allowance.toLocaleString('id-ID')}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Deduction:</span>
-                            <span>Rp ${deduction.toLocaleString('id-ID')}</span>
-                        </div>
-                        <hr class="my-3">
-                        <div class="d-flex justify-content-between">
-                            <strong>Total Salary:</strong>
-                            <strong>Rp ${totalSalary.toLocaleString('id-ID')}</strong>
-                        </div>
+
+        // Update display
+        const calculationHtml = `
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Basic Salary:</span>
+                        <span>Rp ${basicSalary.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Allowance:</span>
+                        <span>Rp ${allowance.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Deduction:</span>
+                        <span>Rp ${deduction.toLocaleString('id-ID')}</span>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>Total Salary:</strong>
+                        <strong>Rp ${totalSalary.toLocaleString('id-ID')}</strong>
                     </div>
                 </div>
-            `;
-            $('#salaryCalculation').html(calculationHtml);
-        } else {
-            $('#salaryCalculation').html(`
-                <div class="text-center text-white-50 py-4">
-                    <i class="fas fa-user fa-3x mb-3"></i>
-                    <p class="mb-0">Select an employee to see calculation preview</p>
-                </div>
-            `);
-        }
+            </div>
+        `;
+        $('#salaryCalculation').html(calculationHtml);
     }
 
     // Bind calculation to input changes
-    $('#basic_salary, #allowance, #deduction').on('input', calculateSalary);
+    $('#basic_salary, #allowance, #deduction').on('input', calculateTotal);
 
     // Auto-fill basic salary when employee is selected
     $('#employee_id').on('change', function() {
@@ -354,7 +360,7 @@ $(function () {
         const salary = selectedOption.data('salary');
         if (salary) {
             $('#basic_salary').val(salary);
-            calculateSalary();
+            calculateTotal();
         }
     });
 
@@ -369,7 +375,7 @@ $(function () {
         }
 
         // Show loading
-        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating...');
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
 
         // Prepare form data
         let formData = new FormData(this);
@@ -390,11 +396,11 @@ $(function () {
                     }, 2000);
                 } else {
                     SwalHelper.error('Gagal!', response.message);
-                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Generate Payroll');
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Update Payroll');
                 }
             },
             error: function(xhr) {
-                let message = 'Terjadi kesalahan saat generate payroll';
+                let message = 'Terjadi kesalahan saat update payroll';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     message = xhr.responseJSON.message;
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
@@ -407,13 +413,13 @@ $(function () {
                 }
                 
                 SwalHelper.error('Error!', message);
-                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Generate Payroll');
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Update Payroll');
             }
         });
     });
 
     // Initial calculation
-    calculateSalary();
+    calculateTotal();
 });
 </script>
-@endpush 
+@endpush

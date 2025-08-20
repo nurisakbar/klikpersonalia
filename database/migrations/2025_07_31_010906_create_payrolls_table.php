@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('tax_amount', 12, 2)->default(0);
             $table->decimal('bpjs_amount', 12, 2)->default(0);
             $table->decimal('total_salary', 12, 2);
-            $table->enum('status', ['draft', 'approved', 'paid'])->default('draft');
+            $table->enum('status', ['draft', 'approved', 'paid', 'rejected'])->default('draft');
             $table->date('payment_date')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
