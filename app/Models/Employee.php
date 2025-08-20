@@ -61,6 +61,22 @@ class Employee extends Model
     }
 
     /**
+     * Get the department that owns the employee.
+     */
+    public function departmentRelation()
+    {
+        return $this->belongsTo(Department::class, 'department', 'name');
+    }
+
+    /**
+     * Get the position that owns the employee.
+     */
+    public function positionRelation()
+    {
+        return $this->belongsTo(Position::class, 'position', 'name');
+    }
+
+    /**
      * Get the payrolls for the employee.
      */
     public function payrolls()
@@ -141,6 +157,22 @@ class Employee extends Model
     public function getFormattedJoinDateAttribute()
     {
         return $this->join_date->format('d/m/Y');
+    }
+
+    /**
+     * Get the employee's department name.
+     */
+    public function getDepartmentAttribute($value)
+    {
+        return $value ?? 'Tidak Diketahui';
+    }
+
+    /**
+     * Get the employee's position name.
+     */
+    public function getPositionAttribute($value)
+    {
+        return $value ?? 'Tidak Diketahui';
     }
 
     /**

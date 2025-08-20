@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Leave Balance')
+@section('title', 'Sisa Cuti - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Sisa Cuti')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Sisa Cuti</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -28,17 +33,6 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-chart-pie mr-2"></i>
-                        Leave Balance ({{ date('Y') }})
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('leaves.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to Leave List
-                        </a>
-                    </div>
-                </div>
                 <div class="card-body">
                     <div class="row">
                         <!-- Annual Leave -->
@@ -48,13 +42,13 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Annual Leave
+                                                Cuti Tahunan
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                                 {{ $leaveBalance['annual_remaining'] }}/{{ $leaveBalance['annual_total'] }}
                                             </div>
                                             <div class="text-xs text-muted">
-                                                {{ $leaveBalance['annual_used'] }} days used
+                                                {{ $leaveBalance['annual_used'] }} hari digunakan
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -75,13 +69,13 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Sick Leave
+                                                Cuti Sakit
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                                 {{ $leaveBalance['sick_remaining'] }}/{{ $leaveBalance['sick_total'] }}
                                             </div>
                                             <div class="text-xs text-muted">
-                                                {{ $leaveBalance['sick_used'] }} days used
+                                                {{ $leaveBalance['sick_used'] }} hari digunakan
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -102,13 +96,13 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Maternity Leave
+                                                Cuti Hamil
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                                 {{ $leaveBalance['maternity_remaining'] }}/{{ $leaveBalance['maternity_total'] }}
                                             </div>
                                             <div class="text-xs text-muted">
-                                                {{ $leaveBalance['maternity_used'] }} days used
+                                                {{ $leaveBalance['maternity_used'] }} hari digunakan
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -129,13 +123,13 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                Paternity Leave
+                                                Cuti Bersalin
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                                 {{ $leaveBalance['paternity_remaining'] }}/{{ $leaveBalance['paternity_total'] }}
                                             </div>
                                             <div class="text-xs text-muted">
-                                                {{ $leaveBalance['paternity_used'] }} days used
+                                                {{ $leaveBalance['paternity_used'] }} hari digunakan
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -156,13 +150,13 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                                Other Leave
+                                                Cuti Lainnya
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                                 {{ $leaveBalance['other_remaining'] }}/{{ $leaveBalance['other_total'] }}
                                             </div>
                                             <div class="text-xs text-muted">
-                                                {{ $leaveBalance['other_used'] }} days used
+                                                {{ $leaveBalance['other_used'] }} hari digunakan
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -183,13 +177,13 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
-                                                Total Available
+                                                Total Tersedia
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                                 {{ $leaveBalance['annual_remaining'] + $leaveBalance['sick_remaining'] + $leaveBalance['maternity_remaining'] + $leaveBalance['paternity_remaining'] + $leaveBalance['other_remaining'] }}
                                             </div>
                                             <div class="text-xs text-muted">
-                                                days remaining
+                                                hari tersisa
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -213,7 +207,7 @@
                                 <div class="card-header py-3">
                                     <h6 class="m-0 font-weight-bold text-primary">
                                         <i class="fas fa-chart-pie mr-2"></i>
-                                        Leave Usage Overview
+                                        Penggunaan Cuti
                                     </h6>
                                 </div>
                                 <div class="card-body">
@@ -226,7 +220,7 @@
                                 <div class="card-header py-3">
                                     <h6 class="m-0 font-weight-bold text-primary">
                                         <i class="fas fa-info-circle mr-2"></i>
-                                        Leave Policy Summary
+                                        Rincian Kebijakan Cuti
                                     </h6>
                                 </div>
                                 <div class="card-body">
@@ -234,39 +228,39 @@
                                         <table class="table table-sm">
                                             <thead>
                                                 <tr>
-                                                    <th>Type</th>
-                                                    <th>Quota</th>
-                                                    <th>Used</th>
-                                                    <th>Remaining</th>
+                                                    <th>Jenis</th>
+                                                    <th>Kuota</th>
+                                                    <th>Digunakan</th>
+                                                    <th>Tersisa</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td>Annual</td>
+                                                    <td>Tahunan</td>
                                                     <td>{{ $leaveBalance['annual_total'] }}</td>
                                                     <td>{{ $leaveBalance['annual_used'] }}</td>
                                                     <td><span class="badge badge-primary">{{ $leaveBalance['annual_remaining'] }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Sick</td>
+                                                    <td>Sakit</td>
                                                     <td>{{ $leaveBalance['sick_total'] }}</td>
                                                     <td>{{ $leaveBalance['sick_used'] }}</td>
                                                     <td><span class="badge badge-warning">{{ $leaveBalance['sick_remaining'] }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Maternity</td>
+                                                    <td>Hamil</td>
                                                     <td>{{ $leaveBalance['maternity_total'] }}</td>
                                                     <td>{{ $leaveBalance['maternity_used'] }}</td>
                                                     <td><span class="badge badge-success">{{ $leaveBalance['maternity_remaining'] }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Paternity</td>
+                                                    <td>Bersalin</td>
                                                     <td>{{ $leaveBalance['paternity_total'] }}</td>
                                                     <td>{{ $leaveBalance['paternity_used'] }}</td>
                                                     <td><span class="badge badge-info">{{ $leaveBalance['paternity_remaining'] }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Other</td>
+                                                    <td>Lainnya</td>
                                                     <td>{{ $leaveBalance['other_total'] }}</td>
                                                     <td>{{ $leaveBalance['other_used'] }}</td>
                                                     <td><span class="badge badge-secondary">{{ $leaveBalance['other_remaining'] }}</span></td>
@@ -286,7 +280,7 @@
                                 <div class="card-header py-3">
                                     <h6 class="m-0 font-weight-bold text-primary">
                                         <i class="fas fa-history mr-2"></i>
-                                        Leave History
+                                        Riwayat Cuti
                                     </h6>
                                 </div>
                                 <div class="card-body">
@@ -295,13 +289,13 @@
                                             <table class="table table-bordered table-striped">
                                                 <thead>
                                                     <tr>
-                                                        <th>Leave Type</th>
-                                                        <th>Start Date</th>
-                                                        <th>End Date</th>
-                                                        <th>Total Days</th>
+                                                        <th>Jenis Cuti</th>
+                                                        <th>Tanggal Mulai</th>
+                                                        <th>Tanggal Selesai</th>
+                                                        <th>Total Hari</th>
                                                         <th>Status</th>
-                                                        <th>Submitted</th>
-                                                        <th>Actions</th>
+                                                        <th>Dibuat</th>
+                                                        <th>Aksi</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -309,9 +303,9 @@
                                                         <tr>
                                                             <td>
                                                                 @if($leave->leave_type === 'annual')
-                                                                    <span class="badge badge-primary">Annual Leave</span>
+                                                                    <span class="badge badge-primary">Cuti Tahunan</span>
                                                                 @elseif($leave->leave_type === 'sick')
-                                                                    <span class="badge badge-danger">Sick Leave</span>
+                                                                    <span class="badge badge-danger">Cuti Sakit</span>
                                                                 @elseif($leave->leave_type === 'maternity')
                                                                     <span class="badge badge-success">Maternity Leave</span>
                                                                 @elseif($leave->leave_type === 'paternity')
@@ -379,24 +373,24 @@
                                 <div class="card-header py-3">
                                     <h6 class="m-0 font-weight-bold text-primary">
                                         <i class="fas fa-bolt mr-2"></i>
-                                        Quick Actions
+                                        Aksi Cepat
                                     </h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-4 mb-2">
                                             <a href="{{ route('leaves.create') }}" class="btn btn-primary btn-block">
-                                                <i class="fas fa-plus mr-2"></i> Submit Leave Request
+                                                <i class="fas fa-plus mr-2"></i> Ajukan Permintaan Cuti
                                             </a>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <a href="{{ route('leaves.index') }}" class="btn btn-info btn-block">
-                                                <i class="fas fa-list mr-2"></i> View Leave History
+                                                <i class="fas fa-list mr-2"></i> Lihat Riwayat Cuti
                                             </a>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <button type="button" class="btn btn-success btn-block" onclick="window.print()">
-                                                <i class="fas fa-print mr-2"></i> Print Balance
+                                                <i class="fas fa-print mr-2"></i> Cetak Sisa Cuti
                                             </button>
                                         </div>
                                     </div>

@@ -1,18 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Settings & Configuration')
+@section('title', 'Pengaturan & Konfigurasi - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Pengaturan & Konfigurasi')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Pengaturan & Konfigurasi</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-cogs mr-2"></i>
-                        Settings & Configuration
-                    </h3>
-                </div>
                 <div class="card-body">
                     <div class="row">
                         <!-- Company Settings -->
@@ -21,15 +20,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-building mr-2"></i>
-                                        Company Settings
+                                        Pengaturan Perusahaan
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Manage company profile, logo, and basic information.</p>
+                                    <p class="card-text">Mengelola profil perusahaan, logo, dan informasi dasar.</p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge badge-primary">Admin Only</span>
+                                        <span class="badge badge-primary">Admin/HR</span>
                                         <a href="{{ route('settings.company') }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -42,15 +41,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-money-bill-wave mr-2"></i>
-                                        Payroll Policy
+                                        Kebijakan Payroll
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Configure overtime rates, attendance bonus, and payroll rules.</p>
+                                    <p class="card-text">Mengkonfigurasi tarif lembur, bonus kehadiran, dan aturan payroll.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge badge-success">Admin/HR</span>
                                         <a href="{{ route('settings.payroll-policy') }}" class="btn btn-success btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -63,15 +62,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-calendar-times mr-2"></i>
-                                        Leave Policy
+                                        Kebijakan Cuti
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Set leave quotas, approval rules, and carry forward policies.</p>
+                                    <p class="card-text">Mengatur kuota cuti, aturan persetujuan, dan kebijakan pembawa ke depan.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge badge-info">Admin/HR</span>
                                         <a href="{{ route('settings.leave-policy') }}" class="btn btn-info btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -84,15 +83,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-user mr-2"></i>
-                                        User Profile
+                                        Profil Pengguna
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Update your personal information and profile picture.</p>
+                                    <p class="card-text">Memperbarui informasi pribadi dan foto profil Anda.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge badge-warning">All Users</span>
                                         <a href="{{ route('settings.profile') }}" class="btn btn-warning btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -105,15 +104,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-lock mr-2"></i>
-                                        Password
+                                        Password Akun
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Change your account password securely.</p>
+                                    <p class="card-text">Ganti password akun Anda dengan aman.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge badge-danger">All Users</span>
                                         <a href="{{ route('settings.password') }}" class="btn btn-danger btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -126,15 +125,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-users mr-2"></i>
-                                        User Management
+                                        Manajemen Pengguna
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Manage users, roles, and permissions for your company.</p>
+                                    <p class="card-text">Mengelola pengguna, peran, dan izin untuk perusahaan Anda.</p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge badge-secondary">Admin Only</span>
+                                        <span class="badge badge-secondary">Admin/HR</span>
                                         <a href="{{ route('settings.users') }}" class="btn btn-secondary btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -147,15 +146,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-server mr-2"></i>
-                                        System Settings
+                                        Pengaturan Sistem
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Configure system-wide settings like timezone and currency.</p>
+                                    <p class="card-text">Mengkonfigurasi pengaturan sistem seperti zona waktu dan mata uang.</p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge badge-dark">Admin Only</span>
+                                        <span class="badge badge-dark">Admin/HR</span>
                                         <a href="{{ route('settings.system') }}" class="btn btn-dark btn-sm">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -168,15 +167,15 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-database mr-2"></i>
-                                        Backup & Restore
+                                        Backup & Restore Data
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">Create database backups and manage data recovery.</p>
+                                    <p class="card-text">Membuat cadangan database dan mengelola pemulihan data.</p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge badge-light text-dark">Admin Only</span>
+                                        <span class="badge badge-light text-dark">Admin/HR</span>
                                         <a href="{{ route('settings.backup') }}" class="btn btn-light btn-sm text-dark">
-                                            <i class="fas fa-edit mr-1"></i> Configure
+                                            <i class="fas fa-edit mr-1"></i> Konfigurasi
                                         </a>
                                     </div>
                                 </div>
@@ -191,49 +190,49 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-info-circle mr-2"></i>
-                                        Current Settings Summary
+                                        Ringkasan Pengaturan Saat Ini
                                     </h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <h6>Company Information</h6>
+                                            <h6>Informasi Perusahaan</h6>
                                             <table class="table table-sm">
                                                 <tr>
-                                                    <td><strong>Company Name:</strong></td>
+                                                    <td><strong>Nama Perusahaan:</strong></td>
                                                     <td>{{ $company->name }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Email:</strong></td>
+                                                    <td><strong>Email Perusahaan:</strong></td>
                                                     <td>{{ $company->email }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Phone:</strong></td>
+                                                    <td><strong>Telepon Perusahaan:</strong></td>
                                                     <td>{{ $company->phone }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Address:</strong></td>
+                                                    <td><strong>Alamat Perusahaan:</strong></td>
                                                     <td>{{ $company->address }}, {{ $company->city }}</td>
                                                 </tr>
                                             </table>
                                         </div>
                                         <div class="col-md-6">
-                                            <h6>System Information</h6>
+                                            <h6>Informasi Sistem</h6>
                                             <table class="table table-sm">
                                                 <tr>
-                                                    <td><strong>Subscription Plan:</strong></td>
+                                                    <td><strong>Plan Langganan:</strong></td>
                                                     <td><span class="badge badge-{{ $company->subscription_plan === 'premium' ? 'success' : 'warning' }}">{{ ucfirst($company->subscription_plan) }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Max Employees:</strong></td>
+                                                    <td><strong>Maksimal Karyawan:</strong></td>
                                                     <td>{{ $company->max_employees }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Status:</strong></td>
+                                                    <td><strong>Status Perusahaan:</strong></td>
                                                     <td><span class="badge badge-{{ $company->status === 'active' ? 'success' : 'danger' }}">{{ ucfirst($company->status) }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Created:</strong></td>
+                                                    <td><strong>Dibuat:</strong></td>
                                                     <td>{{ $company->created_at->format('d/m/Y H:i') }}</td>
                                                 </tr>
                                             </table>
@@ -251,19 +250,19 @@
                                 <div class="card-header">
                                     <h5 class="card-title">
                                         <i class="fas fa-bolt mr-2"></i>
-                                        Quick Actions
+                                        Aksi Cepat
                                     </h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('settings.company') }}" class="btn btn-outline-primary">
-                                            <i class="fas fa-building mr-1"></i> Update Company Info
+                                            <i class="fas fa-building mr-1"></i> Perbarui Info Perusahaan
                                         </a>
                                         <a href="{{ route('settings.profile') }}" class="btn btn-outline-warning">
-                                            <i class="fas fa-user mr-1"></i> Update Profile
+                                            <i class="fas fa-user mr-1"></i> Perbarui Profil
                                         </a>
                                         <a href="{{ route('settings.password') }}" class="btn btn-outline-danger">
-                                            <i class="fas fa-lock mr-1"></i> Change Password
+                                            <i class="fas fa-lock mr-1"></i> Ganti Password
                                         </a>
                                         @if(in_array(auth()->user()->role, ['admin']))
                                         <a href="{{ route('settings.users') }}" class="btn btn-outline-secondary">

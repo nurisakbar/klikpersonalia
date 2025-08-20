@@ -15,10 +15,6 @@
         <div class="col-md-9">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        Kalender Kehadiran
-                    </h3>
                     <div class="card-tools">
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="todayBtn">
@@ -32,44 +28,44 @@
                             </button>
                         </div>
                         <div class="btn-group ml-2" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-info" id="monthBtn">Month</button>
-                            <button type="button" class="btn btn-sm btn-outline-info" id="weekBtn">Week</button>
-                            <button type="button" class="btn btn-sm btn-outline-info" id="dayBtn">Day</button>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="monthBtn">Bulan</button>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="weekBtn">Minggu</button>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="dayBtn">Hari</button>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-success ml-2" onclick="exportCalendar()">
-                            <i class="fas fa-download"></i> Export
+                            <i class="fas fa-download"></i> Ekspor
                         </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <!-- Calendar Legend -->
-                    <div class="calendar-legend mb-3">
+                    <div class="calendar-legend">
                         <div class="d-flex flex-wrap">
                             <div class="legend-item mr-3 mb-2">
                                 <span class="legend-color bg-success"></span>
-                                <small>Present</small>
+                                <small>Hadir</small>
                             </div>
                             <div class="legend-item mr-3 mb-2">
                                 <span class="legend-color bg-warning"></span>
-                                <small>Late</small>
+                                <small>Terlambat</small>
                             </div>
                             <div class="legend-item mr-3 mb-2">
                                 <span class="legend-color bg-danger"></span>
-                                <small>Absent</small>
+                                <small>Tidak Hadir</small>
                             </div>
                             <div class="legend-item mr-3 mb-2">
                                 <span class="legend-color bg-info"></span>
-                                <small>Overtime</small>
+                                <small>Lembur</small>
                             </div>
                             <div class="legend-item mr-3 mb-2">
                                 <span class="legend-color bg-secondary"></span>
-                                <small>Leave</small>
+                                <small>Cuti</small>
                             </div>
                         </div>
                     </div>
 
                     <!-- FullCalendar Container -->
-                    <div id="calendar"></div>
+                    <div id="calendar" style="margin-top: -30px;"></div>
                 </div>
             </div>
         </div>
@@ -80,37 +76,37 @@
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="fas fa-chart-pie mr-2"></i>
-                        Monthly Statistics
+                        Statistik Bulanan
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="stat-item">
-                        <div class="stat-label">Present Days</div>
+                        <div class="stat-label">Hari Hadir</div>
                         <div class="stat-value text-success" id="presentDays">0</div>
                     </div>
                     
                     <div class="stat-item">
-                        <div class="stat-label">Late Days</div>
+                        <div class="stat-label">Hari Terlambat</div>
                         <div class="stat-value text-warning" id="lateDays">0</div>
                     </div>
                     
                     <div class="stat-item">
-                        <div class="stat-label">Absent Days</div>
+                        <div class="stat-label">Hari Tidak Hadir</div>
                         <div class="stat-value text-danger" id="absentDays">0</div>
                     </div>
                     
                     <div class="stat-item">
-                        <div class="stat-label">Leave Days</div>
+                        <div class="stat-label">Hari Cuti</div>
                         <div class="stat-value text-info" id="leaveDays">0</div>
                     </div>
                     
                     <div class="stat-item">
-                        <div class="stat-label">Overtime Hours</div>
+                        <div class="stat-label">Jam Lembur</div>
                         <div class="stat-value text-primary" id="overtimeHours">0h</div>
                     </div>
                     
                     <div class="stat-item">
-                        <div class="stat-label">Attendance Rate</div>
+                        <div class="stat-label">Persentase Kehadiran</div>
                         <div class="stat-value text-success" id="attendanceRate">0%</div>
                     </div>
                 </div>
@@ -121,7 +117,7 @@
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="fas fa-bolt mr-2"></i>
-                        Quick Actions
+                        Aksi Cepat
                     </h5>
                 </div>
                 <div class="card-body">
@@ -129,14 +125,14 @@
                         <a href="{{ route('attendance.check-in-out') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-sign-in-alt"></i> Check In/Out
                         </a>
-                        <a href="{{ route('leaves.create') }}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-calendar-plus"></i> Submit Leave
+                        <a href="{{ route('attendance.create') }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-calendar-plus"></i> Submit Kehadiran
                         </a>
                         <a href="{{ route('overtimes.create') }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-clock"></i> Submit Overtime
+                            <i class="fas fa-clock"></i> Submit Lembur
                         </a>
                         <a href="{{ route('attendance.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-list"></i> View All Records
+                            <i class="fas fa-list"></i> Lihat Semua Data
                         </a>
                     </div>
                 </div>
@@ -147,22 +143,17 @@
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="fas fa-info-circle mr-2"></i>
-                        Calendar Info
+                        Info Kalender
                     </h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled">
-                        <li><i class="fas fa-circle text-success mr-2"></i> Green: Present</li>
-                        <li><i class="fas fa-circle text-warning mr-2"></i> Yellow: Late</li>
-                        <li><i class="fas fa-circle text-danger mr-2"></i> Red: Absent</li>
-                        <li><i class="fas fa-circle text-info mr-2"></i> Blue: Overtime</li>
-                        <li><i class="fas fa-circle text-secondary mr-2"></i> Gray: Leave</li>
+                        <li><i class="fas fa-circle text-success mr-2"></i> Hijau: Hadir</li>
+                        <li><i class="fas fa-circle text-warning mr-2"></i> Kuning: Terlambat</li>
+                        <li><i class="fas fa-circle text-danger mr-2"></i> Merah: Tidak Hadir</li>
+                        <li><i class="fas fa-circle text-info mr-2"></i> Biru: Lembur</li>
+                        <li><i class="fas fa-circle text-secondary mr-2"></i> Abu-abu: Cuti</li>
                     </ul>
-                    <hr>
-                    <small class="text-muted">
-                        <i class="fas fa-mouse-pointer mr-1"></i>
-                        Click on events to see details
-                    </small>
                 </div>
             </div>
         </div>
@@ -198,6 +189,7 @@
 .calendar-legend {
     background: #f8f9fa;
     padding: 15px;
+    padding-bottom: 5px;
     border-radius: 8px;
     border: 1px solid #dee2e6;
 }
@@ -570,12 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         // For now, just show alert. You can implement actual export later
-        Swal.fire({
-            title: 'Export Calendar',
-            text: 'Export functionality will be implemented here',
-            icon: 'info',
-            confirmButtonText: 'OK'
-        });
+        SwalHelper.info('Export Calendar', 'Export functionality will be implemented here');
     };
 });
 </script>

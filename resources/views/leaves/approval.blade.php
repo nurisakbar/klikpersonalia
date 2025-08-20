@@ -1,36 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Leave Approval')
+@section('title', 'Persetujuan Cuti - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Persetujuan Cuti')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Persetujuan Cuti</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        Leave Approval
-                    </h6>
-                    <div class="card-tools">
-                        <a href="{{ route('leaves.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to Leave List
-                        </a>
-                    </div>
-                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="leave-approval-table" style="width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>Employee</th>
-                                    <th>Leave Type</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Total Days</th>
-                                    <th>Reason</th>
-                                    <th>Submitted</th>
-                                    <th>Actions</th>
+                                    <th>Karyawan</th>
+                                    <th>Jenis Cuti</th>
+                                    <th>Tanggal Mulai</th>
+                                    <th>Tanggal Selesai</th>
+                                    <th>Total Hari</th>
+                                    <th>Alasan</th>
+                                    <th>Dibuat</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                         </table>
@@ -240,32 +234,17 @@ $(function () {
         
         console.log('Approve button clicked for leave ID:', leaveId);
         
-        Swal.fire({
-            title: 'Konfirmasi Approval Cuti',
-            html: `
-                <div class="text-left">
-                    <p><strong>Karyawan:</strong> ${employeeName}</p>
-                    <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
-                    <p><strong>Total Hari:</strong> ${totalDays} hari</p>
-                    <div class="form-group mt-3">
-                        <label for="approval_notes">Catatan Approval (Opsional)</label>
-                        <textarea id="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
-                    </div>
+        SwalHelper.confirm('Konfirmasi Approval Cuti', `
+            <div class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="approval_notes">Catatan Approval (Opsional)</label>
+                    <textarea id="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
                 </div>
-            `,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Setujui!',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            reverseButtons: true,
-            preConfirm: () => {
-                return {
-                    notes: document.getElementById('approval_notes').value
-                };
-            }
-        }).then((result) => {
+            </div>
+        `, function(result) {
             if (result.isConfirmed) {
                 // Show loading
                 SwalHelper.loading('Menyetujui permintaan cuti...');
@@ -274,6 +253,7 @@ $(function () {
                 $.ajax({
                     url: `{{ url('leaves') }}/${leaveId}/approve`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         approval_notes: result.value.notes
                     },
@@ -312,37 +292,17 @@ $(function () {
         
         console.log('Reject button clicked for leave ID:', leaveId);
         
-        Swal.fire({
-            title: 'Konfirmasi Penolakan Cuti',
-            html: `
-                <div class="text-left">
-                    <p><strong>Karyawan:</strong> ${employeeName}</p>
-                    <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
-                    <p><strong>Total Hari:</strong> ${totalDays} hari</p>
-                    <div class="form-group mt-3">
-                        <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
-                        <textarea id="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
-                    </div>
+        SwalHelper.confirmDelete('Konfirmasi Penolakan Cuti', `
+            <div class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
+                    <textarea id="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
                 </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Tolak!',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            reverseButtons: true,
-            preConfirm: () => {
-                const notes = document.getElementById('rejection_notes').value;
-                if (!notes.trim()) {
-                    Swal.showValidationMessage('Alasan penolakan harus diisi');
-                    return false;
-                }
-                return {
-                    notes: notes
-                };
-            }
-        }).then((result) => {
+            </div>
+        `, function(result) {
             if (result.isConfirmed) {
                 // Show loading
                 SwalHelper.loading('Menolak permintaan cuti...');
@@ -351,6 +311,7 @@ $(function () {
                 $.ajax({
                     url: `{{ url('leaves') }}/${leaveId}/reject`,
                     method: 'POST',
+                    errorHandled: true, // Mark as manually handled
                     data: {
                         approval_notes: result.value.notes
                     },

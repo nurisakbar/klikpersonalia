@@ -219,7 +219,7 @@ class EmployeeController extends Controller
     {
         $result = $this->employeeService->deleteEmployee($id);
         
-        $statusCode = $result['success'] ? 200 : 500;
+        $statusCode = $result['success'] ? 200 : 422;
         return response()->json($result, $statusCode);
     }
 }

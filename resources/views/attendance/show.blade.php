@@ -1,28 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Absensi - Aplikasi Payroll KlikMedis')
-@section('page-title', 'Detail Absensi')
+@section('title', 'Rincian Kehadiran - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Rincian Kehadiran')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('attendance.index') }}">Absensi</a></li>
-<li class="breadcrumb-item active">Detail</li>
+<li class="breadcrumb-item"><a href="{{ route('attendance.index') }}">Kehadiran</a></li>
+<li class="breadcrumb-item active">Rincian</li>
 @endsection
 
 @section('content')
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Detail Absensi</h3>
-                <div class="card-tools">
-                    <a href="{{ route('attendance.edit', $attendance->id) }}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <a href="{{ route('attendance.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                    </a>
-                </div>
-            </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
@@ -52,7 +41,7 @@
                     <div class="col-md-6">
                         <table class="table table-borderless">
                             <tr>
-                                <td width="150"><strong>Check In</strong></td>
+                                <td width="150"><strong>Datang</strong></td>
                                 <td>: {{ $attendance->check_in ? $attendance->check_in->format('H:i:s') : '-' }}</td>
                             </tr>
                             <tr>
@@ -78,10 +67,9 @@
                 <!-- Additional Information -->
                 @if($attendance->check_in_location || $attendance->check_in_ip || $attendance->check_in_device)
                 <hr>
-                <h5><i class="fas fa-info-circle"></i> Informasi Teknis</h5>
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Check In</h6>
+                        <h6>Datang</h6>
                         <table class="table table-sm table-borderless">
                             <tr>
                                 <td width="120"><strong>Lokasi</strong></td>
@@ -98,7 +86,7 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <h6>Check Out</h6>
+                        <h6>Pulang</h6>
                         <table class="table table-sm table-borderless">
                             <tr>
                                 <td width="120"><strong>Lokasi</strong></td>

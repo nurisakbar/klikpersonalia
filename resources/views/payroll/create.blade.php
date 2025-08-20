@@ -9,12 +9,21 @@
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Form Tambah Payroll</h3>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus mr-2"></i>
+                        Tambah Payroll Baru
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{{ route('payrolls.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                    </div>
+                </div>
             <form action="{{ route('payrolls.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
@@ -148,12 +157,14 @@
                         </div>
                     </div>
                 </div>
+                </div>
+
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Simpan
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save mr-1"></i> Simpan
                     </button>
                     <a href="{{ route('payrolls.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Kembali
+                        <i class="fas fa-times mr-1"></i> Batal
                     </a>
                 </div>
             </form>
@@ -163,6 +174,9 @@
 @endsection
 
 @push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <script>
 $(function () {
     // Format input dengan separator ribuan
@@ -190,10 +204,54 @@ $(function () {
     $('#basic_salary, #allowance, #overtime, #bonus, #deduction').on('input', calculateTotal);
 
     // Submit form dengan format angka yang benar
-    $('form').on('submit', function() {
+    $('form').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+        // Prepare form data with raw numbers
+        let formData = new FormData(this);
         $('input[type="number"]').each(function() {
             let value = $(this).val().replace(/[^\d]/g, '');
-            $(this).val(value);
+            formData.set($(this).attr('name'), value);
+        });
+
+        // Send AJAX request
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            errorHandled: true,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    SwalHelper.success('Berhasil!', response.message, 2000);
+                    setTimeout(() => {
+                        window.location.href = '{{ route("payrolls.index") }}';
+                    }, 2000);
+                } else {
+                    SwalHelper.error('Gagal!', response.message);
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat menyimpan data';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessages = [];
+                    for (let field in errors) {
+                        errorMessages.push(errors[field][0]);
+                    }
+                    message = errorMessages.join('\n');
+                }
+                
+                SwalHelper.error('Error!', message);
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
+            }
         });
     });
 });

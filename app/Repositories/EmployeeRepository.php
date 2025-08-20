@@ -63,7 +63,14 @@ class EmployeeRepository
     public function create(array $data): Employee
     {
         // Add company_id to data
-        $data['company_id'] = auth()->user()->company_id;
+        if (!isset($data['company_id'])) {
+            $data['company_id'] = auth()->user()->company_id;
+        }
+        
+        // Validate company_id
+        if (!$data['company_id']) {
+            throw new \Exception('Company ID tidak ditemukan. Pastikan user sudah terautentikasi dan memiliki company.');
+        }
         
         // Generate employee ID
         $data['employee_id'] = $this->generateEmployeeId();
@@ -268,8 +275,15 @@ class EmployeeRepository
      */
     private function generateEmployeeId(): string
     {
-        $lastEmployee = Employee::where('company_id', auth()->user()->company_id)
-            ->orderBy('id', 'desc')
+        $companyId = auth()->user()->company_id;
+        
+        if (!$companyId) {
+            throw new \Exception('Company ID tidak ditemukan untuk generate employee ID.');
+        }
+        
+        // Get the highest employee ID for this company
+        $lastEmployee = Employee::where('company_id', $companyId)
+            ->orderByRaw('CAST(SUBSTRING(employee_id, 4) AS UNSIGNED) DESC')
             ->first();
             
         if ($lastEmployee && $lastEmployee->employee_id) {

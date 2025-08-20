@@ -15,6 +15,7 @@
 				<table class="table table-bordered table-striped" id="employees-table" style="width: 100%;">
                         <thead>
                             <tr>
+                                <th>No</th>
                                 <th>ID Karyawan</th>
                                 <th>Nama</th>
                                 <th>Email</th>
@@ -78,8 +79,8 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
 
 <script>
 $(function () {
@@ -100,9 +101,19 @@ $(function () {
         serverSide: true,
         ajax: {
             url: '{{ route("employees.data") }}',
-            type: 'GET'
+            type: 'GET',
+            error: function(xhr, error, thrown) {
+                // Handle DataTable errors silently or show a user-friendly message
+                console.log('DataTable error:', error);
+                // You can show a toast notification here if needed
+                // SwalHelper.toastError('Gagal memuat data karyawan');
+            }
         },
         columns: [
+            {data: null, name: 'row_number', width: '50px', orderable: false, searchable: false, 
+             render: function (data, type, row, meta) {
+                 return meta.row + meta.settings._iDisplayStart + 1;
+             }},
             {data: 'employee_id', name: 'employee_id', width: '120px'},
             {data: 'name', name: 'name', width: '200px'},
             {data: 'email', name: 'email', width: '200px'},
@@ -120,7 +131,7 @@ $(function () {
         dom: 'Bfrtip',
         buttons: [
 			{
-				text: '<i class="fas fa-plus"></i> Tambah Karyawan',
+				text: '<i class="fas fa-plus"></i> Tambah',
 				className: 'btn btn-primary btn-sm mr-2',
 				action: function () {
 					window.location.href = '{{ route("employees.create") }}';
@@ -131,7 +142,7 @@ $(function () {
 				text: '<i class="fas fa-file-excel"></i> Excel',
 				className: 'btn btn-success btn-sm',
 				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 				}
 			},
 			{
@@ -139,7 +150,7 @@ $(function () {
 				text: '<i class="fas fa-file-pdf"></i> PDF',
 				className: 'btn btn-danger btn-sm',
 				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 				}
 			},
 			{
@@ -147,7 +158,7 @@ $(function () {
 				text: '<i class="fas fa-print"></i> Print',
 				className: 'btn btn-info btn-sm',
 				exportOptions: {
-					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 				}
 			}
         ],
@@ -155,7 +166,7 @@ $(function () {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
         },
         responsive: true,
-        order: [[0, 'asc']]
+        order: [[2, 'asc']]
     });
 
     // Pastikan tombol Add tidak memakai btn-secondary (force primary)
@@ -185,6 +196,7 @@ $(function () {
         $.ajax({
             url: '/employees/' + id,
             type: 'GET',
+            errorHandled: true, // Mark as manually handled
             headers: {
                 'Accept': 'application/json'
             },
@@ -281,10 +293,7 @@ $(function () {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Konfirmasi Hapus',
-            'Apakah Anda yakin ingin menghapus karyawan "' + name + '" ?'
-        ).then((result) => {
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus karyawan "' + name + '" ?', function(result) {
             if (result.isConfirmed) {
                 // Show loading
                 SwalHelper.loading('Menghapus...');
@@ -293,12 +302,15 @@ $(function () {
                 $.ajax({
                     url: '/employees/' + id,
                     type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     success: function(response) {
                         if (response.success) {
-                            SwalHelper.success('Berhasil!', response.message).then(() => {
-                                // Reload DataTable
-                                table.ajax.reload();
-                            });
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
                         } else {
                             SwalHelper.error('Gagal!', response.message);
                         }

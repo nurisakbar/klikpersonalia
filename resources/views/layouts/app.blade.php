@@ -14,8 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/css/OverlayScrollbars.min.css">
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Global SweetAlert Component -->
+    @include('components.sweet-alert')
     <!-- Select2 (for AJAX employee select) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
@@ -50,18 +50,6 @@
 			border-color: #adb5bd;
 		}
 
-		/* Sub menu indentation */
-		.sidebar .nav-treeview {
-			margin-left: 1rem;
-		}
-
-		.sidebar .nav-treeview .nav-link {
-			padding-left: 1rem;
-		}
-
-		.sidebar .nav-treeview .nav-icon {
-			margin-left: 0.5rem;
-		}
 	</style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -174,23 +162,37 @@
                             </a>
                         </li>
 
-                        <!-- Payroll Management -->
-                        <li class="nav-item {{ request()->routeIs('payrolls.*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-money-bill-wave"></i>
+                        <!-- Master Data Management -->
+                        <li class="nav-item {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-database"></i>
                                 <p>
-                                    Payroll Management
+                                    Master Data
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('payrolls.index') }}" class="nav-link {{ request()->routeIs('payrolls.index') ? 'active' : '' }}">
+                                    <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>All Payrolls</p>
+                                        <p>Kelola Departemen</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('positions.index') }}" class="nav-link {{ request()->routeIs('positions.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Kelola Jabatan</p>
                                     </a>
                                 </li>
                             </ul>
+                        </li>
+
+                        <!-- Payroll Management -->
+                        <li class="nav-item">
+                            <a href="{{ route('payrolls.index') }}" class="nav-link {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-money-bill-wave"></i>
+                                <p>Kelola Payroll</p>
+                            </a>
                         </li>
 
                         <!-- Attendance Management -->
@@ -207,7 +209,7 @@
                                 <li class="nav-item">
                                     <a href="{{ route('attendance.index') }}" class="nav-link {{ request()->routeIs('attendance.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Attendance Records</p>
+                                        <p>Daftar Kehadiran</p>
                                     </a>
                                 </li>
                                 @endif
@@ -221,7 +223,7 @@
                                 <li class="nav-item">
                                     <a href="{{ route('attendance.calendar') }}" class="nav-link {{ request()->routeIs('attendance.calendar*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Attendance Calendar</p>
+                                        <p>Kalender Kehadiran</p>
                                     </a>
                                 </li>
                                 @endif
@@ -233,7 +235,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('leaves.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-alt"></i>
                                 <p>
-                                    Leave Management
+                                    Kelola Cuti
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -241,20 +243,20 @@
                                 <li class="nav-item">
                                     <a href="{{ route('leaves.index') }}" class="nav-link {{ request()->routeIs('leaves.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>My Leave Requests</p>
+                                        <p>Permintaan Cuti</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('leaves.balance') }}" class="nav-link {{ request()->routeIs('leaves.balance') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Leave Balance</p>
+                                        <p>Sisa Cuti</p>
                                     </a>
                                 </li>
                                 @if(in_array(auth()->user()->role, ['admin', 'hr', 'manager']))
                                 <li class="nav-item">
                                     <a href="{{ route('leaves.approval') }}" class="nav-link {{ request()->routeIs('leaves.approval') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Leave Approval</p>
+                                        <p>Persetujuan Cuti</p>
                                     </a>
                                 </li>
                                 @endif
@@ -266,7 +268,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('overtimes.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-clock"></i>
                                 <p>
-                                    Overtime Management
+                                    Kelola Lembur
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -274,20 +276,14 @@
                                 <li class="nav-item">
                                     <a href="{{ route('overtimes.index') }}" class="nav-link {{ request()->routeIs('overtimes.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>My Overtime Requests</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('overtimes.create') }}" class="nav-link {{ request()->routeIs('overtimes.create') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Submit Overtime Request</p>
+                                        <p>Permintaan Lembur</p>
                                     </a>
                                 </li>
                                 @if(in_array(auth()->user()->role, ['admin', 'hr', 'manager']))
                                 <li class="nav-item">
                                     <a href="{{ route('overtimes.approval') }}" class="nav-link {{ request()->routeIs('overtimes.approval') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Overtime Approval</p>
+                                        <p>Persetujuan Lembur</p>
                                     </a>
                                 </li>
                                 @endif
@@ -299,7 +295,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('taxes.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calculator"></i>
                                 <p>
-                                    Tax Management
+                                    Kelola Pajak
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -307,13 +303,13 @@
                                 <li class="nav-item">
                                     <a href="{{ route('taxes.index') }}" class="nav-link {{ request()->routeIs('taxes.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Tax Calculations</p>
+                                        <p>Perhitungan Pajak</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('taxes.report') }}" class="nav-link {{ request()->routeIs('taxes.report') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Tax Reports</p>
+                                        <p>Laporan Pajak</p>
                                     </a>
                                 </li>
                             </ul>
@@ -324,7 +320,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('bpjs.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-heartbeat"></i>
                                 <p>
-                                    BPJS Management
+                                    Kelola BPJS
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -332,13 +328,13 @@
                                 <li class="nav-item">
                                     <a href="{{ route('bpjs.index') }}" class="nav-link {{ request()->routeIs('bpjs.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>BPJS Calculations</p>
+                                        <p>Perhitungan BPJS</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('bpjs.report') }}" class="nav-link {{ request()->routeIs('bpjs.report') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>BPJS Reports</p>
+                                        <p>Laporan BPJS</p>
                                     </a>
                                 </li>
                             </ul>
@@ -349,7 +345,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('bank-accounts.*') || request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-university"></i>
                                 <p>
-                                    Bank Integration
+                                    Integrasi Bank
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -357,13 +353,13 @@
                                 <li class="nav-item">
                                     <a href="{{ route('bank-accounts.index') }}" class="nav-link {{ request()->routeIs('bank-accounts.*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Bank Accounts</p>
+                                        <p>Rekening Bank</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('salary-transfers.index') }}" class="nav-link {{ request()->routeIs('salary-transfers.*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Salary Transfers</p>
+                                        <p>Transfer Gaji</p>
                                     </a>
                                 </li>
                             </ul>
@@ -373,7 +369,7 @@
                         <li class="nav-item">
                             <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Reports</p>
+                                <p>Laporan</p>
                             </a>
                         </li>
 
@@ -382,7 +378,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('exports.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-download"></i>
                                 <p>
-                                    Export Data
+                                    Ekspor Data
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -390,19 +386,19 @@
                                 <li class="nav-item">
                                     <a href="{{ route('exports.index') }}" class="nav-link {{ request()->routeIs('exports.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Export Dashboard</p>
+                                        <p>Ekspor Dashboard</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('exports.employees') }}?format=xlsx" class="nav-link">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Export Employees</p>
+                                        <p>Ekspor Karyawan</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('exports.payrolls') }}?format=xlsx" class="nav-link">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Export Payrolls</p>
+                                        <p>Ekspor Payrolls</p>
                                     </a>
                                 </li>
                             </ul>
@@ -413,7 +409,7 @@
                             <a href="#" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
-                                    Settings
+                                    Pengaturan
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -421,29 +417,17 @@
                                 <li class="nav-item">
                                     <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Settings Dashboard</p>
+                                        <p>Pengaturan Dashboard</p>
                                     </a>
                                 </li>
                                 @if(in_array(auth()->user()->role, ['admin']))
                                 <li class="nav-item">
                                     <a href="{{ route('settings.company') }}" class="nav-link {{ request()->routeIs('settings.company') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Company Settings</p>
+                                        <p>Pengaturan Perusahaan</p>
                                     </a>
                                 </li>
                                 @endif
-                                <li class="nav-item">
-                                    <a href="{{ route('settings.profile') }}" class="nav-link {{ request()->routeIs('settings.profile') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>User Profile</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('settings.password') }}" class="nav-link {{ request()->routeIs('settings.password') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Change Password</p>
-                                    </a>
-                                </li>
                             </ul>
                         </li>
                     </ul>
@@ -508,124 +492,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/js/OverlayScrollbars.min.js"></script>
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
-    <!-- Global SweetAlert Helper -->
+    <!-- Session Messages Handler -->
     <script>
-        // Global SweetAlert Helper Functions
-        window.SwalHelper = {
-            // Success Alert
-            success: function(title, text = '', timer = 3000) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'success',
-                    timer: timer,
-                    showConfirmButton: false,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Error Alert
-            error: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'error',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Warning Alert
-            warning: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Info Alert
-            info: function(title, text = '', showConfirmButton = true) {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'info',
-                    showConfirmButton: showConfirmButton,
-                    toast: false,
-                    position: 'center'
-                });
-            },
-            
-            // Confirmation Dialog
-            confirm: function(title, text = '', confirmButtonText = 'Ya, Hapus!', cancelButtonText = 'Batal') {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: confirmButtonText,
-                    cancelButtonText: cancelButtonText
-                });
-            },
-            
-            // Toast Success
-            toastSuccess: function(title) {
-                return Swal.fire({
-                    title: title,
-                    icon: 'success',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            },
-            
-            // Toast Error
-            toastError: function(title) {
-                return Swal.fire({
-                    title: title,
-                    icon: 'error',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            },
-            
-            // Loading Alert
-            loading: function(title = 'Memproses...') {
-                return Swal.fire({
-                    title: title,
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    allowEnterKey: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-            },
-            
-            // Close Loading
-            close: function() {
-                Swal.close();
-            }
-        };
-
         // Auto-show alerts from Laravel session
         @if(session('success'))
             SwalHelper.success('Berhasil!', '{{ session("success") }}');
@@ -638,6 +509,27 @@
         @if($errors->any())
             SwalHelper.error('Error!', '{!! implode("\\n", $errors->all()) !!}');
         @endif
+        
+        // Clear any lingering session messages after showing them
+        @if(session('success') || session('error') || $errors->any())
+            // Clear session messages after a short delay
+            setTimeout(function() {
+                // This will prevent the alert from showing again on page refresh
+                if (typeof window.history.replaceState === 'function') {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }, 100);
+        @endif
+        
+        // Clear any stored alerts or errors
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('swal-error');
+            localStorage.removeItem('swal-success');
+        }
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('swal-error');
+            sessionStorage.removeItem('swal-success');
+        }
     </script>
 
     <!-- DataTables Buttons global fix: remove unintended btn-secondary so color classes apply -->
@@ -658,8 +550,5 @@
 
     
     @stack('js')
-    
-    <!-- Include Sweet Alert Component -->
-    @include('components.sweet-alert')
 </body>
 </html>

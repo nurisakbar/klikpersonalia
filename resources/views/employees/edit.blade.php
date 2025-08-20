@@ -9,12 +9,10 @@
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Form Edit Karyawan</h3>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
             <form action="{{ route('employees.update', $employee->id) }}" method="POST">
                 @csrf
                 @method('PUT')
@@ -172,14 +170,15 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Update
-                    </button>
-                    <a href="{{ route('employees.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                    </a>
+
+                    <div>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save mr-1"></i> Update
+                        </button>
+                        <a href="{{ route('employees.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>
@@ -188,6 +187,9 @@
 @endsection
 
 @push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <script>
 $(function () {
     // Format input gaji dengan separator ribuan
@@ -204,22 +206,62 @@ $(function () {
 
     // Submit form dengan format angka yang benar
     $('form').on('submit', function(e) {
+        e.preventDefault();
+        
         // Get raw numeric value from formatted salary
         let salaryInput = $('#basic_salary');
         let formattedSalary = salaryInput.val();
         let rawSalary = formattedSalary.replace(/[^\d]/g, '');
         
-        // Temporarily set raw value for submission
-        salaryInput.val(rawSalary);
-        
         // Validate minimum salary
         if (parseInt(rawSalary) < 1000000) {
-            e.preventDefault();
-            alert('Gaji pokok minimal Rp 1.000.000');
-            // Restore formatted value
-            salaryInput.val(formattedSalary);
+            SwalHelper.error('Error!', 'Gaji pokok minimal Rp 1.000.000');
             return false;
         }
+
+        // Show loading
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+        // Prepare form data
+        let formData = new FormData(this);
+        formData.set('basic_salary', rawSalary); // Set raw salary value
+
+        // Send AJAX request
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            errorHandled: true,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    SwalHelper.success('Berhasil!', response.message, 2000);
+                    setTimeout(() => {
+                        window.location.href = '{{ route("employees.index") }}';
+                    }, 2000);
+                } else {
+                    SwalHelper.error('Gagal!', response.message);
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Update');
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat menyimpan data';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessages = [];
+                    for (let field in errors) {
+                        errorMessages.push(errors[field][0]);
+                    }
+                    message = errorMessages.join('\n');
+                }
+                
+                SwalHelper.error('Error!', message);
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Update');
+            }
+        });
     });
 
     // Format initial value if exists

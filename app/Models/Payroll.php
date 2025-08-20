@@ -27,6 +27,12 @@ class Payroll extends Model
         'notes',
         'generated_by',
         'generated_at',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'paid_by',
+        'paid_at',
     ];
 
     protected $casts = [
@@ -40,6 +46,9 @@ class Payroll extends Model
         'total_salary' => 'decimal:2',
         'payment_date' => 'date',
         'generated_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
 
     /**

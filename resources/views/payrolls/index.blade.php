@@ -1,446 +1,287 @@
 @extends('layouts.app')
 
-@section('title', 'Payroll Management')
+@section('title', 'Kelola Payroll - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Payroll')
 
-@section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-money-bill-wave mr-2"></i>
-                        Payroll Management
-                    </h3>
-                    <div class="card-tools">
-                        <div class="btn-group" role="group">
-                            <a href="{{ route('payrolls.create') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus mr-1"></i> Generate Payroll
-                            </a>
-                            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#generateAllModal">
-                                <i class="fas fa-cogs mr-1"></i> Generate All
-                            </button>
-                            <button type="button" class="btn btn-info btn-sm" onclick="exportPayrolls()">
-                                <i class="fas fa-download mr-1"></i> Export
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <!-- Filter Section -->
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <form method="GET" action="{{ route('payrolls.index') }}" class="form-inline">
-                                <div class="form-group mr-2">
-                                    <label for="period" class="mr-2">Period:</label>
-                                    <select name="period" id="period" class="form-control">
-                                        @php
-                                            $currentYear = date('Y');
-                                            $currentMonth = date('m');
-                                            $selectedPeriod = $period ?? $currentYear . '-' . $currentMonth;
-                                        @endphp
-                                        @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
-                                            @for($month = 1; $month <= 12; $month++)
-                                                @php
-                                                    $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
-                                                    $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
-                                                @endphp
-                                                <option value="{{ $periodValue }}" {{ $selectedPeriod == $periodValue ? 'selected' : '' }}>
-                                                    {{ $periodLabel }}
-                                                </option>
-                                            @endfor
-                                        @endfor
-                                    </select>
-                                </div>
-                                <div class="form-group mr-2">
-                                    <label for="status" class="mr-2">Status:</label>
-                                    <select name="status" id="status" class="form-control">
-                                        <option value="">All Status</option>
-                                        <option value="draft" {{ $status == 'draft' ? 'selected' : '' }}>Draft</option>
-                                        <option value="approved" {{ $status == 'approved' ? 'selected' : '' }}>Approved</option>
-                                        <option value="paid" {{ $status == 'paid' ? 'selected' : '' }}>Paid</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-filter mr-1"></i> Filter
-                                </button>
-                            </form>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-outline-secondary" onclick="setPeriod('current')">Current Month</button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="setPeriod('previous')">Previous Month</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Summary Statistics -->
-                    <div class="row">
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h3>{{ $summary['total_payrolls'] }}</h3>
-                                    <p>Total Payrolls</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-list"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-warning">
-                                <div class="inner">
-                                    <h3>{{ $summary['draft_payrolls'] }}</h3>
-                                    <p>Draft</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h3>{{ $summary['approved_payrolls'] }}</h3>
-                                    <p>Approved</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h3>{{ $summary['paid_payrolls'] }}</h3>
-                                    <p>Paid</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-check-double"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-primary">
-                                <div class="inner">
-                                    <h3>Rp {{ number_format($summary['total_salary'], 0, ',', '.') }}</h3>
-                                    <p>Total Salary</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-secondary">
-                                <div class="inner">
-                                    <h3>Rp {{ number_format($summary['total_overtime'], 0, ',', '.') }}</h3>
-                                    <p>Total Overtime</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h3>Rp {{ number_format($summary['total_bonus'], 0, ',', '.') }}</h3>
-                                    <p>Total Bonus</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-gift"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-danger">
-                                <div class="inner">
-                                    <h3>Rp {{ number_format($summary['total_deductions'], 0, ',', '.') }}</h3>
-                                    <p>Total Deductions</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-minus-circle"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payroll List -->
-                    <div class="row">
-                        <div class="col-12">
-                            @if($payrolls->count() > 0)
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Employee</th>
-                                                <th>Period</th>
-                                                <th>Basic Salary</th>
-                                                <th>Overtime</th>
-                                                <th>Bonus</th>
-                                                <th>Deductions</th>
-                                                <th>Total Salary</th>
-                                                <th>Status</th>
-                                                <th>Generated</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($payrolls as $payroll)
-                                                <tr>
-                                                    <td>
-                                                        <strong>{{ $payroll->employee->name }}</strong><br>
-                                                        <small class="text-muted">{{ $payroll->employee->department }}</small>
-                                                    </td>
-                                                    <td>{{ $payroll->formatted_period }}</td>
-                                                    <td>{{ $payroll->formatted_basic_salary }}</td>
-                                                    <td>{{ 'Rp ' . number_format($payroll->overtime_pay, 0, ',', '.') }}</td>
-                                                    <td>{{ 'Rp ' . number_format($payroll->attendance_bonus, 0, ',', '.') }}</td>
-                                                    <td>{{ 'Rp ' . number_format($payroll->deductions + $payroll->leave_deduction, 0, ',', '.') }}</td>
-                                                    <td>
-                                                        <strong>{{ $payroll->formatted_total_salary }}</strong>
-                                                    </td>
-                                                    <td>{!! $payroll->status_badge !!}</td>
-                                                    <td>
-                                                        {{ $payroll->generated_at ? $payroll->generated_at->format('d/m/Y H:i') : '-' }}<br>
-                                                        <small class="text-muted">by {{ $payroll->generatedBy->name ?? '-' }}</small>
-                                                    </td>
-                                                    <td>
-                                                        <div class="btn-group" role="group">
-                                                            <a href="{{ route('payrolls.show', $payroll->id) }}" class="btn btn-sm btn-info" title="View Details">
-                                                                <i class="fas fa-eye"></i>
-                                                            </a>
-                                                            @if($payroll->isPending())
-                                                                <a href="{{ route('payrolls.edit', $payroll->id) }}" class="btn btn-sm btn-warning" title="Edit">
-                                                                    <i class="fas fa-edit"></i>
-                                                                </a>
-                                                                <button type="button" class="btn btn-sm btn-success approve-btn" 
-                                                                        data-id="{{ $payroll->id }}" 
-                                                                        data-name="{{ $payroll->employee->name }}"
-                                                                        title="Approve">
-                                                                    <i class="fas fa-check"></i>
-                                                                </button>
-                                                                <button type="button" class="btn btn-sm btn-danger reject-btn" 
-                                                                        data-id="{{ $payroll->id }}" 
-                                                                        data-name="{{ $payroll->employee->name }}"
-                                                                        title="Reject">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
-                                                            @endif
-                                                            @if($payroll->isPending())
-                                                                <button type="button" class="btn btn-sm btn-danger delete-btn" 
-                                                                        data-id="{{ $payroll->id }}" 
-                                                                        data-name="{{ $payroll->employee->name }} - {{ $payroll->formatted_period }}"
-                                                                        title="Delete">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            @endif
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                <div class="d-flex justify-content-center">
-                                    {{ $payrolls->links() }}
-                                </div>
-                            @else
-                                <div class="text-center py-4">
-                                    <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No Payrolls Found</h5>
-                                    <p class="text-muted">No payrolls found for the selected criteria.</p>
-                                    <a href="{{ route('payrolls.create') }}" class="btn btn-primary">
-                                        <i class="fas fa-plus mr-1"></i> Generate First Payroll
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Generate All Modal -->
-<div class="modal fade" id="generateAllModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Generate Payroll for All Employees</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form action="{{ route('payrolls.generate-all') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="generate_month">Month</label>
-                        <select name="month" id="generate_month" class="form-control" required>
-                            @for($i = 1; $i <= 12; $i++)
-                                <option value="{{ $i }}" {{ $month == $i ? 'selected' : '' }}>
-                                    {{ date('F', mktime(0, 0, 0, $i, 1)) }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="generate_year">Year</label>
-                        <select name="year" id="generate_year" class="form-control" required>
-                            @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
-                                <option value="{{ $i }}" {{ $year == $i ? 'selected' : '' }}>
-                                    {{ $i }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        This will generate payroll for all active employees for the selected period.
-                        Existing payrolls will be skipped.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-cogs mr-1"></i> Generate All
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Payroll</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this payroll?</p>
-                <p><strong id="deletePayrollName"></strong></p>
-                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Yes, Delete Payroll</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@section('breadcrumb')
+<li class="breadcrumb-item active">Payroll</li>
 @endsection
 
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered table-striped" id="payrolls-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Karyawan</th>
+                            <th>Departemen</th>
+                            <th>Periode</th>
+                            <th>Gaji Pokok</th>
+                            <th>Lembur</th>
+                            <th>Bonus</th>
+                            <th>Potongan</th>
+                            <th>Total Gaji</th>
+                            <th>Status</th>
+                            <th>Generated</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token for AJAX -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
+@push('css')
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+@endpush
+
 @push('js')
+<!-- DataTables & Plugins -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
+
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <script>
-$(document).ready(function() {
-    // Handle delete button click
-    $('.delete-btn').click(function() {
-        const payrollId = $(this).data('id');
-        const payrollName = $(this).data('name');
-        
-        $('#deletePayrollName').text(payrollName);
-        $('#deleteForm').attr('action', '{{ url("payrolls") }}/' + payrollId);
-        $('#deleteModal').modal('show');
+$(function () {
+    // Setup CSRF token for AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    // Initialize DataTable with server-side processing
+    var table = $('#payrolls-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("payrolls.data") }}',
+            type: 'GET',
+            error: function(xhr, error, thrown) {
+                console.log('DataTable error:', error);
+            }
+        },
+        columns: [
+            {data: null, name: 'row_number', width: '50px', orderable: false, searchable: false, 
+             render: function (data, type, row, meta) {
+                 return meta.row + meta.settings._iDisplayStart + 1;
+             }},
+            {data: 'employee_name', name: 'employee_name', width: '200px'},
+            {data: 'employee_department', name: 'employee_department', width: '150px'},
+            {data: 'period_formatted', name: 'period_formatted', width: '120px'},
+            {data: 'salary_formatted', name: 'salary_formatted', width: '130px'},
+            {data: 'overtime_formatted', name: 'overtime_formatted', width: '120px'},
+            {data: 'bonus_formatted', name: 'bonus_formatted', width: '120px'},
+            {data: 'deductions_formatted', name: 'deductions_formatted', width: '130px'},
+            {data: 'total_formatted', name: 'total_formatted', width: '130px'},
+            {data: 'status_badge', name: 'status_badge', width: '100px'},
+            {data: 'generated_info', name: 'generated_info', width: '150px'},
+            {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
+        ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        dom: 'Bfrtip',
+
+        buttons: [
+            {
+                text: '<i class="fas fa-plus"></i> Generate Payroll',
+                className: 'btn btn-primary btn-sm mr-2',
+                action: function () {
+                    window.location.href = '{{ route("payrolls.create") }}';
+                }
+            },
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print',
+                className: 'btn btn-info btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                }
+            }
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+        },
+        responsive: true,
+        order: [[1, 'asc']]
+    });
+
+    // Handle view button click
+    $(document).on('click', '.view-btn', function() {
+        var id = $(this).data('id');
+        window.location.href = '/payrolls/' + id;
+    });
+
+    // Handle edit button click
+    $(document).on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        window.location.href = '/payrolls/' + id + '/edit';
     });
 
     // Handle approve button click
-    $('.approve-btn').click(function() {
-        const payrollId = $(this).data('id');
-        const payrollName = $(this).data('name');
+    $(document).on('click', '.approve-btn', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
         
-        if (confirm(`Are you sure you want to approve payroll for ${payrollName}?`)) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ url("payrolls") }}/' + payrollId + '/approve';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            
-            form.appendChild(csrfToken);
-            document.body.appendChild(form);
-            form.submit();
-        }
+        Swal.fire({
+            icon: 'question',
+            title: 'Konfirmasi Persetujuan',
+            text: 'Apakah Anda yakin ingin menyetujui payroll untuk "' + name + '" ?',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Setujui!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                SwalHelper.loading('Menyetujui...');
+
+                $.ajax({
+                    url: '/payrolls/' + id + '/approve',
+                    type: 'POST',
+                    errorHandled: true,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menyetujui payroll';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        SwalHelper.error('Error!', message);
+                    }
+                });
+            }
+        });
     });
 
     // Handle reject button click
-    $('.reject-btn').click(function() {
-        const payrollId = $(this).data('id');
-        const payrollName = $(this).data('name');
+    $(document).on('click', '.reject-btn', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
         
-        const reason = prompt(`Please provide a reason for rejecting ${payrollName}'s payroll:`);
-        if (reason !== null) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ url("payrolls") }}/' + payrollId + '/reject';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            
-            const reasonInput = document.createElement('input');
-            reasonInput.type = 'hidden';
-            reasonInput.name = 'rejection_reason';
-            reasonInput.value = reason;
-            
-            form.appendChild(csrfToken);
-            form.appendChild(reasonInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
+        Swal.fire({
+            icon: 'warning',
+            title: 'Konfirmasi Penolakan',
+            text: 'Apakah Anda yakin ingin menolak payroll untuk "' + name + '" ?',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Tolak!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                SwalHelper.loading('Menolak...');
+
+                $.ajax({
+                    url: '/payrolls/' + id + '/reject',
+                    type: 'POST',
+                    errorHandled: true,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menolak payroll';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        SwalHelper.error('Error!', message);
+                    }
+                });
+            }
+        });
+    });
+
+    // Handle delete button click
+    $(document).on('click', '.delete-btn', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?', function(result) {
+            if (result.isConfirmed) {
+                SwalHelper.loading('Menghapus...');
+
+                $.ajax({
+                    url: '/payrolls/' + id,
+                    type: 'DELETE',
+                    errorHandled: true,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menghapus data';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        SwalHelper.error('Error!', message);
+                    }
+                });
+            }
+        });
     });
 });
-
-function setPeriod(period) {
-    const today = new Date();
-    let selectedPeriod;
-    
-    if (period === 'current') {
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        selectedPeriod = year + '-' + month;
-    } else if (period === 'previous') {
-        let year = today.getFullYear();
-        let month = today.getMonth();
-        if (month === 0) {
-            month = 12;
-            year--;
-        }
-        selectedPeriod = year + '-' + String(month).padStart(2, '0');
-    }
-    
-    document.getElementById('period').value = selectedPeriod;
-    document.querySelector('form').submit();
-}
-
-function exportPayrolls() {
-    const period = document.getElementById('period').value;
-    const url = '{{ route("exports.payrolls") }}' + '?format=pdf' + (period ? ('&period=' + encodeURIComponent(period)) : '');
-    window.location.href = url;
-}
 </script>
 @endpush 

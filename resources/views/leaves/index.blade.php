@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Leave Management')
+@section('title', 'Kelola Cuti - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Cuti')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Cuti</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -8,20 +13,16 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        Leave Management
-                    </h3>
                     <div class="card-tools">
                         <a href="{{ route('leaves.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus mr-1"></i> Submit Leave Request
+                            <i class="fas fa-plus mr-1"></i> Ajukan Permintaan Cuti
                         </a>
                         <a href="{{ route('leaves.balance') }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-chart-pie mr-1"></i> Leave Balance
+                            <i class="fas fa-chart-pie mr-1"></i> Sisa Cuti
                         </a>
                         @if(in_array(auth()->user()->role, ['admin', 'hr', 'manager']))
                         <a href="{{ route('leaves.approval') }}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-check-circle mr-1"></i> Leave Approval
+                            <i class="fas fa-check-circle mr-1"></i> Persetujuan Cuti
                         </a>
                         @endif
                     </div>
@@ -32,13 +33,13 @@
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Leave Type</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Total Days</th>
+                                        <th>Jenis Cuti</th>
+                                        <th>Tanggal Mulai</th>
+                                        <th>Tanggal Selesai</th>
+                                        <th>Total Hari</th>
                                         <th>Status</th>
-                                        <th>Submitted</th>
-                                        <th>Actions</th>
+                                        <th>Dibuat</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -49,7 +50,7 @@
                                             </td>
                                             <td>{{ $leave->formatted_start_date }}</td>
                                             <td>{{ $leave->formatted_end_date }}</td>
-                                            <td>{{ $leave->total_days }} days</td>
+                                            <td>{{ $leave->total_days }} hari</td>
                                             <td>{!! $leave->status_badge !!}</td>
                                             <td>{{ $leave->created_at->format('d/m/Y H:i') }}</td>
                                             <td>
@@ -82,10 +83,10 @@
                     @else
                         <div class="text-center py-4">
                             <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Leave Requests Found</h5>
-                            <p class="text-muted">You haven't submitted any leave requests yet.</p>
+                            <h5 class="text-muted">Tidak Ada Permintaan Cuti</h5>
+                            <p class="text-muted">Anda belum mengajukan permintaan cuti.</p>
                             <a href="{{ route('leaves.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus mr-1"></i> Submit Your First Leave Request
+                                <i class="fas fa-plus mr-1"></i> Ajukan Permintaan Cuti
                             </a>
                         </div>
                     @endif
@@ -120,6 +121,7 @@ $(document).ready(function() {
                 $.ajax({
                     url: `{{ url('leaves') }}/${leaveId}`,
                     method: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },

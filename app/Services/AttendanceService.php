@@ -19,9 +19,9 @@ class AttendanceService
     /**
      * Get attendances for DataTables
      */
-    public function getAttendancesForDataTables()
+    public function getAttendancesForDataTables($request = null)
     {
-        return $this->attendanceRepository->getForDataTables();
+        return $this->attendanceRepository->getForDataTables($request);
     }
 
     /**

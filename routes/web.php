@@ -20,6 +20,8 @@ use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\SalaryTransferController;
 use App\Http\Controllers\ExternalIntegrationController;
 use App\Http\Controllers\DataImportController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\PositionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +74,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
     Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
     Route::resource('employees', EmployeeController::class);
+
+    // Master Data Management
+    Route::middleware('ensure.company')->group(function () {
+        Route::get('/departments-data', [DepartmentController::class, 'data'])->name('departments.data');
+        Route::resource('departments', DepartmentController::class);
+        
+        Route::get('/positions-data', [PositionController::class, 'data'])->name('positions.data');
+        Route::resource('positions', PositionController::class);
+    });
 
     // Payroll Management
     Route::get('/payrolls/generate', [PayrollController::class, 'generate'])->name('payrolls.generate');

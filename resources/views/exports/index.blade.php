@@ -1,23 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Export Data')
+@section('title', 'Expor Data - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Expor Data')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Expor Data</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-download mr-2"></i>
-                        Export Data
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
-                        </a>
-                    </div>
-                </div>
                 <div class="card-body">
                     <!-- Export Statistics -->
                     <div class="row mb-4">

@@ -141,10 +141,7 @@ $(function () {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        SwalHelper.confirm(
-            'Konfirmasi Hapus',
-            'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?'
-        ).then((result) => {
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus payroll "' + name + '" ?', function(result) {
             if (result.isConfirmed) {
                 // Show loading
                 SwalHelper.loading('Menghapus...');
@@ -153,12 +150,12 @@ $(function () {
                 $.ajax({
                     url: '/payroll/' + id,
                     type: 'DELETE',
+                    errorHandled: true,
                     success: function(response) {
                         if (response.success) {
-                            SwalHelper.success('Berhasil!', response.message).then(() => {
-                                // Reload DataTable
-                                table.ajax.reload();
-                            });
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
                         } else {
                             SwalHelper.error('Gagal!', response.message);
                         }
