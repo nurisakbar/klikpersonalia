@@ -64,8 +64,8 @@
                                     <label for="department">Departemen <span class="text-danger">*</span></label>
                                     <select class="form-control @error('department') is-invalid @enderror" id="department" name="department" required>
                                         <option value="">Pilih Departemen</option>
-                                        @foreach($departments as $department)
-                                            <option value="{{ $department }}" {{ old('department') == $department ? 'selected' : '' }}>{{ $department }}</option>
+                                        @foreach($departments as $key => $department)
+                                            <option value="{{ $key }}" {{ old('department') == $key ? 'selected' : '' }}>{{ $department }}</option>
                                         @endforeach
                                     </select>
                                     @error('department')
@@ -78,8 +78,8 @@
                                     <label for="position">Jabatan <span class="text-danger">*</span></label>
                                     <select class="form-control @error('position') is-invalid @enderror" id="position" name="position" required>
                                         <option value="">Pilih Jabatan</option>
-                                        @foreach($positions as $position)
-                                            <option value="{{ $position }}" {{ old('position') == $position ? 'selected' : '' }}>{{ $position }}</option>
+                                        @foreach($positions as $key => $position)
+                                            <option value="{{ $key }}" {{ old('position') == $key ? 'selected' : '' }}>{{ $position }}</option>
                                         @endforeach
                                     </select>
                                     @error('position')

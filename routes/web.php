@@ -71,9 +71,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Employee Management
-    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
-    Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
-    Route::resource('employees', EmployeeController::class);
+    Route::middleware('ensure.company')->group(function () {
+        Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
+        Route::get('/employees-data', [EmployeeController::class, 'data'])->name('employees.data');
+        Route::resource('employees', EmployeeController::class);
+    });
 
     // Master Data Management
     Route::middleware('ensure.company')->group(function () {

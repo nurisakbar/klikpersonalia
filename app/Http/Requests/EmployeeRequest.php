@@ -22,11 +22,31 @@ class EmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Get departments and positions from database for current company
+        $departments = \App\Models\Department::byCompany(auth()->user()->company_id)
+            ->active()
+            ->pluck('name')
+            ->toArray();
+        
+        $positions = \App\Models\Position::byCompany(auth()->user()->company_id)
+            ->active()
+            ->pluck('name')
+            ->toArray();
+        
+        // Fallback to default values if no data in database
+        if (empty($departments)) {
+            $departments = ['IT', 'HR', 'Finance', 'Marketing', 'Sales', 'Operations'];
+        }
+        
+        if (empty($positions)) {
+            $positions = ['Staff', 'Senior Staff', 'Supervisor', 'Manager', 'Senior Manager', 'Director'];
+        }
+        
         $rules = [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
-            'department' => 'required|string|in:IT,HR,Finance,Marketing,Sales,Operations',
-            'position' => 'required|string|in:Staff,Senior Staff,Supervisor,Manager,Senior Manager,Director',
+            'department' => 'required|string|in:' . implode(',', $departments),
+            'position' => 'required|string|in:' . implode(',', $positions),
             'join_date' => 'required|date',
             'basic_salary' => 'required|numeric|min:1000000|max:999999999999', // Min 1 juta, max 999 miliar
             'address' => 'nullable|string|max:500',
@@ -43,12 +63,19 @@ class EmployeeRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('employees', 'email')->ignore($employeeId)
+                Rule::unique('employees', 'email')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($employeeId)
             ];
             $rules['status'] = 'required|string|in:active,inactive,terminated';
         } else {
             // For create requests
-            $rules['email'] = 'required|email|max:255|unique:employees,email';
+            $rules['email'] = [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('employees', 'email')->where('company_id', auth()->user()->company_id)
+            ];
         }
 
         return $rules;

@@ -152,7 +152,7 @@ $(function () {
                 text: '<i class="fas fa-plus"></i> Tambah',
                 className: 'btn btn-primary btn-sm mr-2',
                 action: function () {
-					window.location.href = '{{ route("employees.create") }}';
+					window.location.href = '{{ route("attendance.create") }}';
 				}
             },
             {

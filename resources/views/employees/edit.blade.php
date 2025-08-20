@@ -65,8 +65,8 @@
                                 <label for="department">Departemen <span class="text-danger">*</span></label>
                                 <select class="form-control @error('department') is-invalid @enderror" id="department" name="department" required>
                                     <option value="">Pilih Departemen</option>
-                                    @foreach($departments as $department)
-                                        <option value="{{ $department }}" {{ old('department', $employee->department) == $department ? 'selected' : '' }}>{{ $department }}</option>
+                                    @foreach($departments as $key => $department)
+                                        <option value="{{ $key }}" {{ old('department', $employee->department) == $key ? 'selected' : '' }}>{{ $department }}</option>
                                     @endforeach
                                 </select>
                                 @error('department')
@@ -79,8 +79,8 @@
                                 <label for="position">Jabatan <span class="text-danger">*</span></label>
                                 <select class="form-control @error('position') is-invalid @enderror" id="position" name="position" required>
                                     <option value="">Pilih Jabatan</option>
-                                    @foreach($positions as $position)
-                                        <option value="{{ $position }}" {{ old('position', $employee->position) == $position ? 'selected' : '' }}>{{ $position }}</option>
+                                    @foreach($positions as $key => $position)
+                                        <option value="{{ $key }}" {{ old('position', $employee->position) == $key ? 'selected' : '' }}>{{ $position }}</option>
                                     @endforeach
                                 </select>
                                 @error('position')
@@ -111,8 +111,8 @@
                                 <label for="status">Status <span class="text-danger">*</span></label>
                                 <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
                                     <option value="">Pilih Status</option>
-                                    @foreach($statuses as $status)
-                                        <option value="{{ $status }}" {{ old('status', $employee->status) == $status ? 'selected' : '' }}>{{ $status }}</option>
+                                    @foreach($statuses as $key => $status)
+                                        <option value="{{ $key }}" {{ old('status', $employee->status) == $key ? 'selected' : '' }}>{{ $status }}</option>
                                     @endforeach
                                 </select>
                                 @error('status')
