@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\Employee;
+use App\Models\Department;
+use App\Models\Position;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -189,33 +191,63 @@ class EmployeeRepository
     }
 
     /**
-     * Get departments list.
+     * Get departments list from database for current company.
      */
     public function getDepartments(): array
     {
-        return [
-            'IT' => 'Information Technology',
-            'HR' => 'Human Resources',
-            'Finance' => 'Finance',
-            'Marketing' => 'Marketing',
-            'Sales' => 'Sales',
-            'Operations' => 'Operations'
-        ];
+        $departments = Department::byCompany(auth()->user()->company_id)
+            ->active()
+            ->orderBy('name')
+            ->get();
+        
+        $result = [];
+        foreach ($departments as $department) {
+            $result[$department->name] = $department->name;
+        }
+        
+        // Fallback to default departments if no data in database
+        if (empty($result)) {
+            $result = [
+                'IT' => 'Information Technology',
+                'HR' => 'Human Resources',
+                'Finance' => 'Finance',
+                'Marketing' => 'Marketing',
+                'Sales' => 'Sales',
+                'Operations' => 'Operations'
+            ];
+        }
+        
+        return $result;
     }
 
     /**
-     * Get positions list.
+     * Get positions list from database for current company.
      */
     public function getPositions(): array
     {
-        return [
-            'Staff' => 'Staff',
-            'Senior Staff' => 'Senior Staff',
-            'Supervisor' => 'Supervisor',
-            'Manager' => 'Manager',
-            'Senior Manager' => 'Senior Manager',
-            'Director' => 'Director'
-        ];
+        $positions = Position::byCompany(auth()->user()->company_id)
+            ->active()
+            ->orderBy('name')
+            ->get();
+        
+        $result = [];
+        foreach ($positions as $position) {
+            $result[$position->name] = $position->name;
+        }
+        
+        // Fallback to default positions if no data in database
+        if (empty($result)) {
+            $result = [
+                'Staff' => 'Staff',
+                'Senior Staff' => 'Senior Staff',
+                'Supervisor' => 'Supervisor',
+                'Manager' => 'Manager',
+                'Senior Manager' => 'Senior Manager',
+                'Director' => 'Director'
+            ];
+        }
+        
+        return $result;
     }
 
     /**

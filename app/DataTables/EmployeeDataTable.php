@@ -65,7 +65,7 @@ class EmployeeDataTable extends DataTable
      */
     public function query(Employee $model): QueryBuilder
     {
-        return $model->select([
+        return $model->currentCompany()->select([
             'id',
             'employee_id',
             'name',

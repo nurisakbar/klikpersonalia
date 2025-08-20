@@ -103,8 +103,8 @@ class EmployeeController extends Controller
         $formData = $this->employeeService->getFormData();
         
         return view('employees.create', [
-            'departments' => array_keys($formData['departments']),
-            'positions' => array_keys($formData['positions']),
+            'departments' => $formData['departments'],
+            'positions' => $formData['positions'],
             'banks' => $formData['banks']
         ]);
     }
@@ -187,9 +187,9 @@ class EmployeeController extends Controller
 
         return view('employees.edit', [
             'employee' => $employee,
-            'departments' => array_keys($formData['departments']),
-            'positions' => array_keys($formData['positions']),
-            'statuses' => array_keys($formData['statuses']),
+            'departments' => $formData['departments'],
+            'positions' => $formData['positions'],
+            'statuses' => $formData['statuses'],
             'banks' => $formData['banks']
         ]);
     }
