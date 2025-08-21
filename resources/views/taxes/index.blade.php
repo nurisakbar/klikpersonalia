@@ -12,50 +12,57 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="card-tools">
-                        <a href="{{ route('taxes.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> Tambah Pajak
-                        </a>
-                        <a href="{{ route('taxes.report') }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-chart-bar"></i> Laporan Pajak
-                        </a>
-                    </div>
-                </div>
                 <div class="card-body">
-                    <!-- Filters -->
+                    <!-- Filter Section -->
                     <div class="row mb-3">
                         <div class="col-md-3">
-                            <label for="period">Periode Pajak</label>
-                            <input type="month" class="form-control" id="period" name="period" 
-                                   value="{{ request('period') }}" onchange="applyFilters()">
+                            <label for="period_filter">Periode Pajak:</label>
+                            <select id="period_filter" class="form-control form-control-sm">
+                                <option value="">Semua Periode</option>
+                                @php
+                                    $currentYear = date('Y');
+                                    $currentMonth = date('m');
+                                @endphp
+                                @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
+                                    @for($month = 1; $month <= 12; $month++)
+                                        @php
+                                            $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
+                                            $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
+                                        @endphp
+                                        <option value="{{ $periodValue }}" {{ $currentYear . '-' . $currentMonth == $periodValue ? 'selected' : '' }}>
+                                            {{ $periodLabel }}
+                                        </option>
+                                    @endfor
+                                @endfor
+                            </select>
                         </div>
                         <div class="col-md-3">
-                            <label for="employee_id">Karyawan</label>
-                            <select class="form-control" id="employee_id" name="employee_id" onchange="applyFilters()">
+                            <label for="employee_filter">Karyawan:</label>
+                            <select id="employee_filter" class="form-control form-control-sm">
                                 <option value="">Semua Karyawan</option>
                                 @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>
-                                        {{ $employee->name }}
-                                    </option>
+                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label for="status">Status</label>
-                            <select class="form-control" id="status" name="status" onchange="applyFilters()">
+                            <label for="status_filter">Status:</label>
+                            <select id="status_filter" class="form-control form-control-sm">
                                 <option value="">Semua Status</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Menunggu</option>
-                                <option value="calculated" {{ request('status') == 'calculated' ? 'selected' : '' }}>Dihitung</option>
-                                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Dibayar</option>
-                                <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
+                                <option value="pending">Menunggu</option>
+                                <option value="calculated">Dihitung</option>
+                                <option value="paid">Dibayar</option>
+                                <option value="verified">Terverifikasi</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label>&nbsp;</label>
                             <div>
-                                <button type="button" class="btn btn-secondary" onclick="clearFilters()">
-                                    <i class="fas fa-times"></i> Bersihkan Filter
+                                <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-filter mr-1"></i> Terapkan Filter
+                                </button>
+                                <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-undo mr-1"></i> Reset
                                 </button>
                             </div>
                         </div>
@@ -73,7 +80,7 @@
                                         @csrf
                                         <div class="form-group mr-3">
                                             <label for="month" class="mr-2">Bulan:</label>
-                                            <select name="month" id="month" class="form-control" required>
+                                            <select name="month" id="month" class="form-control form-control-sm" required>
                                                 @for($i = 1; $i <= 12; $i++)
                                                     <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
                                                 @endfor
@@ -81,13 +88,13 @@
                                         </div>
                                         <div class="form-group mr-3">
                                             <label for="year" class="mr-2">Tahun:</label>
-                                            <select name="year" id="year" class="form-control" required>
+                                            <select name="year" id="year" class="form-control form-control-sm" required>
                                                 @for($i = date('Y'); $i >= date('Y') - 5; $i--)
                                                     <option value="{{ $i }}">{{ $i }}</option>
                                                 @endfor
                                             </select>
                                         </div>
-                                        <button type="submit" class="btn btn-success">
+                                        <button type="submit" class="btn btn-success btn-sm">
                                             <i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan
                                         </button>
                                     </form>
@@ -96,128 +103,444 @@
                         </div>
                     </div>
 
-                    <!-- Tax List -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
+                    <!-- DataTable -->
+                    <table class="table table-bordered table-striped" id="taxes-table" style="width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>Karyawan</th>
+                                <th>ID</th>
+                                <th>Nama Karyawan</th>
+                                <th>ID Karyawan</th>
                                     <th>Periode Pajak</th>
                                     <th>Pendapatan Kena Pajak</th>
-                                    <th>Status PTKP</th>
-                                    <th>Tax Amount</th>
-                                    <th>Tax Rate</th>
+                                <th>PTKP</th>
+                                <th>Jumlah Pajak</th>
+                                <th>Tarif Pajak</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse($taxes as $tax)
-                                    <tr>
-                                        <td>
-                                            <strong>{{ $tax->employee->name }}</strong><br>
-                                            <small class="text-muted">{{ $tax->employee->employee_id }}</small>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-info">{{ $tax->tax_period }}</span>
-                                        </td>
-                                        <td>
-                                            <strong>Rp {{ number_format($tax->taxable_income, 0, ',', '.') }}</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-secondary">{{ $tax->ptkp_status }}</span><br>
-                                            <small class="text-muted">Rp {{ number_format($tax->ptkp_amount, 0, ',', '.') }}</small>
-                                        </td>
-                                        <td>
-                                            <strong class="text-danger">Rp {{ number_format($tax->tax_amount, 0, ',', '.') }}</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-warning">{{ number_format($tax->tax_rate * 100, 1) }}%</span>
-                                        </td>
-                                        <td>
-                                            @switch($tax->status)
-                                                @case('pending')
-                                                    <span class="badge badge-secondary">Pending</span>
-                                                    @break
-                                                @case('calculated')
-                                                    <span class="badge badge-info">Calculated</span>
-                                                    @break
-                                                @case('paid')
-                                                    <span class="badge badge-success">Paid</span>
-                                                    @break
-                                                @case('verified')
-                                                    <span class="badge badge-primary">Verified</span>
-                                                    @break
-                                            @endswitch
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('taxes.show', $tax) }}" class="btn btn-sm btn-info" title="View">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('taxes.edit', $tax) }}" class="btn btn-sm btn-warning" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form action="{{ route('taxes.destroy', $tax) }}" method="POST" class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this tax calculation?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center">
-                                            <div class="alert alert-info">
-                                                <i class="fas fa-info-circle"></i> No tax calculations found.
-                                                <br>
-                                                <a href="{{ route('taxes.create') }}" class="btn btn-primary btn-sm mt-2">
-                                                    Create First Tax Calculation
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="d-flex justify-content-center">
-                        {{ $taxes->links() }}
-                    </div>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-function applyFilters() {
-    const period = document.getElementById('period').value;
-    const employeeId = document.getElementById('employee_id').value;
-    const status = document.getElementById('status').value;
-    
-    let url = new URL(window.location);
-    
-    if (period) url.searchParams.set('period', period);
-    else url.searchParams.delete('period');
-    
-    if (employeeId) url.searchParams.set('employee_id', employeeId);
-    else url.searchParams.delete('employee_id');
-    
-    if (status) url.searchParams.set('status', status);
-    else url.searchParams.delete('status');
-    
-    window.location.href = url.toString();
-}
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Detail Pajak</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- Detail content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-function clearFilters() {
-    window.location.href = '{{ route("taxes.index") }}';
-}
+<!-- CSRF Token for AJAX -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
+@push('css')
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+@endpush
+
+@push('js')
+<!-- DataTables & Plugins -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
+
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
+<script>
+$(function () {
+    // Global variables
+    let currentTaxId = null;
+    let isEditMode = false;
+    
+    // Setup CSRF token for AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    // Initialize DataTable with server-side processing
+    var table = $('#taxes-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("taxes.data") }}',
+            type: 'GET',
+            data: function(d) {
+                d.period_filter = $('#period_filter').val();
+                d.employee_filter = $('#employee_filter').val();
+                d.status_filter = $('#status_filter').val();
+            },
+            error: function(xhr, error, thrown) {
+                console.log('DataTable error:', error);
+                console.log('XHR:', xhr);
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    console.log('Error message:', xhr.responseJSON.error);
+                }
+                SwalHelper.error('Error', 'Gagal memuat data pajak: ' + (xhr.responseJSON ? xhr.responseJSON.error : error));
+            }
+        },
+        columns: [
+            {data: 'id', name: 'id', width: '50px'},
+            {data: 'employee_name', name: 'employee_name', width: '200px'},
+            {data: 'employee_id_display', name: 'employee_id_display', width: '120px'},
+            {data: 'tax_period_formatted', name: 'tax_period_formatted', width: '120px'},
+            {data: 'taxable_income_formatted', name: 'taxable_income_formatted', width: '180px'},
+            {data: 'ptkp_amount_formatted', name: 'ptkp_amount_formatted', width: '120px'},
+            {data: 'tax_amount_formatted', name: 'tax_amount_formatted', width: '150px'},
+            {data: 'tax_rate_formatted', name: 'tax_rate_formatted', width: '100px'},
+            {data: 'status_badge', name: 'status_badge', width: '100px'},
+            {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
+        ],
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                text: '<i class="fas fa-plus"></i> Tambah',
+                className: 'btn btn-primary btn-sm mr-2',
+                action: function () {
+                    window.location.href = '{{ route("taxes.create") }}';
+                }
+            },
+            {
+                text: '<i class="fas fa-calculator"></i> Hitung Bulk',
+                className: 'btn btn-success btn-sm mr-2',
+                action: function () {
+                    showBulkCalculationModal();
+                }
+            },
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8]
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8]
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print',
+                className: 'btn btn-info btn-sm',
+                exportOptions: {
+                    columns: [1, 2, 3, 4, 5, 6, 7, 8]
+                }
+            }
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+        },
+        responsive: true,
+        order: [[1, 'asc']]
+    });
+
+    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
+    var taxesButtons = table.buttons().container();
+    taxesButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
+
+    // Layout info/pagination sudah diatur global via CSS
+
+    // Apply filter
+    $('#apply_filter').on('click', function() {
+        table.ajax.reload();
+    });
+
+    // Reset filter
+    $('#reset_filter').on('click', function() {
+        $('#period_filter').val('');
+        $('#employee_filter').val('');
+        $('#status_filter').val('');
+        table.ajax.reload();
+    });
+
+    // Handle view button click
+    $(document).on('click', '.view-btn', function() {
+        var id = $(this).data('id');
+        loadTaxDetail(id);
+    });
+
+    // Handle edit button click
+    $(document).on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        window.location.href = '/taxes/' + id + '/edit';
+    });
+
+    // Load tax detail
+    function loadTaxDetail(id) {
+        // Show loading
+        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+        $('#detailModal').modal('show');
+
+        $.ajax({
+            url: '/taxes/' + id,
+            type: 'GET',
+            errorHandled: true, // Mark as manually handled
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    let tax = response.data;
+                    let detailHtml = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Nama Karyawan:</strong></td>
+                                        <td>${tax.employee_name}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ID Karyawan:</strong></td>
+                                        <td>${tax.employee_id}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Periode Pajak:</strong></td>
+                                        <td>${tax.tax_period}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Pendapatan Kena Pajak:</strong></td>
+                                        <td>${tax.taxable_income}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status PTKP:</strong></td>
+                                        <td>${tax.ptkp_status}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jumlah PTKP:</strong></td>
+                                        <td>${tax.ptkp_amount}</td>
+                                    </tr>
+                                </table>
+                                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Dasar Pengenaan Pajak:</strong></td>
+                                        <td>${tax.taxable_base}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jumlah Pajak:</strong></td>
+                                        <td>${tax.tax_amount}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tarif Pajak:</strong></td>
+                                        <td>${tax.tax_rate}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>${tax.status}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Catatan:</strong></td>
+                                        <td>${tax.notes}</td>
+                                    </tr>
+                        </table>
+                    </div>
+                        </div>
+                    `;
+                    $('#detailContent').html(detailHtml);
+                } else {
+                    $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                    SwalHelper.error('Error!', response.message);
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat memuat detail pajak';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                SwalHelper.error('Error!', message);
+            }
+        });
+    }
+
+    // Handle delete button click
+    $(document).on('click', '.delete-btn', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus data pajak untuk "' + name + '" ?', function(result) {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Menghapus...');
+
+                // Send delete request
+                $.ajax({
+                    url: '/taxes/' + id,
+                    type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menghapus data';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.error('Error!', message);
+                    }
+                });
+            }
+        });
+    });
+
+    // Show bulk calculation modal
+    function showBulkCalculationModal() {
+        let modalHtml = `
+            <div class="modal fade" id="bulkCalculationModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Hitung Pajak Bulk</h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="bulkCalculationForm">
+                                <div class="form-group">
+                                    <label for="month">Bulan:</label>
+                                    <select name="month" id="month" class="form-control" required>
+                                        <option value="">Pilih Bulan</option>
+                                        <option value="1">Januari</option>
+                                        <option value="2">Februari</option>
+                                        <option value="3">Maret</option>
+                                        <option value="4">April</option>
+                                        <option value="5">Mei</option>
+                                        <option value="6">Juni</option>
+                                        <option value="7">Juli</option>
+                                        <option value="8">Agustus</option>
+                                        <option value="9">September</option>
+                                        <option value="10">Oktober</option>
+                                        <option value="11">November</option>
+                                        <option value="12">Desember</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="year">Tahun:</label>
+                                    <select name="year" id="year" class="form-control" required>
+                                        <option value="">Pilih Tahun</option>
+                                        ${generateYearOptions()}
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-success" onclick="calculateBulkTax()">
+                                <i class="fas fa-calculator"></i> Hitung Pajak
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        $('#bulkCalculationModal').remove();
+        
+        // Append modal to body
+        $('body').append(modalHtml);
+        
+        // Show modal
+        $('#bulkCalculationModal').modal('show');
+    }
+
+    // Generate year options
+    function generateYearOptions() {
+        let currentYear = new Date().getFullYear();
+        let options = '';
+        for (let i = currentYear; i >= currentYear - 5; i--) {
+            options += `<option value="${i}">${i}</option>`;
+        }
+        return options;
+    }
+
+    // Calculate bulk tax
+    window.calculateBulkTax = function() {
+        let month = $('#month').val();
+        let year = $('#year').val();
+        
+        if (!month || !year) {
+            SwalHelper.error('Error!', 'Silakan pilih bulan dan tahun');
+            return;
+        }
+        
+        SwalHelper.confirm('Konfirmasi', 'Apakah Anda yakin ingin menghitung pajak untuk semua karyawan pada periode ' + month + '/' + year + '?', function(result) {
+            if (result.isConfirmed) {
+                SwalHelper.loading('Menghitung pajak...');
+                
+                $.ajax({
+                    url: '{{ route("taxes.calculate-for-payroll") }}',
+                    type: 'POST',
+                    data: {
+                        month: month,
+                        year: year,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        $('#bulkCalculationModal').modal('hide');
+                        SwalHelper.success('Berhasil!', 'Pajak berhasil dihitung untuk semua karyawan', 3000);
+                        table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let message = 'Terjadi kesalahan saat menghitung pajak';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        SwalHelper.error('Error!', message);
+                    }
+                });
+            }
+        });
+    };
+
+    // Session messages sudah ditangani oleh global SwalHelper di layout
+});
 </script>
-@endsection 
+@endpush 

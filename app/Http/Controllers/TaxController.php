@@ -6,42 +6,142 @@ use App\Models\Tax;
 use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\Company;
+use App\Services\TaxService;
+use App\DataTables\TaxDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 
 class TaxController extends Controller
 {
+    protected $taxService;
+
+    public function __construct(TaxService $taxService)
+    {
+        $this->taxService = $taxService;
+    }
+
     /**
      * Display a listing of taxes.
      */
     public function index(Request $request)
     {
         $user = Auth::user();
-        
-        $query = Tax::with(['employee', 'payroll'])
-            ->where('company_id', $user->company_id);
-
-        // Filter by period
-        if ($request->filled('period')) {
-            $query->where('tax_period', $request->period);
-        }
-
-        // Filter by employee
-        if ($request->filled('employee_id')) {
-            $query->where('employee_id', $request->employee_id);
-        }
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $taxes = $query->orderBy('created_at', 'desc')->paginate(15);
         $employees = Employee::where('company_id', $user->company_id)->get();
 
-        return view('taxes.index', compact('taxes', 'employees'));
+        return view('taxes.index', compact('employees'));
+    }
+
+    /**
+     * Get taxes data for DataTable
+     */
+    public function data(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $taxes = Tax::with(['employee'])
+                ->where('company_id', $user->company_id)
+                ->select([
+                    'taxes.id',
+                    'taxes.employee_id',
+                    'taxes.tax_period',
+                    'taxes.taxable_income',
+                    'taxes.ptkp_amount',
+                    'taxes.tax_amount',
+                    'taxes.tax_rate',
+                    'taxes.status'
+                ]);
+
+            // Apply filters
+            if ($request->filled('period_filter')) {
+                $taxes->where('tax_period', $request->period_filter);
+            }
+
+            if ($request->filled('employee_filter')) {
+                $taxes->where('employee_id', $request->employee_filter);
+            }
+
+            if ($request->filled('status_filter')) {
+                $taxes->where('status', $request->status_filter);
+            }
+
+            return DataTables::of($taxes)
+                ->addColumn('action', function ($tax) {
+                    return '
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $tax->id . '" title="Detail">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="' . route('taxes.edit', $tax->id) . '" class="btn btn-sm btn-warning" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="Tax #' . $tax->id . '" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    ';
+                })
+                ->addColumn('employee_name', function ($tax) {
+                    return $tax->employee ? $tax->employee->name : '-';
+                })
+                ->addColumn('employee_id_display', function ($tax) {
+                    return $tax->employee ? $tax->employee->employee_id : '-';
+                })
+                ->addColumn('tax_period_formatted', function ($tax) {
+                    if (!$tax->tax_period) return '-';
+                    try {
+                        return date('M Y', strtotime($tax->tax_period . '-01'));
+                    } catch (\Exception $e) {
+                        return $tax->tax_period;
+                    }
+                })
+                ->addColumn('taxable_income_formatted', function ($tax) {
+                    return 'Rp ' . number_format($tax->taxable_income ?? 0, 0, ',', '.');
+                })
+                ->addColumn('ptkp_amount_formatted', function ($tax) {
+                    return 'Rp ' . number_format($tax->ptkp_amount ?? 0, 0, ',', '.');
+                })
+                ->addColumn('tax_amount_formatted', function ($tax) {
+                    return 'Rp ' . number_format($tax->tax_amount ?? 0, 0, ',', '.');
+                })
+                ->addColumn('tax_rate_formatted', function ($tax) {
+                    return number_format(($tax->tax_rate ?? 0) * 100, 1) . '%';
+                })
+                ->addColumn('status_badge', function ($tax) {
+                    $status = $tax->status ?? 'pending';
+                    $statusClass = [
+                        'pending' => 'badge badge-secondary',
+                        'calculated' => 'badge badge-info',
+                        'paid' => 'badge badge-success',
+                        'verified' => 'badge badge-primary'
+                    ];
+                    
+                    $statusText = [
+                        'pending' => 'Menunggu',
+                        'calculated' => 'Dihitung',
+                        'paid' => 'Dibayar',
+                        'verified' => 'Terverifikasi'
+                    ];
+                    
+                    $class = $statusClass[$status] ?? 'badge badge-secondary';
+                    $text = $statusText[$status] ?? ucfirst($status);
+                    
+                    return '<span class="' . $class . '">' . $text . '</span>';
+                })
+                ->rawColumns(['action', 'status_badge'])
+                ->make(true);
+        } catch (\Exception $e) {
+            \Log::error('TaxDataTable error: ' . $e->getMessage());
+            return response()->json([
+                'draw' => intval($request->get('draw')),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'Gagal memuat data pajak: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -113,18 +213,42 @@ class TaxController extends Controller
     /**
      * Display the specified tax calculation.
      */
-    public function show(Tax $tax)
+    public function show(Request $request, $id)
     {
-        $user = Auth::user();
-        
-        // Check if tax belongs to user's company
-        if ($tax->company_id !== $user->company_id) {
-            abort(404);
+        try {
+            $tax = $this->taxService->getTaxById($id);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'id' => $tax->id,
+                        'employee_name' => $tax->employee->name ?? '-',
+                        'employee_id' => $tax->employee->employee_id ?? '-',
+                        'tax_period' => $tax->tax_period ? date('M Y', strtotime($tax->tax_period . '-01')) : '-',
+                        'taxable_income' => 'Rp ' . number_format($tax->taxable_income, 0, ',', '.'),
+                        'ptkp_status' => $tax->ptkp_status,
+                        'ptkp_amount' => 'Rp ' . number_format($tax->ptkp_amount, 0, ',', '.'),
+                        'taxable_base' => 'Rp ' . number_format($tax->taxable_base, 0, ',', '.'),
+                        'tax_amount' => 'Rp ' . number_format($tax->tax_amount, 0, ',', '.'),
+                        'tax_rate' => number_format($tax->tax_rate * 100, 1) . '%',
+                        'status' => $tax->status,
+                        'notes' => $tax->notes ?? '-',
+                    ]
+                ]);
+            }
+            
+            return view('taxes.show', compact('tax'));
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 404);
+            }
+            
+            return redirect()->route('taxes.index')->with('error', $e->getMessage());
         }
-
-        $tax->load(['employee', 'payroll']);
-        
-        return view('taxes.show', compact('tax'));
     }
 
     /**
@@ -186,18 +310,29 @@ class TaxController extends Controller
     /**
      * Remove the specified tax calculation.
      */
-    public function destroy(Tax $tax)
+    public function destroy(Request $request, $id)
     {
-        $user = Auth::user();
-        
-        // Check if tax belongs to user's company
-        if ($tax->company_id !== $user->company_id) {
-            abort(404);
+        try {
+            $this->taxService->deleteTax($id);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data pajak berhasil dihapus'
+                ]);
+            }
+            
+            return redirect()->route('taxes.index')->with('success', 'Data pajak berhasil dihapus');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('taxes.index')->with('error', $e->getMessage());
         }
-
-        $tax->delete();
-
-        return redirect()->route('taxes.index')->with('success', 'Tax calculation deleted successfully.');
     }
 
     /**
