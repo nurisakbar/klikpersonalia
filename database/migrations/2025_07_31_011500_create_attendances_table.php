@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attendances', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('company_id');
+            $table->uuid('employee_id');
             $table->date('date');
             $table->time('check_in')->nullable();
             $table->time('check_out')->nullable();
@@ -29,8 +30,13 @@ return new class extends Migration
             $table->string('check_out_device')->nullable();
             $table->timestamps();
 
+            // Foreign keys
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+
             // Indexes
-            $table->unique(['employee_id', 'date']);
+            $table->index('company_id');
+            $table->unique(['company_id', 'employee_id', 'date']);
             $table->index(['employee_id', 'date']);
             $table->index('status');
             $table->index('date');

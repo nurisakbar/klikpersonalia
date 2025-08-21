@@ -195,6 +195,7 @@ Route::get('/benefits/employee/{employeeId}', [BenefitController::class, 'employ
 Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('benefits.reports');
 
     // Tax Management
+    Route::get('/taxes/data', [TaxController::class, 'data'])->name('taxes.data');
     Route::resource('taxes', TaxController::class);
     Route::post('/taxes/calculate-for-payroll', [TaxController::class, 'calculateForPayroll'])->name('taxes.calculate-for-payroll');
     Route::get('/taxes/report', [TaxController::class, 'report'])->name('taxes.report');
