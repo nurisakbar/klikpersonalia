@@ -41,6 +41,7 @@ class TaxController extends Controller
     {
         try {
             $user = Auth::user();
+            
             $taxes = Tax::with(['employee'])
                 ->where('company_id', $user->company_id)
                 ->select([
@@ -69,19 +70,17 @@ class TaxController extends Controller
 
             return DataTables::of($taxes)
                 ->addColumn('action', function ($tax) {
-                    return '
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $tax->id . '" title="Detail">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <a href="' . route('taxes.edit', $tax->id) . '" class="btn btn-sm btn-warning" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="Tax #' . $tax->id . '" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    ';
+                    return '<div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $tax->id . '" title="Detail">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <a href="' . route('taxes.edit', $tax->id) . '" class="btn btn-sm btn-warning" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="Tax #' . $tax->id . '" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>';
                 })
                 ->addColumn('employee_name', function ($tax) {
                     return $tax->employee ? $tax->employee->name : '-';
@@ -92,9 +91,10 @@ class TaxController extends Controller
                 ->addColumn('tax_period_formatted', function ($tax) {
                     if (!$tax->tax_period) return '-';
                     try {
-                        return date('M Y', strtotime($tax->tax_period . '-01'));
+                        $date = \Carbon\Carbon::createFromFormat('Y-m', $tax->tax_period);
+                        return $date->format('M Y');
                     } catch (\Exception $e) {
-                        return $tax->tax_period;
+                        return $tax->tax_period ?? '-';
                     }
                 })
                 ->addColumn('taxable_income_formatted', function ($tax) {
@@ -132,8 +132,13 @@ class TaxController extends Controller
                 })
                 ->rawColumns(['action', 'status_badge'])
                 ->make(true);
+                
         } catch (\Exception $e) {
-            \Log::error('TaxDataTable error: ' . $e->getMessage());
+            \Log::error('TaxDataTable error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'draw' => intval($request->get('draw')),
                 'recordsTotal' => 0,

@@ -107,7 +107,7 @@
                     <table class="table table-bordered table-striped" id="taxes-table" style="width: 100%;">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Nomor</th>
                                 <th>Nama Karyawan</th>
                                 <th>ID Karyawan</th>
                                 <th>Periode Pajak</th>
@@ -123,9 +123,9 @@
                 </div>
             </div>
                 
-        </div>
-    </div>
-</div>
+                                </div>
+                                        </div>
+                                        </div>
 
 <!-- Detail Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
@@ -135,17 +135,17 @@
                 <h5 class="modal-title" id="detailModalLabel">Detail Pajak</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
-                </button>
+                                        </button>
             </div>
             <div class="modal-body" id="detailContent">
                 <!-- Detail content will be loaded here -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 <!-- CSRF Token for AJAX -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -174,7 +174,7 @@
 @include('components.sweet-alert')
 
 <script>
-$(function () {
+$(document).ready(function () {
     // Global variables
     let currentTaxId = null;
     let isEditMode = false;
@@ -199,16 +199,13 @@ $(function () {
                 d.status_filter = $('#status_filter').val();
             },
             error: function(xhr, error, thrown) {
-                console.log('DataTable error:', error);
-                console.log('XHR:', xhr);
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    console.log('Error message:', xhr.responseJSON.error);
-                }
                 SwalHelper.error('Error', 'Gagal memuat data pajak: ' + (xhr.responseJSON ? xhr.responseJSON.error : error));
             }
         },
         columns: [
-            {data: 'id', name: 'id', width: '50px'},
+            {data: null, name: 'DT_RowIndex', width: '50px', title: 'Nomor', orderable: false, searchable: false, render: function (data, type, row, meta) {
+                return meta.row + meta.settings._iDisplayStart + 1;
+            }},
             {data: 'employee_name', name: 'employee_name', width: '200px'},
             {data: 'employee_id_display', name: 'employee_id_display', width: '120px'},
             {data: 'tax_period_formatted', name: 'tax_period_formatted', width: '120px'},
@@ -257,7 +254,21 @@ $(function () {
             }
         ],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+            "sProcessing":   "Sedang memproses...",
+            "sLengthMenu":   "Tampilkan _MENU_ entri",
+            "sZeroRecords":  "Tidak ditemukan data yang sesuai",
+            "sInfo":         "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+            "sInfoEmpty":    "Menampilkan 0 sampai 0 dari 0 entri",
+            "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
+            "sInfoPostFix":  "",
+            "sSearch":       "Cari:",
+            "sUrl":          "",
+            "oPaginate": {
+                "sFirst":    "Pertama",
+                "sPrevious": "Sebelumnya",
+                "sNext":     "Selanjutnya",
+                "sLast":     "Terakhir"
+            }
         },
         responsive: true,
         order: [[1, 'asc']]
@@ -333,7 +344,7 @@ $(function () {
                                     <tr>
                                         <td><strong>Status PTKP:</strong></td>
                                         <td>${tax.ptkp_status}</td>
-                                    </tr>
+                                </tr>
                                     <tr>
                                         <td><strong>Jumlah PTKP:</strong></td>
                                         <td>${tax.ptkp_amount}</td>
@@ -364,7 +375,7 @@ $(function () {
                                     </tr>
                         </table>
                     </div>
-                        </div>
+                    </div>
                     `;
                     $('#detailContent').html(detailHtml);
                 } else {
