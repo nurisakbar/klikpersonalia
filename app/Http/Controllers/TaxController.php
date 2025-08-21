@@ -78,7 +78,7 @@ class TaxController extends Controller
                         <a href="' . route('taxes.edit', $tax->id) . '" class="btn btn-sm btn-warning" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="Tax #' . $tax->id . '" title="Hapus">
+                                                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="' . ($tax->employee ? $tax->employee->name : 'Unknown') . '" title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>';
@@ -338,8 +338,13 @@ class TaxController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        $user = Auth::user();
+        
         try {
-            $this->taxService->deleteTax($id);
+            // Find tax by UUID and check if it belongs to user's company
+            $tax = Tax::where('company_id', $user->company_id)->findOrFail($id);
+            
+            $tax->delete();
             
             if ($request->expectsJson()) {
                 return response()->json([
@@ -353,11 +358,11 @@ class TaxController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
+                    'message' => 'Data pajak tidak ditemukan'
+                ], 404);
             }
             
-            return redirect()->route('taxes.index')->with('error', $e->getMessage());
+            return redirect()->route('taxes.index')->with('error', 'Data pajak tidak ditemukan');
         }
     }
 
