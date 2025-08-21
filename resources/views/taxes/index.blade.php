@@ -11,6 +11,41 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
+         
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-calculator"></i> Hitung Pajak Baru
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('taxes.calculate-for-payroll') }}" method="POST" class="form-inline">
+                        @csrf
+                        <div class="form-group mr-3">
+                            <label for="month" class="mr-2">Bulan:</label>
+                            <select name="month" id="month" class="form-control form-control-sm" required>
+                                @for($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="form-group mr-3">
+                            <label for="year" class="mr-2">Tahun:</label>
+                            <select name="year" id="year" class="form-control form-control-sm" required>
+                                @for($i = date('Y'); $i >= date('Y') - 5; $i--)
+                                    <option value="{{ $i }}">{{ $i }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan
+                        </button>
+                    </form>
+                </div>
+            </div>
+                    
+
+                                    <!-- DataTable Card -->
             <div class="card">
                 <div class="card-body">
                     <!-- Filter Section -->
@@ -59,69 +94,35 @@
                             <label>&nbsp;</label>
                             <div>
                                 <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-filter mr-1"></i> Terapkan Filter
+                                    <i class="fas fa-filter"></i> Filter
                                 </button>
                                 <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-undo mr-1"></i> Reset
+                                    <i class="fas fa-undo"></i> Reset
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bulk Actions -->
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title">Hitung Pajak Bulk</h5>
-                                </div>
-                                <div class="card-body">
-                                    <form action="{{ route('taxes.calculate-for-payroll') }}" method="POST" class="form-inline">
-                                        @csrf
-                                        <div class="form-group mr-3">
-                                            <label for="month" class="mr-2">Bulan:</label>
-                                            <select name="month" id="month" class="form-control form-control-sm" required>
-                                                @for($i = 1; $i <= 12; $i++)
-                                                    <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
-                                                @endfor
-                                            </select>
-                                        </div>
-                                        <div class="form-group mr-3">
-                                            <label for="year" class="mr-2">Tahun:</label>
-                                            <select name="year" id="year" class="form-control form-control-sm" required>
-                                                @for($i = date('Y'); $i >= date('Y') - 5; $i--)
-                                                    <option value="{{ $i }}">{{ $i }}</option>
-                                                @endfor
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan
-                                        </button>
-                                    </form>
-                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- DataTable -->
                     <table class="table table-bordered table-striped" id="taxes-table" style="width: 100%;">
-                            <thead>
-                                <tr>
+                        <thead>
+                            <tr>
                                 <th>ID</th>
                                 <th>Nama Karyawan</th>
                                 <th>ID Karyawan</th>
-                                    <th>Periode Pajak</th>
-                                    <th>Pendapatan Kena Pajak</th>
+                                <th>Periode Pajak</th>
+                                <th>Pendapatan Kena Pajak</th>
                                 <th>PTKP</th>
                                 <th>Jumlah Pajak</th>
                                 <th>Tarif Pajak</th>
-                                    <th>Status</th>
+                                <th>Status</th>
                                 <th>Aksi</th>
-                                </tr>
-                            </thead>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
             </div>
+                
         </div>
     </div>
 </div>
@@ -228,13 +229,6 @@ $(function () {
                 className: 'btn btn-primary btn-sm mr-2',
                 action: function () {
                     window.location.href = '{{ route("taxes.create") }}';
-                }
-            },
-            {
-                text: '<i class="fas fa-calculator"></i> Hitung Bulk',
-                className: 'btn btn-success btn-sm mr-2',
-                action: function () {
-                    showBulkCalculationModal();
                 }
             },
             {
@@ -429,116 +423,7 @@ $(function () {
         });
     });
 
-    // Show bulk calculation modal
-    function showBulkCalculationModal() {
-        let modalHtml = `
-            <div class="modal fade" id="bulkCalculationModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Hitung Pajak Bulk</h5>
-                            <button type="button" class="close" data-dismiss="modal">
-                                <span>&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="bulkCalculationForm">
-                                <div class="form-group">
-                                    <label for="month">Bulan:</label>
-                                    <select name="month" id="month" class="form-control" required>
-                                        <option value="">Pilih Bulan</option>
-                                        <option value="1">Januari</option>
-                                        <option value="2">Februari</option>
-                                        <option value="3">Maret</option>
-                                        <option value="4">April</option>
-                                        <option value="5">Mei</option>
-                                        <option value="6">Juni</option>
-                                        <option value="7">Juli</option>
-                                        <option value="8">Agustus</option>
-                                        <option value="9">September</option>
-                                        <option value="10">Oktober</option>
-                                        <option value="11">November</option>
-                                        <option value="12">Desember</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="year">Tahun:</label>
-                                    <select name="year" id="year" class="form-control" required>
-                                        <option value="">Pilih Tahun</option>
-                                        ${generateYearOptions()}
-                                    </select>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                            <button type="button" class="btn btn-success" onclick="calculateBulkTax()">
-                                <i class="fas fa-calculator"></i> Hitung Pajak
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Remove existing modal if any
-        $('#bulkCalculationModal').remove();
-        
-        // Append modal to body
-        $('body').append(modalHtml);
-        
-        // Show modal
-        $('#bulkCalculationModal').modal('show');
-    }
 
-    // Generate year options
-    function generateYearOptions() {
-        let currentYear = new Date().getFullYear();
-        let options = '';
-        for (let i = currentYear; i >= currentYear - 5; i--) {
-            options += `<option value="${i}">${i}</option>`;
-        }
-        return options;
-    }
-
-    // Calculate bulk tax
-    window.calculateBulkTax = function() {
-        let month = $('#month').val();
-        let year = $('#year').val();
-        
-        if (!month || !year) {
-            SwalHelper.error('Error!', 'Silakan pilih bulan dan tahun');
-            return;
-        }
-        
-        SwalHelper.confirm('Konfirmasi', 'Apakah Anda yakin ingin menghitung pajak untuk semua karyawan pada periode ' + month + '/' + year + '?', function(result) {
-            if (result.isConfirmed) {
-                SwalHelper.loading('Menghitung pajak...');
-                
-                $.ajax({
-                    url: '{{ route("taxes.calculate-for-payroll") }}',
-                    type: 'POST',
-                    data: {
-                        month: month,
-                        year: year,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        $('#bulkCalculationModal').modal('hide');
-                        SwalHelper.success('Berhasil!', 'Pajak berhasil dihitung untuk semua karyawan', 3000);
-                        table.ajax.reload();
-                    },
-                    error: function(xhr) {
-                        let message = 'Terjadi kesalahan saat menghitung pajak';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        }
-                        SwalHelper.error('Error!', message);
-                    }
-                });
-            }
-        });
-    };
 
     // Session messages sudah ditangani oleh global SwalHelper di layout
 });

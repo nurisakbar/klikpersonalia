@@ -347,10 +347,26 @@ class TaxController extends Controller
             'year' => 'required|integer|min:2020',
         ]);
 
-        $period = $request->year . '-' . str_pad($request->month, 2, '0', STR_PAD_LEFT);
+        // Format period to match payroll format (e.g., "Januari 2024")
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $period = $monthNames[$request->month] . ' ' . $request->year;
         
         // Get all employees for the company
         $employees = Employee::where('company_id', $user->company_id)->get();
+        
+        // Check if there are any payrolls for this period
+        $payrollsExist = Payroll::where('company_id', $user->company_id)
+            ->where('period', $period)
+            ->exists();
+            
+        if (!$payrollsExist) {
+            return redirect()->route('taxes.index')
+                ->with('error', "Tidak ada data payroll untuk periode {$period}. Silakan generate payroll terlebih dahulu.");
+        }
         
         $calculatedCount = 0;
         $errors = [];
@@ -370,12 +386,11 @@ class TaxController extends Controller
                 // Get payroll for this period
                 $payroll = Payroll::where('company_id', $user->company_id)
                     ->where('employee_id', $employee->id)
-                    ->where('month', $request->month)
-                    ->where('year', $request->year)
+                    ->where('period', $period)
                     ->first();
 
                 if (!$payroll) {
-                    $errors[] = "No payroll found for {$employee->name} in {$period}";
+                    $errors[] = "Tidak ada payroll untuk {$employee->name} pada periode {$period}";
                     continue;
                 }
 
@@ -410,9 +425,9 @@ class TaxController extends Controller
             }
         }
 
-        $message = "Successfully calculated tax for {$calculatedCount} employees.";
+        $message = "Berhasil menghitung pajak untuk {$calculatedCount} karyawan.";
         if (!empty($errors)) {
-            $message .= " Errors: " . implode(', ', $errors);
+            $message .= " Error: " . implode(', ', $errors);
         }
 
         return redirect()->route('taxes.index')->with('success', $message);
