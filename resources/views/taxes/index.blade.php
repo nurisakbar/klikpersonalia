@@ -105,47 +105,29 @@
 
                     <!-- DataTable -->
                     <table class="table table-bordered table-striped" id="taxes-table" style="width: 100%;">
-                        <thead>
-                            <tr>
+                            <thead>
+                                <tr>
                                 <th>Nomor</th>
                                 <th>Nama Karyawan</th>
                                 <th>ID Karyawan</th>
-                                <th>Periode Pajak</th>
-                                <th>Pendapatan Kena Pajak</th>
+                                    <th>Periode Pajak</th>
+                                    <th>Pendapatan Kena Pajak</th>
                                 <th>PTKP</th>
                                 <th>Jumlah Pajak</th>
                                 <th>Tarif Pajak</th>
-                                <th>Status</th>
+                                    <th>Status</th>
                                 <th>Aksi</th>
-                            </tr>
-                        </thead>
-                    </table>
+                                </tr>
+                            </thead>
+                        </table>
                 </div>
             </div>
                 
-                                </div>
-                                        </div>
-                                        </div>
+        </div>
+    </div>
+</div>
 
-<!-- Detail Modal -->
-<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailModalLabel">Detail Pajak</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                                        </button>
-            </div>
-            <div class="modal-body" id="detailContent">
-                <!-- Detail content will be loaded here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
 <!-- CSRF Token for AJAX -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -296,7 +278,7 @@ $(document).ready(function () {
     // Handle view button click
     $(document).on('click', '.view-btn', function() {
         var id = $(this).data('id');
-        loadTaxDetail(id);
+        window.location.href = '/taxes/' + id;
     });
 
     // Handle edit button click
@@ -305,94 +287,7 @@ $(document).ready(function () {
         window.location.href = '/taxes/' + id + '/edit';
     });
 
-    // Load tax detail
-    function loadTaxDetail(id) {
-        // Show loading
-        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
-        $('#detailModal').modal('show');
 
-        $.ajax({
-            url: '/taxes/' + id,
-            type: 'GET',
-            errorHandled: true, // Mark as manually handled
-            headers: {
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                if (response.success) {
-                    let tax = response.data;
-                    let detailHtml = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Nama Karyawan:</strong></td>
-                                        <td>${tax.employee_name}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>ID Karyawan:</strong></td>
-                                        <td>${tax.employee_id}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Periode Pajak:</strong></td>
-                                        <td>${tax.tax_period}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Pendapatan Kena Pajak:</strong></td>
-                                        <td>${tax.taxable_income}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Status PTKP:</strong></td>
-                                        <td>${tax.ptkp_status}</td>
-                                </tr>
-                                    <tr>
-                                        <td><strong>Jumlah PTKP:</strong></td>
-                                        <td>${tax.ptkp_amount}</td>
-                                    </tr>
-                                </table>
-                                            </div>
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Dasar Pengenaan Pajak:</strong></td>
-                                        <td>${tax.taxable_base}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Jumlah Pajak:</strong></td>
-                                        <td>${tax.tax_amount}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Tarif Pajak:</strong></td>
-                                        <td>${tax.tax_rate}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Status:</strong></td>
-                                        <td>${tax.status}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Catatan:</strong></td>
-                                        <td>${tax.notes}</td>
-                                    </tr>
-                        </table>
-                    </div>
-                    </div>
-                    `;
-                    $('#detailContent').html(detailHtml);
-                } else {
-                    $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
-                    SwalHelper.error('Error!', response.message);
-                }
-            },
-            error: function(xhr) {
-                let message = 'Terjadi kesalahan saat memuat detail pajak';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
-                SwalHelper.error('Error!', message);
-            }
-        });
-    }
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {

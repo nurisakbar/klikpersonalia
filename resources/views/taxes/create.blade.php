@@ -1,32 +1,27 @@
 @extends('layouts.app')
 
-@section('title', 'Create Tax Calculation')
+@section('title', 'Tambah Pajak - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Tambah Pajak')
+
+@section('breadcrumb')
+<li class="breadcrumb-item"><a href="{{ route('taxes.index') }}">Pajak</a></li>
+<li class="breadcrumb-item active">Tambah</li>
+@endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-calculator"></i> Create Tax Calculation
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('taxes.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Back to Tax List
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('taxes.store') }}" method="POST">
-                        @csrf
-                        
+                <form id="createTaxForm" action="{{ route('taxes.store') }}" method="POST">
+                    @csrf
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="employee_id">Employee <span class="text-danger">*</span></label>
-                                    <select name="employee_id" id="employee_id" class="form-control @error('employee_id') is-invalid @enderror" required>
-                                        <option value="">Select Employee</option>
+                                    <label for="employee_id">Karyawan <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('employee_id') is-invalid @enderror" id="employee_id" name="employee_id" required>
+                                        <option value="">Pilih Karyawan</option>
                                         @foreach($employees as $employee)
                                             <option value="{{ $employee->id }}" {{ old('employee_id') == $employee->id ? 'selected' : '' }}>
                                                 {{ $employee->name }} ({{ $employee->employee_id }})
@@ -34,19 +29,16 @@
                                         @endforeach
                                     </select>
                                     @error('employee_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="tax_period">Tax Period <span class="text-danger">*</span></label>
-                                    <input type="month" name="tax_period" id="tax_period" 
-                                           class="form-control @error('tax_period') is-invalid @enderror" 
-                                           value="{{ old('tax_period', date('Y-m')) }}" required>
+                                    <label for="tax_period">Periode Pajak <span class="text-danger">*</span></label>
+                                    <input type="month" class="form-control @error('tax_period') is-invalid @enderror" id="tax_period" name="tax_period" value="{{ old('tax_period') }}" required>
                                     @error('tax_period')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -55,209 +47,153 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="taxable_income">Taxable Income <span class="text-danger">*</span></label>
+                                    <label for="taxable_income">Pendapatan Kena Pajak <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Rp</span>
                                         </div>
-                                        <input type="number" name="taxable_income" id="taxable_income" 
-                                               class="form-control @error('taxable_income') is-invalid @enderror" 
-                                               value="{{ old('taxable_income') }}" 
-                                               step="0.01" min="0" required 
-                                               onchange="calculateTax()">
+                                        <input type="text" class="form-control @error('taxable_income') is-invalid @enderror" id="taxable_income" name="taxable_income" value="{{ old('taxable_income') }}" placeholder="Masukkan pendapatan kena pajak" required>
                                     </div>
+                                    <small class="form-text text-muted">Minimal Rp 1.000.000</small>
                                     @error('taxable_income')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
-                                    <small class="form-text text-muted">
-                                        Total income subject to tax (Basic Salary + Allowances + Overtime + Bonus)
-                                    </small>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="ptkp_status">PTKP Status <span class="text-danger">*</span></label>
-                                    <select name="ptkp_status" id="ptkp_status" 
-                                            class="form-control @error('ptkp_status') is-invalid @enderror" 
-                                            onchange="calculateTax()" required>
-                                        <option value="">Select PTKP Status</option>
-                                        @foreach($ptkpStatuses as $status => $description)
-                                            <option value="{{ $status }}" {{ old('ptkp_status') == $status ? 'selected' : '' }}>
-                                                {{ $status }} - {{ $description }}
-                                            </option>
+                                    <label for="ptkp_status">Status PTKP <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('ptkp_status') is-invalid @enderror" id="ptkp_status" name="ptkp_status" required>
+                                        <option value="">Pilih Status PTKP</option>
+                                        @foreach($ptkpStatuses as $key => $status)
+                                            <option value="{{ $key }}" {{ old('ptkp_status') == $key ? 'selected' : '' }}>{{ $key }} - {{ $status }}</option>
                                         @endforeach
                                     </select>
                                     @error('ptkp_status')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Tax Calculation Preview -->
                         <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title">
-                                            <i class="fas fa-calculator"></i> Tax Calculation Preview
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-info">
-                                                        <i class="fas fa-money-bill"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">PTKP Amount</span>
-                                                        <span class="info-box-number" id="ptkp_amount">Rp 0</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-warning">
-                                                        <i class="fas fa-calculator"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">Taxable Base</span>
-                                                        <span class="info-box-number" id="taxable_base">Rp 0</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-danger">
-                                                        <i class="fas fa-percentage"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">Tax Rate</span>
-                                                        <span class="info-box-number" id="tax_rate">0%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-success">
-                                                        <i class="fas fa-coins"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">Tax Amount</span>
-                                                        <span class="info-box-number" id="tax_amount">Rp 0</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="notes">Notes</label>
-                                    <textarea name="notes" id="notes" rows="3" 
-                                              class="form-control @error('notes') is-invalid @enderror">{{ old('notes') }}</textarea>
+                                    <label for="notes">Catatan</label>
+                                    <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" placeholder="Masukkan catatan (opsional)">{{ old('notes') }}</textarea>
                                     @error('notes')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Create Tax Calculation
-                                </button>
-                                <a href="{{ route('taxes.index') }}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancel
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save mr-1"></i> Simpan
+                        </button>
+                        <a href="{{ route('taxes.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+@push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
 
 <script>
-// PTKP Amounts (2024)
-const PTKP_AMOUNTS = {
-    'TK/0': 54000000,
-    'TK/1': 58500000,
-    'TK/2': 63000000,
-    'TK/3': 67500000,
-    'K/0': 58500000,
-    'K/1': 63000000,
-    'K/2': 67500000,
-    'K/3': 72000000,
-};
+$(function () {
+    // Setup CSRF token for AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 
-// Tax Brackets (2024)
-const TAX_BRACKETS = [
-    {min: 0, max: 60000000, rate: 0.05},
-    {min: 60000000, max: 250000000, rate: 0.15},
-    {min: 250000000, max: 500000000, rate: 0.25},
-    {min: 500000000, max: 5000000000, rate: 0.30},
-    {min: 5000000000, max: null, rate: 0.35},
-];
-
-function calculateTax() {
-    const taxableIncome = parseFloat(document.getElementById('taxable_income').value) || 0;
-    const ptkpStatus = document.getElementById('ptkp_status').value;
-    
-    if (!ptkpStatus) {
-        resetCalculation();
-        return;
-    }
-    
-    const ptkpAmount = PTKP_AMOUNTS[ptkpStatus] || 0;
-    const taxableBase = Math.max(0, taxableIncome - ptkpAmount);
-    
-    // Calculate tax amount
-    let taxAmount = 0;
-    let taxRate = 0;
-    
-    for (const bracket of TAX_BRACKETS) {
-        if (taxableBase > bracket.min) {
-            const bracketMax = bracket.max || Number.MAX_SAFE_INTEGER;
-            const bracketAmount = Math.min(taxableBase, bracketMax) - bracket.min;
-            taxAmount += bracketAmount * bracket.rate;
-            
-            if (taxableBase <= bracketMax) {
-                taxRate = bracket.rate;
-                break;
+    // Format input pendapatan dengan separator ribuan
+    $('#taxable_income').on('input', function() {
+        let value = $(this).val().replace(/[^\d]/g, '');
+        if (value) {
+            // Convert to number and format with thousand separators
+            let number = parseInt(value);
+            if (!isNaN(number)) {
+                $(this).val(number.toLocaleString('id-ID'));
             }
         }
+    });
+
+    // Handle form submission with AJAX
+    $('#createTaxForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Get raw numeric value from formatted income
+        let incomeInput = $('#taxable_income');
+        let formattedIncome = incomeInput.val();
+        let rawIncome = formattedIncome.replace(/[^\d]/g, '');
+        
+        // Validate minimum income
+        if (parseInt(rawIncome) < 1000000) {
+            SwalHelper.error('Error!', 'Pendapatan kena pajak minimal Rp 1.000.000');
+            return false;
+        }
+
+        // Show loading
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+        // Prepare form data
+        let formData = new FormData(this);
+        formData.set('taxable_income', rawIncome); // Set raw income value
+
+        // Send AJAX request
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            errorHandled: true,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    SwalHelper.success('Berhasil!', response.message, 2000);
+                    setTimeout(() => {
+                        window.location.href = '{{ route("taxes.index") }}';
+                    }, 2000);
+                } else {
+                    SwalHelper.error('Gagal!', response.message);
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat menyimpan data';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessages = [];
+                    for (let field in errors) {
+                        errorMessages.push(errors[field][0]);
+                    }
+                    message = errorMessages.join('\n');
+                }
+                
+                SwalHelper.error('Error!', message);
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan');
+            }
+        });
+    });
+
+    // Format initial value if exists
+    let initialIncome = $('#taxable_income').val();
+    if (initialIncome && !isNaN(parseInt(initialIncome.replace(/[^\d]/g, '')))) {
+        let value = parseInt(initialIncome.replace(/[^\d]/g, ''));
+        $('#taxable_income').val(value.toLocaleString('id-ID'));
     }
-    
-    // Update display
-    document.getElementById('ptkp_amount').textContent = 'Rp ' + numberFormat(ptkpAmount);
-    document.getElementById('taxable_base').textContent = 'Rp ' + numberFormat(taxableBase);
-    document.getElementById('tax_rate').textContent = (taxRate * 100).toFixed(1) + '%';
-    document.getElementById('tax_amount').textContent = 'Rp ' + numberFormat(taxAmount);
-}
-
-function resetCalculation() {
-    document.getElementById('ptkp_amount').textContent = 'Rp 0';
-    document.getElementById('taxable_base').textContent = 'Rp 0';
-    document.getElementById('tax_rate').textContent = '0%';
-    document.getElementById('tax_amount').textContent = 'Rp 0';
-}
-
-function numberFormat(number) {
-    return new Intl.NumberFormat('id-ID').format(number);
-}
-
-// Calculate on page load
-document.addEventListener('DOMContentLoaded', function() {
-    calculateTax();
 });
 </script>
-@endsection 
+@endpush 

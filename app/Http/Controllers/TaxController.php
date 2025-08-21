@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\Company;
 use App\Services\TaxService;
+use App\Http\Resources\DetailTaxResource;
 use App\DataTables\TaxDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -171,7 +172,7 @@ class TaxController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'tax_period' => 'required|date_format:Y-m',
-            'taxable_income' => 'required|numeric|min:0',
+            'taxable_income' => 'required|numeric|min:1000000',
             'ptkp_status' => 'required|in:' . implode(',', array_keys(Tax::PTKP_STATUSES)),
             'notes' => 'nullable|string',
         ]);
@@ -180,7 +181,13 @@ class TaxController extends Controller
         
         // Check if employee belongs to user's company
         if ($employee->company_id !== $user->company_id) {
-            return redirect()->back()->withErrors(['employee_id' => 'Employee not found.']);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Karyawan tidak ditemukan'
+                ], 404);
+            }
+            return redirect()->back()->withErrors(['employee_id' => 'Karyawan tidak ditemukan.']);
         }
 
         // Check if tax calculation already exists for this period
@@ -190,7 +197,13 @@ class TaxController extends Controller
             ->first();
 
         if ($existingTax) {
-            return redirect()->back()->withErrors(['tax_period' => 'Tax calculation already exists for this period.']);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Perhitungan pajak sudah ada untuk periode ini'
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['tax_period' => 'Perhitungan pajak sudah ada untuk periode ini.']);
         }
 
         // Calculate tax
@@ -212,7 +225,14 @@ class TaxController extends Controller
             'notes' => $request->notes,
         ]);
 
-        return redirect()->route('taxes.show', $tax)->with('success', 'Tax calculation created successfully.');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pajak berhasil dibuat'
+            ]);
+        }
+
+        return redirect()->route('taxes.show', $tax)->with('success', 'Data pajak berhasil dibuat.');
     }
 
     /**
@@ -221,25 +241,13 @@ class TaxController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $tax = $this->taxService->getTaxById($id);
+        $user = Auth::user();
+            $tax = Tax::with(['employee'])->where('company_id', $user->company_id)->findOrFail($id);
             
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'data' => [
-                        'id' => $tax->id,
-                        'employee_name' => $tax->employee->name ?? '-',
-                        'employee_id' => $tax->employee->employee_id ?? '-',
-                        'tax_period' => $tax->tax_period ? date('M Y', strtotime($tax->tax_period . '-01')) : '-',
-                        'taxable_income' => 'Rp ' . number_format($tax->taxable_income, 0, ',', '.'),
-                        'ptkp_status' => $tax->ptkp_status,
-                        'ptkp_amount' => 'Rp ' . number_format($tax->ptkp_amount, 0, ',', '.'),
-                        'taxable_base' => 'Rp ' . number_format($tax->taxable_base, 0, ',', '.'),
-                        'tax_amount' => 'Rp ' . number_format($tax->tax_amount, 0, ',', '.'),
-                        'tax_rate' => number_format($tax->tax_rate * 100, 1) . '%',
-                        'status' => $tax->status,
-                        'notes' => $tax->notes ?? '-',
-                    ]
+                    'data' => new DetailTaxResource($tax)
                 ]);
             }
             
@@ -248,11 +256,11 @@ class TaxController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage()
+                    'message' => 'Data pajak tidak ditemukan'
                 ], 404);
             }
             
-            return redirect()->route('taxes.index')->with('error', $e->getMessage());
+            return redirect()->route('taxes.index')->with('error', 'Data pajak tidak ditemukan');
         }
     }
 
@@ -282,11 +290,17 @@ class TaxController extends Controller
         
         // Check if tax belongs to user's company
         if ($tax->company_id !== $user->company_id) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pajak tidak ditemukan'
+                ], 404);
+            }
             abort(404);
         }
 
         $request->validate([
-            'taxable_income' => 'required|numeric|min:0',
+            'taxable_income' => 'required|numeric|min:1000000',
             'ptkp_status' => 'required|in:' . implode(',', array_keys(Tax::PTKP_STATUSES)),
             'status' => 'required|in:' . implode(',', [Tax::STATUS_PENDING, Tax::STATUS_CALCULATED, Tax::STATUS_PAID, Tax::STATUS_VERIFIED]),
             'notes' => 'nullable|string',
@@ -309,7 +323,14 @@ class TaxController extends Controller
             'notes' => $request->notes,
         ]);
 
-        return redirect()->route('taxes.show', $tax)->with('success', 'Tax calculation updated successfully.');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pajak berhasil diperbarui'
+            ]);
+        }
+
+        return redirect()->route('taxes.show', $tax)->with('success', 'Data pajak berhasil diperbarui.');
     }
 
     /**
