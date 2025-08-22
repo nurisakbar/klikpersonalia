@@ -46,14 +46,17 @@ class AttendanceRepository
                 'notes'
             ]);
 
-        // Apply date filter
-        if ($request && $request->get('date_filter')) {
-            $dateFilter = $request->get('date_filter');
-            if (preg_match('/^(\d{4})-(\d{2})$/', $dateFilter, $matches)) {
-                $year = $matches[1];
-                $month = $matches[2];
-                $query->whereYear('date', $year)
-                      ->whereMonth('date', $month);
+        // Apply date range filter
+        if ($request) {
+            $startDate = $request->get('start_date');
+            $endDate = $request->get('end_date');
+            
+            if ($startDate && $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            } elseif ($startDate) {
+                $query->where('date', '>=', $startDate);
+            } elseif ($endDate) {
+                $query->where('date', '<=', $endDate);
             }
         }
 
