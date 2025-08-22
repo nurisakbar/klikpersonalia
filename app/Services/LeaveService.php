@@ -37,6 +37,42 @@ class LeaveService
     /**
      * Get pending leaves for approval
      */
+    public function getPendingLeavesForApproval($startDate = null, $endDate = null)
+    {
+        $user = auth()->user();
+        
+        if (!in_array($user->role, ['admin', 'hr', 'manager'])) {
+            throw new Exception('You do not have permission to approve leave requests.');
+        }
+
+        return $this->leaveRepository->getPendingLeavesForCompany($user->company_id, $startDate, $endDate);
+    }
+
+    /**
+     * Get leaves for DataTables
+     */
+    public function getLeavesForDataTables($startDate = null, $endDate = null, $statusFilter = null)
+    {
+        $user = auth()->user();
+        
+        // If user is admin/HR/manager, show all leaves for their company
+        if (in_array($user->role, ['admin', 'hr', 'manager'])) {
+            return $this->leaveRepository->getLeavesForCompanyDataTables($user->company_id, $startDate, $endDate, $statusFilter);
+        }
+        
+        // If user is employee, show only their own leaves
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            throw new Exception('Employee not found for this user.');
+        }
+
+        return $this->leaveRepository->getLeavesForEmployeeDataTables($employee->id, $startDate, $endDate, $statusFilter);
+    }
+
+    /**
+     * Get pending leaves for approval
+     */
     public function getPendingLeaves(int $perPage = 10)
     {
         $user = auth()->user();
@@ -62,11 +98,19 @@ class LeaveService
 
         // Check for overlapping leaves
         if ($this->leaveRepository->hasOverlappingLeaves($employee->id, $data['start_date'], $data['end_date'])) {
-            throw new Exception('You have overlapping leave requests for the selected dates.');
+            throw new Exception('Anda memiliki permintaan cuti yang tumpang tindih untuk tanggal yang dipilih.');
         }
 
         // Calculate total days
         $totalDays = $this->calculateWorkingDays($data['start_date'], $data['end_date']);
+
+        // Check leave balance for annual leave
+        if ($data['leave_type'] === 'annual') {
+            $leaveBalance = $this->leaveRepository->getLeaveBalance($employee->id);
+            if ($totalDays > $leaveBalance['annual_remaining']) {
+                throw new Exception('Sisa cuti tahunan tidak mencukupi. Anda memiliki ' . $leaveBalance['annual_remaining'] . ' hari tersisa.');
+            }
+        }
 
         // Handle file upload
         $attachmentPath = null;
@@ -82,7 +126,7 @@ class LeaveService
             'end_date' => $data['end_date'],
             'total_days' => $totalDays,
             'reason' => $data['reason'],
-            'attachment_path' => $attachmentPath,
+            'attachment' => $attachmentPath,
             'status' => 'pending',
         ];
 
@@ -117,14 +161,23 @@ class LeaveService
 
         // Check for overlapping leaves (excluding current leave)
         if ($this->leaveRepository->hasOverlappingLeaves($employee->id, $data['start_date'], $data['end_date'], $leaveId)) {
-            throw new Exception('You have overlapping leave requests for the selected dates.');
+            throw new Exception('Anda memiliki permintaan cuti yang tumpang tindih untuk tanggal yang dipilih.');
         }
 
         // Calculate total days
         $totalDays = $this->calculateWorkingDays($data['start_date'], $data['end_date']);
 
+        // Check leave balance for annual leave
+        if ($data['leave_type'] === 'annual') {
+            $leaveBalance = $this->leaveRepository->getLeaveBalance($employee->id);
+            $currentLeaveDays = $leave->leave_type === 'annual' ? $leave->total_days : 0;
+            if (($totalDays - $currentLeaveDays) > $leaveBalance['annual_remaining']) {
+                throw new Exception('Sisa cuti tahunan tidak mencukupi. Anda memiliki ' . $leaveBalance['annual_remaining'] . ' hari tersisa.');
+            }
+        }
+
         // Handle file upload
-        $attachmentPath = $leave->attachment_path;
+        $attachmentPath = $leave->attachment;
         if (isset($data['attachment']) && $data['attachment']) {
             // Delete old file if exists
             if ($attachmentPath && Storage::disk('public')->exists($attachmentPath)) {
@@ -139,7 +192,7 @@ class LeaveService
             'end_date' => $data['end_date'],
             'total_days' => $totalDays,
             'reason' => $data['reason'],
-            'attachment_path' => $attachmentPath,
+            'attachment' => $attachmentPath,
         ];
 
         return $this->leaveRepository->update($leave, $updateData);
@@ -172,8 +225,8 @@ class LeaveService
         }
 
         // Delete attachment file if exists
-        if ($leave->attachment_path && Storage::disk('public')->exists($leave->attachment_path)) {
-            Storage::disk('public')->delete($leave->attachment_path);
+        if ($leave->attachment && Storage::disk('public')->exists($leave->attachment)) {
+            Storage::disk('public')->delete($leave->attachment);
         }
 
         return $this->leaveRepository->delete($leave);

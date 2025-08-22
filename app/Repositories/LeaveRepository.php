@@ -30,6 +30,56 @@ class LeaveRepository
     }
 
     /**
+     * Get leaves for DataTables
+     */
+    public function getLeavesForEmployeeDataTables(string $employeeId, $startDate = null, $endDate = null, $statusFilter = null)
+    {
+        $query = $this->model
+            ->where('employee_id', $employeeId)
+            ->with(['employee', 'approver']);
+
+        // Apply date filters
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
+
+        // Apply status filter
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get all leaves for company DataTables (for admin/HR/manager)
+     */
+    public function getLeavesForCompanyDataTables(string $companyId, $startDate = null, $endDate = null, $statusFilter = null)
+    {
+        $query = $this->model
+            ->where('company_id', $companyId)
+            ->with(['employee', 'approver']);
+
+        // Apply date filters
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
+
+        // Apply status filter
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get pending leaves for approval
      */
     public function getPendingLeaves(string $companyId, int $perPage = 10): LengthAwarePaginator
@@ -150,6 +200,27 @@ class LeaveRepository
     }
 
     /**
+     * Get pending leaves for company approval
+     */
+    public function getPendingLeavesForCompany(string $companyId, $startDate = null, $endDate = null)
+    {
+        $query = $this->model
+            ->with('employee')
+            ->where('company_id', $companyId)
+            ->where('status', 'pending');
+
+        // Apply date filters
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
+
+        return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get leave statistics
      */
     public function getLeaveStatistics(string $companyId, int $year = null): array
@@ -179,14 +250,22 @@ class LeaveRepository
     {
         $query = $this->model
             ->where('employee_id', $employeeId)
-            ->where('status', '!=', 'cancelled')
+            ->whereIn('status', ['pending', 'approved']) // Only check pending and approved leaves
             ->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('start_date', [$startDate, $endDate])
-                  ->orWhereBetween('end_date', [$startDate, $endDate])
-                  ->orWhere(function ($q2) use ($startDate, $endDate) {
-                      $q2->where('start_date', '<=', $startDate)
-                         ->where('end_date', '>=', $endDate);
-                  });
+                // Check if the new date range overlaps with existing leaves
+                $q->where(function ($q2) use ($startDate, $endDate) {
+                    // Case 1: New start date falls within existing leave period
+                    $q2->where('start_date', '<=', $startDate)
+                       ->where('end_date', '>=', $startDate);
+                })->orWhere(function ($q2) use ($startDate, $endDate) {
+                    // Case 2: New end date falls within existing leave period
+                    $q2->where('start_date', '<=', $endDate)
+                       ->where('end_date', '>=', $endDate);
+                })->orWhere(function ($q2) use ($startDate, $endDate) {
+                    // Case 3: New date range completely contains existing leave period
+                    $q2->where('start_date', '>=', $startDate)
+                       ->where('end_date', '<=', $endDate);
+                });
             });
 
         if ($excludeId) {

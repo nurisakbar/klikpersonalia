@@ -117,6 +117,7 @@ Route::middleware('auth')->group(function () {
     
     // Leave API Routes for AJAX
     Route::get('/api/leaves', [LeaveController::class, 'apiIndex'])->name('api.leaves.index');
+    Route::get('/api/leaves/balance', [LeaveController::class, 'apiBalance'])->name('api.leaves.balance');
     Route::get('/api/leaves/{id}', [LeaveController::class, 'apiShow'])->name('api.leaves.show');
     Route::post('/api/leaves', [LeaveController::class, 'apiStore'])->name('api.leaves.store');
     Route::put('/api/leaves/{id}', [LeaveController::class, 'apiUpdate'])->name('api.leaves.update');

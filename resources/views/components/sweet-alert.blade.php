@@ -200,6 +200,177 @@ window.SwalHelper = {
             confirmButtonText: 'OK',
             confirmButtonColor: '#dc3545'
         });
+    },
+
+    // Form Input Modal
+    formInput: function(title, html, callback = null, options = {}) {
+        const defaultOptions = {
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            showCancelButton: true,
+            reverseButtons: true,
+            preConfirm: () => {
+                // Get all input values
+                const inputs = document.querySelectorAll('#swal-form input, #swal-form textarea, #swal-form select');
+                const values = {};
+                inputs.forEach(input => {
+                    values[input.name || input.id] = input.value;
+                });
+                return values;
+            }
+        };
+
+        const mergedOptions = { ...defaultOptions, ...options };
+
+        Swal.fire({
+            title: title,
+            html: html,
+            ...mergedOptions
+        }).then((result) => {
+            if (callback && typeof callback === 'function') {
+                callback(result);
+            }
+        });
+    },
+
+    // Approval Form Modal
+    approvalForm: function(title, employeeName, leaveType, totalDays, callback = null) {
+        const html = `
+            <div id="swal-form" class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="approval_notes">Catatan Persetujuan (Opsional)</label>
+                    <textarea id="approval_notes" name="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
+                </div>
+            </div>
+        `;
+
+        this.formInput(title, html, callback, {
+            confirmButtonText: 'Setujui',
+            confirmButtonColor: '#28a745'
+        });
+    },
+
+    // Rejection Form Modal
+    rejectionForm: function(title, employeeName, leaveType, totalDays, callback = null) {
+        const html = `
+            <div id="swal-form" class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
+                    <textarea id="rejection_notes" name="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
+                </div>
+            </div>
+        `;
+
+        this.formInput(title, html, callback, {
+            confirmButtonText: 'Tolak',
+            confirmButtonColor: '#dc3545',
+            preConfirm: () => {
+                const notes = document.getElementById('rejection_notes').value;
+                if (!notes.trim()) {
+                    Swal.showValidationMessage('Alasan penolakan harus diisi');
+                    return false;
+                }
+                return {
+                    approval_notes: notes
+                };
+            }
+        });
+    },
+
+    // Simple Approval Confirmation (like payroll)
+    confirmApproval: function(title, message, callback = null) {
+        Swal.fire({
+            icon: 'question',
+            title: title || 'Konfirmasi Persetujuan',
+            text: message,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Setujui!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (callback && typeof callback === 'function') {
+                callback(result);
+            }
+        });
+    },
+
+    // Simple Rejection Confirmation (like payroll)
+    confirmRejection: function(title, message, callback = null) {
+        Swal.fire({
+            icon: 'warning',
+            title: title || 'Konfirmasi Penolakan',
+            text: message,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Tolak!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (callback && typeof callback === 'function') {
+                callback(result);
+            }
+        });
+    },
+
+    // Approval with Notes Form
+    approvalWithNotes: function(title, employeeName, leaveType, totalDays, callback = null) {
+        const html = `
+            <div id="swal-form" class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="approval_notes">Catatan Persetujuan (Opsional)</label>
+                    <textarea id="approval_notes" name="approval_notes" class="form-control" rows="3" placeholder="Tambahkan catatan atau komentar..."></textarea>
+                </div>
+            </div>
+        `;
+
+        this.formInput(title, html, callback, {
+            confirmButtonText: 'Setujui',
+            confirmButtonColor: '#28a745'
+        });
+    },
+
+    // Rejection with Notes Form
+    rejectionWithNotes: function(title, employeeName, leaveType, totalDays, callback = null) {
+        const html = `
+            <div id="swal-form" class="text-left">
+                <p><strong>Karyawan:</strong> ${employeeName}</p>
+                <p><strong>Jenis Cuti:</strong> ${leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}</p>
+                <p><strong>Total Hari:</strong> ${totalDays} hari</p>
+                <div class="form-group mt-3">
+                    <label for="rejection_notes">Alasan Penolakan <span class="text-danger">*</span></label>
+                    <textarea id="rejection_notes" name="rejection_notes" class="form-control" rows="3" placeholder="Berikan alasan penolakan..." required></textarea>
+                </div>
+            </div>
+        `;
+
+        this.formInput(title, html, callback, {
+            confirmButtonText: 'Tolak',
+            confirmButtonColor: '#dc3545',
+            preConfirm: () => {
+                const notes = document.getElementById('rejection_notes').value;
+                if (!notes.trim()) {
+                    Swal.showValidationMessage('Alasan penolakan harus diisi');
+                    return false;
+                }
+                return {
+                    approval_notes: notes
+                };
+            }
+        });
     }
 };
 
