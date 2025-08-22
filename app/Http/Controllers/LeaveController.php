@@ -388,13 +388,11 @@ class LeaveController extends Controller
                 return redirect()->back()->with('error', 'Data karyawan tidak ditemukan.');
             }
 
-            // Get leave balance
-            $leaveBalance = $this->getLeaveBalance($employee->id);
+            // Get leave balance using service
+            $leaveBalance = $this->leaveService->getLeaveBalanceForCurrentUser();
             
-            // Get leave history
-            $leaveHistory = Leave::where('employee_id', $employee->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+            // Get leave history using service
+            $leaveHistory = $this->leaveService->getLeavesForCurrentUser(10);
             
             return view('leaves.balance', compact('leaveBalance', 'leaveHistory'));
         } catch (\Exception $e) {
@@ -482,6 +480,30 @@ class LeaveController extends Controller
         try {
             $leaves = $this->leaveService->getLeavesForCurrentUser(10);
             return LeaveResource::collection($leaves);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * API: Get leave balance for current user
+     */
+    public function apiBalance()
+    {
+        try {
+            $leaveBalance = $this->leaveService->getLeaveBalanceForCurrentUser();
+            $leaveHistory = $this->leaveService->getLeavesForCurrentUser(10);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'balance' => $leaveBalance,
+                    'history' => LeaveResource::collection($leaveHistory)
+                ]
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
