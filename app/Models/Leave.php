@@ -135,13 +135,15 @@ class Leave extends Model
         $statusClass = [
             'pending' => 'badge badge-warning',
             'approved' => 'badge badge-success',
-            'rejected' => 'badge badge-danger'
+            'rejected' => 'badge badge-danger',
+            'cancelled' => 'badge badge-secondary'
         ];
         
         $statusText = [
             'pending' => 'Menunggu',
             'approved' => 'Disetujui',
-            'rejected' => 'Ditolak'
+            'rejected' => 'Ditolak',
+            'cancelled' => 'Dibatalkan'
         ];
         
         return '<span class="' . $statusClass[$this->status] . '">' . $statusText[$this->status] . '</span>';

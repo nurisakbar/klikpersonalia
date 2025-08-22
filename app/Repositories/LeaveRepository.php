@@ -30,6 +30,17 @@ class LeaveRepository
     }
 
     /**
+     * Get leaves for DataTables
+     */
+    public function getLeavesForEmployeeDataTables(string $employeeId)
+    {
+        return $this->model
+            ->where('employee_id', $employeeId)
+            ->with(['employee', 'approver'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get pending leaves for approval
      */
     public function getPendingLeaves(string $companyId, int $perPage = 10): LengthAwarePaginator

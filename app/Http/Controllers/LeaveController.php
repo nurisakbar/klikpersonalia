@@ -30,11 +30,52 @@ class LeaveController extends Controller
     public function index()
     {
         try {
-            $leaves = $this->leaveService->getLeavesForCurrentUser(10);
-            return view('leaves.index', compact('leaves'));
+            return view('leaves.index');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Get leaves data for DataTables.
+     */
+    public function data(): JsonResponse
+    {
+        $leaves = $this->leaveService->getLeavesForDataTables();
+
+        return DataTables::of($leaves)
+            ->addColumn('action', function ($leave) {
+                $buttons = '<div class="btn-group" role="group">';
+                $buttons .= '<button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $leave->id . '" title="Detail"><i class="fas fa-eye"></i></button>';
+                
+                if ($leave->status === 'pending') {
+                    $buttons .= '<button type="button" class="btn btn-sm btn-warning edit-btn" data-id="' . $leave->id . '" title="Edit"><i class="fas fa-edit"></i></button>';
+                    $buttons .= '<button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $leave->id . '" data-name="' . htmlspecialchars($leave->leave_type . ' cuti dari ' . $leave->formatted_start_date . ' sampai ' . $leave->formatted_end_date) . '" title="Batalkan"><i class="fas fa-times"></i></button>';
+                }
+                
+                $buttons .= '</div>';
+                return $buttons;
+            })
+            ->addColumn('type_badge', function ($leave) {
+                return $leave->type_badge;
+            })
+            ->addColumn('status_badge', function ($leave) {
+                return $leave->status_badge;
+            })
+            ->addColumn('start_date', function ($leave) {
+                return $leave->formatted_start_date;
+            })
+            ->addColumn('end_date', function ($leave) {
+                return $leave->formatted_end_date;
+            })
+            ->addColumn('total_days_formatted', function ($leave) {
+                return $leave->total_days . ' hari';
+            })
+            ->addColumn('created_at_formatted', function ($leave) {
+                return $leave->created_at->format('d/m/Y H:i');
+            })
+            ->rawColumns(['action', 'type_badge', 'status_badge', 'total_days_formatted', 'created_at_formatted'])
+            ->make(true);
     }
 
     /**
@@ -146,13 +187,55 @@ class LeaveController extends Controller
         $employee = Employee::where('user_id', $user->id)->first();
         
         if (!$employee) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee not found for this user.'
+                ], 404);
+            }
             return redirect()->back()->with('error', 'Employee not found for this user.');
         }
 
         $leave = Leave::with(['employee', 'approver'])
             ->where('id', $id)
             ->where('employee_id', $employee->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$leave) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Leave request not found.'
+                ], 404);
+            }
+            abort(404);
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $leave->id,
+                    'leave_type' => $leave->leave_type,
+                    'type_badge' => $leave->type_badge,
+                    'start_date' => $leave->start_date,
+                    'formatted_start_date' => $leave->formatted_start_date,
+                    'end_date' => $leave->end_date,
+                    'formatted_end_date' => $leave->formatted_end_date,
+                    'total_days' => $leave->total_days,
+                    'reason' => $leave->reason,
+                    'status' => $leave->status,
+                    'status_badge' => $leave->status_badge,
+                    'attachment_path' => $leave->attachment,
+                    'created_at' => $leave->created_at,
+                    'created_at_formatted' => $leave->created_at->format('d/m/Y H:i'),
+                    'approver_name' => $leave->approver ? $leave->approver->name : null,
+                    'approved_at' => $leave->approved_at,
+                    'approved_at_formatted' => $leave->approved_at ? $leave->approved_at->format('d/m/Y H:i') : null,
+                    'approval_notes' => $leave->approval_notes,
+                ]
+            ]);
+        }
 
         return view('leaves.show', compact('leave'));
     }
@@ -253,23 +336,47 @@ class LeaveController extends Controller
         $employee = Employee::where('user_id', $user->id)->first();
         
         if (!$employee) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee not found for this user.'
+                ], 404);
+            }
             return redirect()->back()->with('error', 'Employee not found for this user.');
         }
 
         $leave = Leave::where('id', $id)
             ->where('employee_id', $employee->id)
             ->where('status', 'pending')
-            ->firstOrFail();
+            ->first();
 
-        // Delete attachment if exists
-        if ($leave->attachment) {
-            \Storage::disk('public')->delete($leave->attachment);
+        if (!$leave) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Leave request not found or cannot be cancelled.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Leave request not found or cannot be cancelled.');
         }
 
-        $leave->delete();
+        // Update status to cancelled instead of deleting
+        $leave->update([
+            'status' => 'cancelled',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+            'approval_notes' => 'Dibatalkan oleh pemohon'
+        ]);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Permintaan cuti berhasil dibatalkan!'
+            ]);
+        }
 
         return redirect()->route('leaves.index')
-            ->with('success', 'Leave request cancelled successfully!');
+            ->with('success', 'Permintaan cuti berhasil dibatalkan!');
     }
 
     /**
@@ -432,65 +539,7 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Get leaves data for DataTables
-     */
-    public function data(): JsonResponse
-    {
-        try {
-            $user = Auth::user();
-            
-            if (!$user) {
-                return response()->json(['error' => 'User not authenticated'], 401);
-            }
-            
-            $employee = Employee::where('user_id', $user->id)->first();
-            
-            if (!$employee) {
-                return response()->json(['error' => 'Employee not found'], 404);
-            }
 
-            $leaves = Leave::where('employee_id', $employee->id);
-
-            return DataTables::of($leaves)
-                ->addColumn('leave_type_badge', function ($leave) {
-                    $badges = [
-                        'annual' => '<span class="badge badge-primary">Cuti Tahunan</span>',
-                        'sick' => '<span class="badge badge-danger">Cuti Sakit</span>',
-                        'maternity' => '<span class="badge badge-success">Cuti Melahirkan</span>',
-                        'paternity' => '<span class="badge badge-secondary">Cuti Melahirkan (Suami)</span>',
-                        'other' => '<span class="badge badge-warning">Cuti Lainnya</span>'
-                    ];
-                    
-                    return $badges[$leave->leave_type] ?? '<span class="badge badge-secondary">Unknown</span>';
-                })
-                ->addColumn('status_badge', function ($leave) {
-                    $badges = [
-                        'pending' => '<span class="badge badge-warning">Menunggu</span>',
-                        'approved' => '<span class="badge badge-success">Disetujui</span>',
-                        'rejected' => '<span class="badge badge-danger">Ditolak</span>',
-                        'cancelled' => '<span class="badge badge-secondary">Dibatalkan</span>'
-                    ];
-                    
-                    return $badges[$leave->status] ?? '<span class="badge badge-secondary">Unknown</span>';
-                })
-                ->addColumn('start_date_formatted', function ($leave) {
-                    return date('d/m/Y', strtotime($leave->start_date));
-                })
-                ->addColumn('end_date_formatted', function ($leave) {
-                    return date('d/m/Y', strtotime($leave->end_date));
-                })
-                ->addColumn('created_at_formatted', function ($leave) {
-                    return date('d/m/Y H:i', strtotime($leave->created_at));
-                })
-                ->rawColumns(['leave_type_badge', 'status_badge'])
-                ->make(true);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Terjadi kesalahan saat memuat data'
-            ], 500);
-        }
-    }
 
     /**
      * Get approval data for DataTables

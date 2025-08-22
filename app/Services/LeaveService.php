@@ -35,6 +35,21 @@ class LeaveService
     }
 
     /**
+     * Get leaves for DataTables
+     */
+    public function getLeavesForDataTables()
+    {
+        $user = auth()->user();
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            throw new Exception('Employee not found for this user.');
+        }
+
+        return $this->leaveRepository->getLeavesForEmployeeDataTables($employee->id);
+    }
+
+    /**
      * Get pending leaves for approval
      */
     public function getPendingLeaves(int $perPage = 10)
