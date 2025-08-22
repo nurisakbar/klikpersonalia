@@ -16,25 +16,12 @@
                     <!-- Filter Section -->
                     <div class="row mb-3">
                         <div class="col-md-3">
-                            <label for="date_filter">Periode Tanggal:</label>
-                            <select id="date_filter" class="form-control form-control-sm">
-                                <option value="">Semua Periode</option>
-                                @php
-                                    $currentYear = date('Y');
-                                    $currentMonth = date('m');
-                                @endphp
-                                @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
-                                    @for($month = 1; $month <= 12; $month++)
-                                        @php
-                                            $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
-                                            $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
-                                        @endphp
-                                        <option value="{{ $periodValue }}" {{ $currentYear . '-' . $currentMonth == $periodValue ? 'selected' : '' }}>
-                                            {{ $periodLabel }}
-                                        </option>
-                                    @endfor
-                                @endfor
-                            </select>
+                            <label for="start_date">Dari Tanggal:</label>
+                            <input type="date" id="start_date" class="form-control form-control-sm" max="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date">Sampai Tanggal:</label>
+                            <input type="date" id="end_date" class="form-control form-control-sm" max="{{ date('Y-m-d') }}">
                         </div>
                         <div class="col-md-3">
                             <label for="status_filter">Status:</label>
@@ -52,7 +39,7 @@
                             <label>&nbsp;</label>
                             <div>
                                 <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-filter mr-1"></i> Terapkan Filter
+                                    <i class="fas fa-filter mr-1"></i> Filter
                                 </button>
                                 <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-undo mr-1"></i> Reset
@@ -127,7 +114,8 @@ $(function () {
             url: '{{ route("attendance.data") }}',
             type: 'GET',
             data: function(d) {
-                d.date_filter = $('#date_filter').val();
+                d.start_date = $('#start_date').val();
+                d.end_date = $('#end_date').val();
                 d.status_filter = $('#status_filter').val();
             }
         },
@@ -187,16 +175,142 @@ $(function () {
         order: [[3, 'desc']] // Order by date descending
     });
 
+    // Initialize filter info
+    updateFilterInfo();
+
     // Apply filter
     $('#apply_filter').on('click', function() {
-        table.ajax.reload();
+        var $btn = $(this);
+        var originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Memproses...');
+        $btn.prop('disabled', true);
+        
+        table.ajax.reload(function() {
+            // Restore button state
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+            updateFilterInfo();
+        });
     });
 
     // Reset filter
     $('#reset_filter').on('click', function() {
-        $('#date_filter').val('');
+        var $btn = $(this);
+        var originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Reset...');
+        $btn.prop('disabled', true);
+        
+        // Clear all filters
+        $('#start_date').val('');
+        $('#end_date').val('');
         $('#status_filter').val('');
-        table.ajax.reload();
+        
+        table.ajax.reload(function() {
+            // Restore button state
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+            updateFilterInfo();
+        });
+    });
+
+    // Date validation and auto-filter with debounce
+    var filterTimeout;
+    
+    function applyFilterWithDelay() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(function() {
+            table.ajax.reload();
+            updateFilterInfo();
+        }, 500); // 500ms delay
+    }
+    
+    function updateFilterInfo() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        var status = $('#status_filter').val();
+        var info = 'Menampilkan ';
+        
+        if (startDate && endDate) {
+            info += 'data dari ' + formatDate(startDate) + ' sampai ' + formatDate(endDate);
+        } else if (startDate) {
+            info += 'data dari ' + formatDate(startDate);
+        } else if (endDate) {
+            info += 'data sampai ' + formatDate(endDate);
+        } else {
+            info += 'semua data';
+        }
+        
+        if (status) {
+            var statusText = $('#status_filter option:selected').text();
+            info += ' dengan status ' + statusText;
+        }
+        
+        info += ' absensi';
+        $('#filter-info').text(info);
+    }
+    
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+    }
+    
+    $('#end_date').on('change', function() {
+        var startDate = $('#start_date').val();
+        var endDate = $(this).val();
+        
+        if (startDate && endDate && startDate > endDate) {
+            SwalHelper.warning('Peringatan!', 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.');
+            $(this).val('');
+            return;
+        }
+        
+        // Validate future date
+        if (endDate && endDate > '{{ date("Y-m-d") }}') {
+            SwalHelper.warning('Peringatan!', 'Tanggal tidak boleh lebih dari hari ini.');
+            $(this).val('');
+            return;
+        }
+        
+        // Auto apply filter if both dates are selected
+        if (startDate && endDate) {
+            applyFilterWithDelay();
+        }
+    });
+
+    $('#start_date').on('change', function() {
+        var startDate = $(this).val();
+        var endDate = $('#end_date').val();
+        
+        if (startDate && endDate && startDate > endDate) {
+            SwalHelper.warning('Peringatan!', 'Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
+            $('#end_date').val('');
+            return;
+        }
+        
+        // Validate future date
+        if (startDate && startDate > '{{ date("Y-m-d") }}') {
+            SwalHelper.warning('Peringatan!', 'Tanggal tidak boleh lebih dari hari ini.');
+            $(this).val('');
+            return;
+        }
+        
+        // Auto apply filter if both dates are selected
+        if (startDate && endDate) {
+            applyFilterWithDelay();
+        }
+    });
+
+    // Auto apply filter when status changes
+    $('#status_filter').on('change', function() {
+        applyFilterWithDelay();
     });
 
     // Handle delete button click
