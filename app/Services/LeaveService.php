@@ -37,7 +37,7 @@ class LeaveService
     /**
      * Get pending leaves for approval
      */
-    public function getPendingLeavesForApproval()
+    public function getPendingLeavesForApproval($startDate = null, $endDate = null)
     {
         $user = auth()->user();
         
@@ -45,19 +45,19 @@ class LeaveService
             throw new Exception('You do not have permission to approve leave requests.');
         }
 
-        return $this->leaveRepository->getPendingLeavesForCompany($user->company_id);
+        return $this->leaveRepository->getPendingLeavesForCompany($user->company_id, $startDate, $endDate);
     }
 
     /**
      * Get leaves for DataTables
      */
-    public function getLeavesForDataTables()
+    public function getLeavesForDataTables($startDate = null, $endDate = null, $statusFilter = null)
     {
         $user = auth()->user();
         
         // If user is admin/HR/manager, show all leaves for their company
         if (in_array($user->role, ['admin', 'hr', 'manager'])) {
-            return $this->leaveRepository->getLeavesForCompanyDataTables($user->company_id);
+            return $this->leaveRepository->getLeavesForCompanyDataTables($user->company_id, $startDate, $endDate, $statusFilter);
         }
         
         // If user is employee, show only their own leaves
@@ -67,7 +67,7 @@ class LeaveService
             throw new Exception('Employee not found for this user.');
         }
 
-        return $this->leaveRepository->getLeavesForEmployeeDataTables($employee->id);
+        return $this->leaveRepository->getLeavesForEmployeeDataTables($employee->id, $startDate, $endDate, $statusFilter);
     }
 
     /**

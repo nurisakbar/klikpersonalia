@@ -12,6 +12,29 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body">
+                <!-- Filter Section -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="start_date">Dari Tanggal:</label>
+                        <input type="date" id="start_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date">Sampai Tanggal:</label>
+                        <input type="date" id="end_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
+                                <i class="fas fa-filter mr-1"></i> Filter
+                            </button>
+                            <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-undo mr-1"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <table class="table table-bordered table-striped" id="leave-approval-table" style="width: 100%;">
                     <thead>
                                                             <tr>
@@ -96,6 +119,10 @@ $(function () {
         ajax: {
             url: '{{ route("leaves.approval.data") }}',
             type: 'GET',
+            data: function(d) {
+                d.start_date = $('#start_date').val();
+                d.end_date = $('#end_date').val();
+            },
             error: function(xhr, error, thrown) {
                 console.log('DataTable error:', error);
             }
@@ -334,6 +361,118 @@ $(function () {
                 });
             }
         });
+    });
+
+    // Initialize filter info
+    updateFilterInfo();
+
+    // Apply filter
+    $('#apply_filter').on('click', function() {
+        var $btn = $(this);
+        var originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Memproses...');
+        $btn.prop('disabled', true);
+        
+        table.ajax.reload(function() {
+            // Restore button state
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+            updateFilterInfo();
+        });
+    });
+
+    // Reset filter
+    $('#reset_filter').on('click', function() {
+        var $btn = $(this);
+        var originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Reset...');
+        $btn.prop('disabled', true);
+        
+        // Clear all filters
+        $('#start_date').val('');
+        $('#end_date').val('');
+        
+        table.ajax.reload(function() {
+            // Restore button state
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+            updateFilterInfo();
+        });
+    });
+
+    // Date validation and auto-filter with debounce
+    var filterTimeout;
+    
+    function applyFilterWithDelay() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(function() {
+            table.ajax.reload();
+            updateFilterInfo();
+        }, 500); // 500ms delay
+    }
+    
+    function updateFilterInfo() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        var info = 'Menampilkan ';
+        
+        if (startDate && endDate) {
+            info += 'permintaan cuti dari ' + formatDate(startDate) + ' sampai ' + formatDate(endDate);
+        } else if (startDate) {
+            info += 'permintaan cuti dari ' + formatDate(startDate);
+        } else if (endDate) {
+            info += 'permintaan cuti sampai ' + formatDate(endDate);
+        } else {
+            info += 'semua permintaan cuti';
+        }
+        
+        info += ' yang menunggu persetujuan';
+        $('#filter-info').text(info);
+    }
+    
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+    }
+    
+    $('#end_date').on('change', function() {
+        var startDate = $('#start_date').val();
+        var endDate = $(this).val();
+        
+        if (startDate && endDate && startDate > endDate) {
+            SwalHelper.warning('Peringatan!', 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.');
+            $(this).val('');
+            return;
+        }
+        
+        // Auto apply filter if both dates are selected
+        if (startDate && endDate) {
+            applyFilterWithDelay();
+        }
+    });
+
+    $('#start_date').on('change', function() {
+        var startDate = $(this).val();
+        var endDate = $('#end_date').val();
+        
+        if (startDate && endDate && startDate > endDate) {
+            SwalHelper.warning('Peringatan!', 'Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
+            $('#end_date').val('');
+            return;
+        }
+        
+        // Auto apply filter if both dates are selected
+        if (startDate && endDate) {
+            applyFilterWithDelay();
+        }
     });
 });
 </script>

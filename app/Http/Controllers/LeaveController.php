@@ -41,7 +41,11 @@ class LeaveController extends Controller
      */
     public function data(): JsonResponse
     {
-        $leaves = $this->leaveService->getLeavesForDataTables();
+        $startDate = request('start_date');
+        $endDate = request('end_date');
+        $statusFilter = request('status_filter');
+        
+        $leaves = $this->leaveService->getLeavesForDataTables($startDate, $endDate, $statusFilter);
         $user = Auth::user();
         $isAdmin = in_array($user->role, ['admin', 'hr', 'manager']);
 
@@ -543,8 +547,11 @@ class LeaveController extends Controller
                 return response()->json(['error' => 'You do not have permission to approve leave requests.'], 403);
             }
 
+            $startDate = request('start_date');
+            $endDate = request('end_date');
+
             // Get pending leaves using service
-            $leaves = $this->leaveService->getPendingLeavesForApproval();
+            $leaves = $this->leaveService->getPendingLeavesForApproval($startDate, $endDate);
             
             return DataTables::of($leaves)
                 ->addColumn('employee_info', function ($leave) {

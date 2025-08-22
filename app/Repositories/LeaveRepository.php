@@ -32,23 +32,51 @@ class LeaveRepository
     /**
      * Get leaves for DataTables
      */
-    public function getLeavesForEmployeeDataTables(string $employeeId)
+    public function getLeavesForEmployeeDataTables(string $employeeId, $startDate = null, $endDate = null, $statusFilter = null)
     {
-        return $this->model
+        $query = $this->model
             ->where('employee_id', $employeeId)
-            ->with(['employee', 'approver'])
-            ->orderBy('created_at', 'desc');
+            ->with(['employee', 'approver']);
+
+        // Apply date filters
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
+
+        // Apply status filter
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**
      * Get all leaves for company DataTables (for admin/HR/manager)
      */
-    public function getLeavesForCompanyDataTables(string $companyId)
+    public function getLeavesForCompanyDataTables(string $companyId, $startDate = null, $endDate = null, $statusFilter = null)
     {
-        return $this->model
+        $query = $this->model
             ->where('company_id', $companyId)
-            ->with(['employee', 'approver'])
-            ->orderBy('created_at', 'desc');
+            ->with(['employee', 'approver']);
+
+        // Apply date filters
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
+
+        // Apply status filter
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**
@@ -174,13 +202,22 @@ class LeaveRepository
     /**
      * Get pending leaves for company approval
      */
-    public function getPendingLeavesForCompany(string $companyId)
+    public function getPendingLeavesForCompany(string $companyId, $startDate = null, $endDate = null)
     {
-        return $this->model
+        $query = $this->model
             ->with('employee')
             ->where('company_id', $companyId)
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc');
+            ->where('status', 'pending');
+
+        // Apply date filters
+        if ($startDate) {
+            $query->where('start_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('end_date', '<=', $endDate);
+        }
+
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**
