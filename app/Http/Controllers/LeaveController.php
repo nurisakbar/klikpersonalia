@@ -125,57 +125,36 @@ class LeaveController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'leave_type' => 'required|in:annual,sick,maternity,paternity,other',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'required|string|max:500',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+        try {
+            $request->validate([
+                'leave_type' => 'required|in:annual,sick,maternity,paternity,other',
+                'start_date' => 'required|date|after_or_equal:today',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'reason' => 'required|string|max:500',
+                'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            ]);
 
-        $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
-            return redirect()->back()->with('error', 'Employee not found for this user.');
-        }
+            $leave = $this->leaveService->createLeave($request->all());
 
-        // Calculate total days
-        $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
-        $totalDays = $this->calculateWorkingDays($startDate, $endDate);
-
-        // Check leave balance for annual leave
-        if ($request->leave_type === 'annual') {
-            $leaveBalance = $this->getLeaveBalance($employee->id);
-            if ($totalDays > $leaveBalance['annual_remaining']) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['end_date' => 'Insufficient annual leave balance. You have ' . $leaveBalance['annual_remaining'] . ' days remaining.']);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Permintaan cuti berhasil diajukan! Akan direview oleh manager Anda.',
+                    'data' => $leave
+                ]);
             }
+
+            return redirect()->route('leaves.index')
+                ->with('success', 'Permintaan cuti berhasil diajukan! Akan direview oleh manager Anda.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
-
-        // Handle file upload
-        $attachmentPath = null;
-        if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('leave-attachments', 'public');
-        }
-
-        // Create leave request
-        $leave = Leave::create([
-            'employee_id' => $employee->id,
-            'company_id' => $employee->company_id,
-            'leave_type' => $request->leave_type,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'total_days' => $totalDays,
-            'reason' => $request->reason,
-            'attachment' => $attachmentPath,
-            'status' => 'pending',
-        ]);
-
-        return redirect()->route('leaves.index')
-            ->with('success', 'Leave request submitted successfully! It will be reviewed by your manager.');
     }
 
     /**
@@ -267,64 +246,36 @@ class LeaveController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'leave_type' => 'required|in:annual,sick,maternity,paternity,other',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'required|string|max:500',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+        try {
+            $request->validate([
+                'leave_type' => 'required|in:annual,sick,maternity,paternity,other',
+                'start_date' => 'required|date|after_or_equal:today',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'reason' => 'required|string|max:500',
+                'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            ]);
 
-        $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
-            return redirect()->back()->with('error', 'Employee not found for this user.');
-        }
+            $updated = $this->leaveService->updateLeave($id, $request->all());
 
-        $leave = Leave::where('id', $id)
-            ->where('employee_id', $employee->id)
-            ->where('status', 'pending')
-            ->firstOrFail();
-
-        // Calculate total days
-        $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
-        $totalDays = $this->calculateWorkingDays($startDate, $endDate);
-
-        // Check leave balance for annual leave
-        if ($request->leave_type === 'annual') {
-            $leaveBalance = $this->getLeaveBalance($employee->id);
-            $currentLeaveDays = $leave->leave_type === 'annual' ? $leave->total_days : 0;
-            if (($totalDays - $currentLeaveDays) > $leaveBalance['annual_remaining']) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['end_date' => 'Insufficient annual leave balance. You have ' . $leaveBalance['annual_remaining'] . ' days remaining.']);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Permintaan cuti berhasil diperbarui!',
+                    'data' => $updated
+                ]);
             }
-        }
 
-        // Handle file upload
-        $attachmentPath = $leave->attachment;
-        if ($request->hasFile('attachment')) {
-            // Delete old file if exists
-            if ($attachmentPath) {
-                \Storage::disk('public')->delete($attachmentPath);
+            return redirect()->route('leaves.index')
+                ->with('success', 'Permintaan cuti berhasil diperbarui!');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
             }
-            $attachmentPath = $request->file('attachment')->store('leave-attachments', 'public');
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
-
-        // Update leave request
-        $leave->update([
-            'leave_type' => $request->leave_type,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'total_days' => $totalDays,
-            'reason' => $request->reason,
-            'attachment' => $attachmentPath,
-        ]);
-
-        return redirect()->route('leaves.index')
-            ->with('success', 'Leave request updated successfully!');
     }
 
     /**

@@ -190,14 +190,22 @@ class LeaveRepository
     {
         $query = $this->model
             ->where('employee_id', $employeeId)
-            ->where('status', '!=', 'cancelled')
+            ->whereIn('status', ['pending', 'approved']) // Only check pending and approved leaves
             ->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('start_date', [$startDate, $endDate])
-                  ->orWhereBetween('end_date', [$startDate, $endDate])
-                  ->orWhere(function ($q2) use ($startDate, $endDate) {
-                      $q2->where('start_date', '<=', $startDate)
-                         ->where('end_date', '>=', $endDate);
-                  });
+                // Check if the new date range overlaps with existing leaves
+                $q->where(function ($q2) use ($startDate, $endDate) {
+                    // Case 1: New start date falls within existing leave period
+                    $q2->where('start_date', '<=', $startDate)
+                       ->where('end_date', '>=', $startDate);
+                })->orWhere(function ($q2) use ($startDate, $endDate) {
+                    // Case 2: New end date falls within existing leave period
+                    $q2->where('start_date', '<=', $endDate)
+                       ->where('end_date', '>=', $endDate);
+                })->orWhere(function ($q2) use ($startDate, $endDate) {
+                    // Case 3: New date range completely contains existing leave period
+                    $q2->where('start_date', '>=', $startDate)
+                       ->where('end_date', '<=', $endDate);
+                });
             });
 
         if ($excludeId) {
