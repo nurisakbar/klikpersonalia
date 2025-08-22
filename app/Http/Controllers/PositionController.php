@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\PositionDataTable;
 use App\Services\PositionService;
 use App\Http\Requests\PositionRequest;
 use App\Http\Resources\PositionResource;
@@ -15,9 +16,9 @@ class PositionController extends Controller
         private PositionService $positionService
     ) {}
 
-    public function index()
+    public function index(PositionDataTable $dataTable)
     {
-        return view('positions.index');
+        return $dataTable->render('positions.index');
     }
 
     public function data()

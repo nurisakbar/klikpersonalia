@@ -205,18 +205,6 @@ class EmployeeRepository
             $result[$department->name] = $department->name;
         }
         
-        // Fallback to default departments if no data in database
-        if (empty($result)) {
-            $result = [
-                'IT' => 'Information Technology',
-                'HR' => 'Human Resources',
-                'Finance' => 'Finance',
-                'Marketing' => 'Marketing',
-                'Sales' => 'Sales',
-                'Operations' => 'Operations'
-            ];
-        }
-        
         return $result;
     }
 
@@ -233,18 +221,6 @@ class EmployeeRepository
         $result = [];
         foreach ($positions as $position) {
             $result[$position->name] = $position->name;
-        }
-        
-        // Fallback to default positions if no data in database
-        if (empty($result)) {
-            $result = [
-                'Staff' => 'Staff',
-                'Senior Staff' => 'Senior Staff',
-                'Supervisor' => 'Supervisor',
-                'Manager' => 'Manager',
-                'Senior Manager' => 'Senior Manager',
-                'Director' => 'Director'
-            ];
         }
         
         return $result;
