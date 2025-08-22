@@ -41,6 +41,17 @@ class LeaveRepository
     }
 
     /**
+     * Get all leaves for company DataTables (for admin/HR/manager)
+     */
+    public function getLeavesForCompanyDataTables(string $companyId)
+    {
+        return $this->model
+            ->where('company_id', $companyId)
+            ->with(['employee', 'approver'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get pending leaves for approval
      */
     public function getPendingLeaves(string $companyId, int $perPage = 10): LengthAwarePaginator
@@ -158,6 +169,18 @@ class LeaveRepository
             'other_used' => $usedOther,
             'other_remaining' => max(0, $otherQuota - $usedOther),
         ];
+    }
+
+    /**
+     * Get pending leaves for company approval
+     */
+    public function getPendingLeavesForCompany(string $companyId)
+    {
+        return $this->model
+            ->with('employee')
+            ->where('company_id', $companyId)
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc');
     }
 
     /**

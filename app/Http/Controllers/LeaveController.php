@@ -42,9 +42,11 @@ class LeaveController extends Controller
     public function data(): JsonResponse
     {
         $leaves = $this->leaveService->getLeavesForDataTables();
+        $user = Auth::user();
+        $isAdmin = in_array($user->role, ['admin', 'hr', 'manager']);
 
         return DataTables::of($leaves)
-            ->addColumn('action', function ($leave) {
+            ->addColumn('action', function ($leave) use ($isAdmin) {
                 $buttons = '<div class="btn-group" role="group">';
                 $buttons .= '<button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $leave->id . '" title="Detail"><i class="fas fa-eye"></i></button>';
                 
@@ -56,17 +58,17 @@ class LeaveController extends Controller
                 $buttons .= '</div>';
                 return $buttons;
             })
+            ->addColumn('employee_name', function ($leave) {
+                return $leave->employee->name . ' (' . $leave->employee->employee_id . ')';
+            })
             ->addColumn('type_badge', function ($leave) {
                 return $leave->type_badge;
             })
             ->addColumn('status_badge', function ($leave) {
                 return $leave->status_badge;
             })
-            ->addColumn('start_date', function ($leave) {
-                return $leave->formatted_start_date;
-            })
-            ->addColumn('end_date', function ($leave) {
-                return $leave->formatted_end_date;
+            ->addColumn('date_range', function ($leave) {
+                return $leave->formatted_start_date . ' - ' . $leave->formatted_end_date;
             })
             ->addColumn('total_days_formatted', function ($leave) {
                 return $leave->total_days . ' hari';
@@ -163,22 +165,32 @@ class LeaveController extends Controller
     public function show(string $id)
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
         
-        if (!$employee) {
-            if (request()->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Employee not found for this user.'
-                ], 404);
+        // If user is admin/HR/manager, they can view any leave in their company
+        if (in_array($user->role, ['admin', 'hr', 'manager'])) {
+            $leave = Leave::with(['employee', 'approver'])
+                ->where('id', $id)
+                ->where('company_id', $user->company_id)
+                ->first();
+        } else {
+            // If user is employee, they can only view their own leaves
+            $employee = Employee::where('user_id', $user->id)->first();
+            
+            if (!$employee) {
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Employee not found for this user.'
+                    ], 404);
+                }
+                return redirect()->back()->with('error', 'Employee not found for this user.');
             }
-            return redirect()->back()->with('error', 'Employee not found for this user.');
-        }
 
-        $leave = Leave::with(['employee', 'approver'])
-            ->where('id', $id)
-            ->where('employee_id', $employee->id)
-            ->first();
+            $leave = Leave::with(['employee', 'approver'])
+                ->where('id', $id)
+                ->where('employee_id', $employee->id)
+                ->first();
+        }
 
         if (!$leave) {
             if (request()->expectsJson()) {
@@ -195,6 +207,7 @@ class LeaveController extends Controller
                 'success' => true,
                 'data' => [
                     'id' => $leave->id,
+                    'employee_name' => $leave->employee->name . ' (' . $leave->employee->employee_id . ')',
                     'leave_type' => $leave->leave_type,
                     'type_badge' => $leave->type_badge,
                     'start_date' => $leave->start_date,
@@ -340,7 +353,7 @@ class LeaveController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Leave request approved successfully!'
+                'message' => 'Permintaan cuti berhasil disetujui!'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -360,7 +373,7 @@ class LeaveController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Leave request rejected successfully!'
+                'message' => 'Permintaan cuti berhasil ditolak!'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -523,128 +536,65 @@ class LeaveController extends Controller
             $user = Auth::user();
             
             if (!$user) {
-                \Log::error('User not authenticated in approvalData');
                 return response()->json(['error' => 'User not authenticated'], 401);
             }
             
-            $company = $user->company;
-            
-            if (!$company) {
-                \Log::error('Company not found for user: ' . $user->id);
-                return response()->json(['error' => 'Company not found'], 404);
+            if (!in_array($user->role, ['admin', 'hr', 'manager'])) {
+                return response()->json(['error' => 'You do not have permission to approve leave requests.'], 403);
             }
 
-            // Debug: Log the query
-            \Log::info('Leave approval data request for company: ' . $company->id);
-
-            $leaves = Leave::with('employee')
-                ->where('company_id', $company->id)
-                ->where('status', 'pending');
-
-            // Debug: Log the count
-            $count = $leaves->count();
-            \Log::info('Found ' . $count . ' pending leaves for company: ' . $company->id);
-
-            // If no data found, return empty DataTable response
-            if ($count === 0) {
-                \Log::info('No pending leaves found, returning empty response');
-                return DataTables::of(collect([]))
-                    ->addColumn('employee_info', function ($leave) {
-                        return 'No data';
-                    })
-                    ->addColumn('leave_type_badge', function ($leave) {
-                        return 'No data';
-                    })
-                    ->addColumn('start_date_formatted', function ($leave) {
-                        return 'No data';
-                    })
-                    ->addColumn('end_date_formatted', function ($leave) {
-                        return 'No data';
-                    })
-                    ->addColumn('created_at_formatted', function ($leave) {
-                        return 'No data';
-                    })
-                    ->addColumn('action', function ($leave) {
-                        return 'No data';
-                    })
-                    ->rawColumns(['leave_type_badge', 'action'])
-                    ->make(true);
-            }
-
-            // Get the actual data
-            $leavesData = $leaves->get();
-            \Log::info('Retrieved ' . $leavesData->count() . ' leaves from database');
-
-            // Transform data for client-side processing
-            $transformedData = $leavesData->map(function ($leave) {
-                try {
-                    $badges = [
-                        'annual' => '<span class="badge badge-primary">Cuti Tahunan</span>',
-                        'sick' => '<span class="badge badge-danger">Cuti Sakit</span>',
-                        'maternity' => '<span class="badge badge-success">Cuti Melahirkan</span>',
-                        'paternity' => '<span class="badge badge-secondary">Cuti Melahirkan (Suami)</span>',
-                        'other' => '<span class="badge badge-warning">Cuti Lainnya</span>'
-                    ];
-
-                    return [
-                        'employee_info' => $leave->employee->name . ' (' . $leave->employee->employee_id . ')',
-                        'leave_type_badge' => $badges[$leave->leave_type] ?? '<span class="badge badge-secondary">Unknown</span>',
-                        'start_date_formatted' => date('d/m/Y', strtotime($leave->start_date)),
-                        'end_date_formatted' => date('d/m/Y', strtotime($leave->end_date)),
-                        'total_days' => $leave->total_days,
-                        'reason' => $leave->reason,
-                        'created_at_formatted' => date('d/m/Y H:i', strtotime($leave->created_at)),
-                        'action' => '
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-success approve-btn" 
-                                        data-id="' . $leave->id . '" 
-                                        data-employee="' . htmlspecialchars($leave->employee->name) . '"
-                                        data-type="' . $leave->leave_type . '"
-                                        data-days="' . $leave->total_days . '"
-                                        title="Approve">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger reject-btn" 
-                                        data-id="' . $leave->id . '" 
-                                        data-employee="' . htmlspecialchars($leave->employee->name) . '"
-                                        data-type="' . $leave->leave_type . '"
-                                        data-days="' . $leave->total_days . '"
-                                        title="Reject">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                <a href="' . route('leaves.show', $leave->id) . '" class="btn btn-sm btn-info" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </div>
-                        '
-                    ];
-                } catch (\Exception $e) {
-                    \Log::error('Error transforming leave data for ID ' . $leave->id . ': ' . $e->getMessage());
-                    return [
-                        'employee_info' => 'Error loading employee',
-                        'leave_type_badge' => '<span class="badge badge-secondary">Error</span>',
-                        'start_date_formatted' => 'Error',
-                        'end_date_formatted' => 'Error',
-                        'total_days' => 0,
-                        'reason' => 'Error loading data',
-                        'created_at_formatted' => 'Error',
-                        'action' => 'Error generating actions'
-                    ];
-                }
-            });
-
-            \Log::info('Data transformed successfully, returning ' . $transformedData->count() . ' records');
+            // Get pending leaves using service
+            $leaves = $this->leaveService->getPendingLeavesForApproval();
             
-            return response()->json([
-                'data' => $transformedData
-            ]);
+            return DataTables::of($leaves)
+                ->addColumn('employee_info', function ($leave) {
+                    return $leave->employee->name . ' (' . $leave->employee->employee_id . ')';
+                })
+                ->addColumn('leave_type_badge', function ($leave) {
+                    return $leave->type_badge;
+                })
+                ->addColumn('date_range', function ($leave) {
+                    return $leave->formatted_start_date . ' - ' . $leave->formatted_end_date;
+                })
+                ->addColumn('total_days', function ($leave) {
+                    return $leave->total_days . ' hari';
+                })
+                ->addColumn('created_at_formatted', function ($leave) {
+                    return $leave->created_at->format('d/m/Y H:i');
+                })
+                ->addColumn('action', function ($leave) {
+                    return '
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-success approve-btn" 
+                                    data-id="' . $leave->id . '" 
+                                    data-employee="' . htmlspecialchars($leave->employee->name) . '"
+                                    data-type="' . $leave->leave_type . '"
+                                    data-days="' . $leave->total_days . '"
+                                    title="Setujui">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger reject-btn" 
+                                    data-id="' . $leave->id . '" 
+                                    data-employee="' . htmlspecialchars($leave->employee->name) . '"
+                                    data-type="' . $leave->leave_type . '"
+                                    data-days="' . $leave->total_days . '"
+                                    title="Tolak">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-info view-btn" 
+                                    data-id="' . $leave->id . '"
+                                    title="Detail">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['leave_type_badge', 'action'])
+                ->make(true);
+
         } catch (\Exception $e) {
             \Log::error('Error in approvalData: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
-            return response()->json([
-                'error' => 'Internal server error: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Internal server error'], 500);
         }
     }
 

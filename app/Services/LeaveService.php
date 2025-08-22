@@ -35,11 +35,32 @@ class LeaveService
     }
 
     /**
+     * Get pending leaves for approval
+     */
+    public function getPendingLeavesForApproval()
+    {
+        $user = auth()->user();
+        
+        if (!in_array($user->role, ['admin', 'hr', 'manager'])) {
+            throw new Exception('You do not have permission to approve leave requests.');
+        }
+
+        return $this->leaveRepository->getPendingLeavesForCompany($user->company_id);
+    }
+
+    /**
      * Get leaves for DataTables
      */
     public function getLeavesForDataTables()
     {
         $user = auth()->user();
+        
+        // If user is admin/HR/manager, show all leaves for their company
+        if (in_array($user->role, ['admin', 'hr', 'manager'])) {
+            return $this->leaveRepository->getLeavesForCompanyDataTables($user->company_id);
+        }
+        
+        // If user is employee, show only their own leaves
         $employee = Employee::where('user_id', $user->id)->first();
         
         if (!$employee) {

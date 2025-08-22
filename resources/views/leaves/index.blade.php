@@ -16,9 +16,11 @@
                     <thead>
                         <tr>
                             <th>No</th>
+                            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+                                <th>Karyawan</th>
+                            @endif
                             <th>Jenis Cuti</th>
-                            <th>Tanggal Mulai</th>
-                            <th>Tanggal Selesai</th>
+                            <th>Periode Cuti</th>
                             <th>Total Hari</th>
                             <th>Status</th>
                             <th>Dibuat</th>
@@ -105,9 +107,11 @@ $(function () {
              render: function (data, type, row, meta) {
                  return meta.row + meta.settings._iDisplayStart + 1;
              }},
+            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+            {data: 'employee_name', name: 'employee.name', width: '150px'},
+            @endif
             {data: 'type_badge', name: 'leave_type', width: '120px'},
-            {data: 'start_date', name: 'start_date', width: '120px'},
-            {data: 'end_date', name: 'end_date', width: '120px'},
+            {data: 'date_range', name: 'start_date', width: '180px'},
             {data: 'total_days_formatted', name: 'total_days', width: '100px'},
             {data: 'status_badge', name: 'status', width: '100px'},
             {data: 'created_at_formatted', name: 'created_at', width: '130px'},
@@ -125,12 +129,25 @@ $(function () {
                     window.location.href = '{{ route("leaves.create") }}';
                 }
             },
+            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+            {
+                text: '<i class="fas fa-check"></i> Persetujuan Cuti',
+                className: 'btn btn-warning btn-sm mr-2',
+                action: function () {
+                    window.location.href = '{{ route("leaves.approval") }}';
+                }
+            },
+            @endif
             {
                 extend: 'excel',
                 text: '<i class="fas fa-file-excel"></i> Excel',
                 className: 'btn btn-success btn-sm',
                 exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6]
+                    columns: @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+                        [1, 2, 3, 4, 5, 6]
+                    @else
+                        [1, 2, 3, 4, 5]
+                    @endif
                 }
             },
             {
@@ -138,7 +155,11 @@ $(function () {
                 text: '<i class="fas fa-file-pdf"></i> PDF',
                 className: 'btn btn-danger btn-sm',
                 exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6]
+                    columns: @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+                        [1, 2, 3, 4, 5, 6]
+                    @else
+                        [1, 2, 3, 4, 5]
+                    @endif
                 }
             },
             {
@@ -146,7 +167,11 @@ $(function () {
                 text: '<i class="fas fa-print"></i> Print',
                 className: 'btn btn-info btn-sm',
                 exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6]
+                    columns: @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+                        [1, 2, 3, 4, 5, 6]
+                    @else
+                        [1, 2, 3, 4, 5]
+                    @endif
                 }
             }
         ],
@@ -154,7 +179,11 @@ $(function () {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
         },
         responsive: true,
-        order: [[6, 'desc']]
+        order: @if(auth()->user()->role === 'admin' || auth()->user()->role === 'hr' || auth()->user()->role === 'manager')
+            [[6, 'desc']]
+        @else
+            [[5, 'desc']]
+        @endif
     });
 
     // Handle view button click
