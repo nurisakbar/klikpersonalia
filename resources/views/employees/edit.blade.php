@@ -65,10 +65,20 @@
                                 <label for="department">Departemen <span class="text-danger">*</span></label>
                                 <select class="form-control @error('department') is-invalid @enderror" id="department" name="department" required>
                                     <option value="">Pilih Departemen</option>
-                                    @foreach($departments as $key => $department)
-                                        <option value="{{ $key }}" {{ old('department', $employee->department) == $key ? 'selected' : '' }}>{{ $department }}</option>
-                                    @endforeach
+                                    @if(count($departments) > 0)
+                                        @foreach($departments as $key => $department)
+                                            <option value="{{ $key }}" {{ old('department', $employee->department) == $key ? 'selected' : '' }}>{{ $department }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>Belum ada departemen yang ditambahkan</option>
+                                    @endif
                                 </select>
+                                @if(count($departments) == 0)
+                                    <small class="form-text text-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> 
+                                        Departemen belum ditambahkan. Silakan tambahkan departemen terlebih dahulu di menu Master Data > Departemen.
+                                    </small>
+                                @endif
                                 @error('department')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -79,10 +89,20 @@
                                 <label for="position">Jabatan <span class="text-danger">*</span></label>
                                 <select class="form-control @error('position') is-invalid @enderror" id="position" name="position" required>
                                     <option value="">Pilih Jabatan</option>
-                                    @foreach($positions as $key => $position)
-                                        <option value="{{ $key }}" {{ old('position', $employee->position) == $key ? 'selected' : '' }}>{{ $position }}</option>
-                                    @endforeach
+                                    @if(count($positions) > 0)
+                                        @foreach($positions as $key => $position)
+                                            <option value="{{ $key }}" {{ old('position', $employee->position) == $key ? 'selected' : '' }}>{{ $position }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>Belum ada jabatan yang ditambahkan</option>
+                                    @endif
                                 </select>
+                                @if(count($positions) == 0)
+                                    <small class="form-text text-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> 
+                                        Jabatan belum ditambahkan. Silakan tambahkan jabatan terlebih dahulu di menu Master Data > Jabatan.
+                                    </small>
+                                @endif
                                 @error('position')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\DepartmentDataTable;
 use App\Services\DepartmentService;
 use App\Http\Requests\DepartmentRequest;
 use App\Http\Resources\DepartmentResource;
@@ -15,9 +16,9 @@ class DepartmentController extends Controller
         private DepartmentService $departmentService
     ) {}
 
-    public function index()
+    public function index(DepartmentDataTable $dataTable)
     {
-        return view('departments.index');
+        return $dataTable->render('departments.index');
     }
 
     public function data()
