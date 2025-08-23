@@ -12,13 +12,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
-    <!-- overlayScrollbars -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/css/OverlayScrollbars.min.css">
+    <!-- overlayScrollbars - Commented out due to CDN issues -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/css/OverlayScrollbars.min.css"> -->
     <!-- Global SweetAlert Component -->
     @include('components.sweet-alert')
+    <!-- DataTables Language Component -->
+    @include('components.datatables-language')
     <!-- Select2 (for AJAX employee select) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+    <!-- Select2 Bootstrap theme - Using alternative CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
     
     @stack('css')
     <style>
@@ -163,8 +166,8 @@
                         </li>
 
                         <!-- Master Data Management -->
-                        <li class="nav-item {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'active' : '' }}">
+                        <li class="nav-item {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') || request()->routeIs('salary-components.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('departments.*') || request()->routeIs('positions.*') || request()->routeIs('salary-components.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>
                                     Master Data
@@ -184,6 +187,19 @@
                                         <p>Kelola Jabatan</p>
                                     </a>
                                 </li>
+                                                <li class="nav-item">
+                    <a href="{{ route('salary-components.index') }}" class="nav-link {{ request()->routeIs('salary-components.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Komponen Gaji</p>
+                    </a>
+                </li>
+                                                <li class="nav-item">
+                    <a href="{{ route('employee-salary-component-management.index') }}" class="nav-link {{ request()->routeIs('employee-salary-component-management.*') ? 'active' : '' }}">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Pengelolaan Komponen Gaji</p>
+                    </a>
+                </li>
+
                             </ul>
                         </li>
 
@@ -484,12 +500,24 @@
 
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- jQuery Fallback -->
+    <script>
+        if (typeof $ === 'undefined') {
+            console.error('jQuery failed to load from CDN, trying alternative...');
+            document.write('<script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>');
+        }
+        if (typeof $ === 'undefined') {
+            console.error('jQuery still not available after fallback');
+        } else {
+            console.log('jQuery loaded successfully:', $.fn.jquery);
+        }
+    </script>
     <!-- jQuery UI 1.11.4 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
     <!-- Bootstrap 4 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
-    <!-- overlayScrollbars -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/js/OverlayScrollbars.min.js"></script>
+    <!-- overlayScrollbars - Commented out due to CDN issues -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/2.4.0/js/OverlayScrollbars.min.js"></script> -->
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
     <!-- Select2 -->
