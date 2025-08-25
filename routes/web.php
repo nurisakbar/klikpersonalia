@@ -124,11 +124,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/leaves/{id}', [LeaveController::class, 'apiDestroy'])->name('api.leaves.destroy');
 
     // Overtime Management
-    Route::resource('overtimes', OvertimeController::class);
-    Route::get('/overtimes/approval', [OvertimeController::class, 'approval'])->name('overtimes.approval');
-    Route::get('/overtimes/statistics', [OvertimeController::class, 'statistics'])->name('overtimes.statistics');
-    Route::post('/overtimes/{id}/approve', [OvertimeController::class, 'approve'])->name('overtimes.approve');
-    Route::post('/overtimes/{id}/reject', [OvertimeController::class, 'reject'])->name('overtimes.reject');
+    Route::get('/overtimes-data', [OvertimeController::class, 'data'])->name('overtimes.data');
+Route::get('/overtimes/approval-data', [OvertimeController::class, 'approvalData'])->name('overtimes.approval.data');
+Route::get('/overtimes/approval', [OvertimeController::class, 'approval'])->name('overtimes.approval');
+Route::get('/overtimes/statistics', [OvertimeController::class, 'statistics'])->name('overtimes.statistics');
+Route::post('/overtimes/{id}/approve', [OvertimeController::class, 'approve'])->name('overtimes.approve');
+Route::post('/overtimes/{id}/reject', [OvertimeController::class, 'reject'])->name('overtimes.reject');
+
+Route::resource('overtimes', OvertimeController::class);
 
     // Attendance Reports
     Route::get('/reports', [AttendanceReportController::class, 'index'])->name('reports.index');

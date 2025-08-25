@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Ajukan Permintaan Lembur - Aplikasi Payroll KlikMedis')
-@section('page-title', 'Ajukan Permintaan Lembur')
+@section('title', 'Perbarui Permintaan Lembur - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Perbarui Permintaan Lembur')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('overtimes.index') }}">Lembur</a></li>
-<li class="breadcrumb-item active">Ajukan Lembur</li>
+<li class="breadcrumb-item active">Perbarui Lembur</li>
 @endsection
 
 @section('content')
@@ -14,8 +14,9 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('overtimes.store') }}" method="POST" enctype="multipart/form-data" id="overtimeForm">
+                    <form action="{{ route('overtimes.update', $overtime->id) }}" method="POST" enctype="multipart/form-data" id="overtimeForm">
                         @csrf
+                        @method('PUT')
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -23,10 +24,10 @@
                                     <label for="overtime_type">Jenis Lembur <span class="text-danger">*</span></label>
                                     <select name="overtime_type" id="overtime_type" class="form-control @error('overtime_type') is-invalid @enderror" required>
                                         <option value="">Pilih Jenis Lembur</option>
-                                        <option value="regular" {{ old('overtime_type') == 'regular' ? 'selected' : '' }}>Lembur Regular</option>
-                                        <option value="holiday" {{ old('overtime_type') == 'holiday' ? 'selected' : '' }}>Lembur Hari Libur</option>
-                                        <option value="weekend" {{ old('overtime_type') == 'weekend' ? 'selected' : '' }}>Lembur Akhir Pekan</option>
-                                        <option value="emergency" {{ old('overtime_type') == 'emergency' ? 'selected' : '' }}>Lembur Darurat</option>
+                                        <option value="regular" {{ old('overtime_type', $overtime->overtime_type) == 'regular' ? 'selected' : '' }}>Lembur Regular</option>
+                                        <option value="holiday" {{ old('overtime_type', $overtime->overtime_type) == 'holiday' ? 'selected' : '' }}>Lembur Hari Libur</option>
+                                        <option value="weekend" {{ old('overtime_type', $overtime->overtime_type) == 'weekend' ? 'selected' : '' }}>Lembur Akhir Pekan</option>
+                                        <option value="emergency" {{ old('overtime_type', $overtime->overtime_type) == 'emergency' ? 'selected' : '' }}>Lembur Darurat</option>
                                     </select>
                                     @error('overtime_type')
                                         <span class="invalid-feedback">{{ $message }}</span>
@@ -38,6 +39,14 @@
                                     <label for="attachment">Lampiran (Opsional)</label>
                                     <input type="file" name="attachment" id="attachment" class="form-control @error('attachment') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png">
                                     <small class="form-text text-muted">Format yang didukung: PDF, JPG, JPEG, PNG (Maks: 2MB)</small>
+                                    @if($overtime->attachment)
+                                        <div class="mt-2">
+                                            <small class="text-info">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Lampiran saat ini: {{ basename($overtime->attachment) }}
+                                            </small>
+                                        </div>
+                                    @endif
                                     @error('attachment')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -49,7 +58,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="date">Tanggal Lembur <span class="text-danger">*</span></label>
-                                    <input type="date" name="date" id="date" class="form-control @error('date') is-invalid @enderror" value="{{ old('date') }}" required min="{{ date('Y-m-d') }}">
+                                    <input type="date" name="date" id="date" class="form-control @error('date') is-invalid @enderror" value="{{ old('date', $overtime->date->format('Y-m-d')) }}" required>
                                     @error('date')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -58,7 +67,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="start_time">Waktu Mulai <span class="text-danger">*</span></label>
-                                    <input type="time" name="start_time" id="start_time" class="form-control @error('start_time') is-invalid @enderror" value="{{ old('start_time') }}" required>
+                                    <input type="time" name="start_time" id="start_time" class="form-control @error('start_time') is-invalid @enderror" value="{{ old('start_time', $overtime->formatted_start_time) }}" required>
                                     @error('start_time')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -67,7 +76,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="end_time">Waktu Selesai <span class="text-danger">*</span></label>
-                                    <input type="time" name="end_time" id="end_time" class="form-control @error('end_time') is-invalid @enderror" value="{{ old('end_time') }}" required>
+                                    <input type="time" name="end_time" id="end_time" class="form-control @error('end_time') is-invalid @enderror" value="{{ old('end_time', $overtime->formatted_end_time) }}" required>
                                     @error('end_time')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -77,7 +86,7 @@
 
                         <div class="form-group">
                             <label for="reason">Alasan <span class="text-danger">*</span></label>
-                            <textarea name="reason" id="reason" rows="4" class="form-control @error('reason') is-invalid @enderror" placeholder="Berikan alasan detail untuk permintaan lembur Anda..." required>{{ old('reason') }}</textarea>
+                            <textarea name="reason" id="reason" rows="4" class="form-control @error('reason') is-invalid @enderror" placeholder="Berikan alasan detail untuk permintaan lembur Anda..." required>{{ old('reason', $overtime->reason) }}</textarea>
                             @error('reason')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
@@ -85,7 +94,7 @@
 
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary" id="submitBtn">
-                                <i class="fas fa-paper-plane mr-1"></i> Ajukan
+                                <i class="fas fa-save mr-1"></i> Perbarui
                             </button>
                         </div>
                     </form>
@@ -94,17 +103,16 @@
         </div>
         
         <div class="col-md-4">
-            <!-- Overtime Statistics Card -->
+            <!-- Current Overtime Details -->
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="fas fa-chart-pie mr-2"></i>
-                        Statistik Lembur ({{ date('Y') }})
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Detail Lembur Saat Ini
                     </h5>
                 </div>
                 <div class="card-body">
-                    @if(isset($overtimeStats))
-                    <!-- Baris 1: Total Jam Lembur -->
+                    <!-- Baris 1: Total Jam & Waktu -->
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="d-flex align-items-center p-3 bg-info text-white rounded statistics-card">
@@ -112,60 +120,53 @@
                                     <i class="fas fa-clock fa-2x"></i>
                                 </div>
                                 <div class="flex-grow-1 ml-3">
-                                    <div class="h5 mb-0">{{ $overtimeStats['total_hours'] ?? 0 }} jam</div>
-                                    <small>Total Jam Lembur ({{ date('Y') }})</small>
+                                    <div class="h5 mb-0">{{ $overtime->total_hours }} jam</div>
+                                    <small>{{ $overtime->formatted_start_time }} - {{ $overtime->formatted_end_time }}</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Baris 2: Permintaan Disetujui & Rata-rata -->
+                    <!-- Baris 2: Tanggal & Status -->
                     <div class="row mb-3">
                         <div class="col-6">
                             <div class="d-flex align-items-center p-3 bg-success text-white rounded statistics-card">
                                 <div class="flex-shrink-0">
-                                    <i class="fas fa-check fa-lg"></i>
+                                    <i class="fas fa-calendar fa-lg"></i>
                                 </div>
                                 <div class="flex-grow-1 ml-2">
-                                    <div class="h6 mb-0">{{ $overtimeStats['total_requests'] ?? 0 }}</div>
-                                    <small>Disetujui</small>
+                                    <div class="h6 mb-0">{{ $overtime->formatted_date }}</div>
+                                    <small>Tanggal Lembur</small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="d-flex align-items-center p-3 bg-warning text-white rounded statistics-card">
                                 <div class="flex-shrink-0">
-                                    <i class="fas fa-chart-line fa-lg"></i>
+                                    <i class="fas fa-tag fa-lg"></i>
                                 </div>
                                 <div class="flex-grow-1 ml-2">
-                                    <div class="h6 mb-0">{{ $overtimeStats['average_hours'] ?? 0 }} jam</div>
-                                    <small>Rata-rata</small>
+                                    <div class="h6 mb-0">{!! $overtime->status_badge !!}</div>
+                                    <small>Status</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Baris 3: Statistik Bulanan -->
+                    <!-- Baris 3: Jenis Lembur -->
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex align-items-center p-3 bg-primary text-white rounded statistics-card">
                                 <div class="flex-shrink-0">
-                                    <i class="fas fa-calendar-alt fa-lg"></i>
+                                    <i class="fas fa-briefcase fa-lg"></i>
                                 </div>
                                 <div class="flex-grow-1 ml-2">
-                                    <div class="h6 mb-0">{{ $overtimeStats['monthly_average'] ?? 0 }} jam</div>
-                                    <small>Rata-rata per Bulan</small>
+                                    <div class="h6 mb-0">{!! $overtime->type_badge !!}</div>
+                                    <small>Jenis Lembur</small>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    @else
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
-                        <p class="mb-0">Belum ada data lembur</p>
-                        <small>Statistik akan muncul setelah Anda mengajukan lembur</small>
-                    </div>
-                    @endif
                 </div>
             </div>
 
@@ -189,7 +190,7 @@
                     <hr>
                     <small class="text-muted">
                         <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Permintaan lembur harus diajukan minimal 1 hari sebelumnya.
+                        Hanya permintaan dengan status "Menunggu" yang dapat diperbarui.
                     </small>
                 </div>
             </div>
@@ -237,6 +238,9 @@ $(function () {
     }
     
     $('#start_time, #end_time').change(calculateHours);
+    
+    // Calculate initial hours
+    calculateHours();
 
     // Submit form dengan AJAX
     $('#overtimeForm').on('submit', function(e) {
@@ -256,14 +260,6 @@ $(function () {
         
         if (startTime >= endTime) {
             SwalHelper.error('Error!', 'Waktu selesai harus lebih besar dari waktu mulai.');
-            return;
-        }
-        
-        // Check if date is in the past
-        let today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (new Date(date) < today) {
-            SwalHelper.error('Error!', 'Tanggal lembur tidak boleh di masa lalu.');
             return;
         }
         
@@ -288,10 +284,16 @@ $(function () {
         }
         
         // Show loading
-        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengajukan...');
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memperbarui...');
 
         // Prepare form data
         let formData = new FormData(this);
+
+        // Debug: Log form data
+        console.log('Form data being sent:');
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
 
         // Send AJAX request
         $.ajax({
@@ -309,11 +311,11 @@ $(function () {
                     }, 2000);
                 } else {
                     SwalHelper.error('Gagal!', response.message);
-                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Ajukan');
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Perbarui');
                 }
             },
             error: function(xhr) {
-                let message = 'Terjadi kesalahan saat mengajukan permintaan lembur';
+                let message = 'Terjadi kesalahan saat memperbarui permintaan lembur';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     message = xhr.responseJSON.message;
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
@@ -326,7 +328,7 @@ $(function () {
                 }
                 
                 SwalHelper.error('Error!', message);
-                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Ajukan');
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Perbarui');
             }
         });
     });
@@ -448,4 +450,4 @@ $(function () {
     }
 }
 </style>
-@endpush 
+@endpush

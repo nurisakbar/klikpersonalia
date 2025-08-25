@@ -35,6 +35,8 @@ class Overtime extends Model
         'approved_at' => 'datetime',
     ];
 
+
+
     /**
      * Get the company that owns the overtime.
      */
@@ -84,6 +86,14 @@ class Overtime extends Model
     }
 
     /**
+     * Scope a query to only include cancelled overtimes.
+     */
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 'cancelled');
+    }
+
+    /**
      * Scope a query to only include this month's overtimes.
      */
     public function scopeThisMonth($query)
@@ -110,6 +120,15 @@ class Overtime extends Model
      */
     public function getFormattedDateAttribute()
     {
+        if (!$this->date) {
+            return '-';
+        }
+        
+        // Ensure date is a Carbon instance
+        if (is_string($this->date)) {
+            return \Carbon\Carbon::parse($this->date)->format('d/m/Y');
+        }
+        
         return $this->date->format('d/m/Y');
     }
 
@@ -118,7 +137,17 @@ class Overtime extends Model
      */
     public function getFormattedStartTimeAttribute()
     {
-        return $this->start_time;
+        if (!$this->start_time) {
+            return '';
+        }
+        
+        // Pastikan format waktu selalu H:i
+        try {
+            $time = \Carbon\Carbon::parse($this->start_time);
+            return $time->format('H:i');
+        } catch (\Exception $e) {
+            return $this->start_time;
+        }
     }
 
     /**
@@ -126,7 +155,48 @@ class Overtime extends Model
      */
     public function getFormattedEndTimeAttribute()
     {
-        return $this->end_time;
+        if (!$this->end_time) {
+            return '';
+        }
+        
+        // Pastikan format waktu selalu H:i
+        try {
+            $time = \Carbon\Carbon::parse($this->end_time);
+            return $time->format('H:i');
+        } catch (\Exception $e) {
+            return $this->end_time;
+        }
+    }
+
+    /**
+     * Mutator untuk memastikan format waktu yang konsisten
+     */
+    public function setStartTimeAttribute($value)
+    {
+        if ($value) {
+            try {
+                $time = \Carbon\Carbon::parse($value);
+                $this->attributes['start_time'] = $time->format('H:i:s');
+            } catch (\Exception $e) {
+                $this->attributes['start_time'] = $value;
+            }
+        } else {
+            $this->attributes['start_time'] = null;
+        }
+    }
+
+    public function setEndTimeAttribute($value)
+    {
+        if ($value) {
+            try {
+                $time = \Carbon\Carbon::parse($value);
+                $this->attributes['end_time'] = $time->format('H:i:s');
+            } catch (\Exception $e) {
+                $this->attributes['end_time'] = $value;
+            }
+        } else {
+            $this->attributes['end_time'] = null;
+        }
     }
 
     /**
@@ -138,6 +208,14 @@ class Overtime extends Model
     }
 
     /**
+     * Get the overtime's attachment path.
+     */
+    public function getAttachmentPathAttribute()
+    {
+        return $this->attachment;
+    }
+
+    /**
      * Get the overtime's status badge.
      */
     public function getStatusBadgeAttribute()
@@ -145,13 +223,15 @@ class Overtime extends Model
         $statusClass = [
             'pending' => 'badge badge-warning',
             'approved' => 'badge badge-success',
-            'rejected' => 'badge badge-danger'
+            'rejected' => 'badge badge-danger',
+            'cancelled' => 'badge badge-secondary'
         ];
         
         $statusText = [
             'pending' => 'Menunggu',
             'approved' => 'Disetujui',
-            'rejected' => 'Ditolak'
+            'rejected' => 'Ditolak',
+            'cancelled' => 'Dibatalkan'
         ];
         
         return '<span class="' . $statusClass[$this->status] . '">' . $statusText[$this->status] . '</span>';
