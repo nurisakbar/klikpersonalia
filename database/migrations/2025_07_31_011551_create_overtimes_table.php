@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('hours', 4, 2)->default(0);
             $table->enum('type', ['weekday', 'weekend', 'holiday'])->default('weekday');
             $table->text('reason');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->uuid('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->text('approval_notes')->nullable();
