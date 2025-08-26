@@ -83,17 +83,46 @@
 @include('components.sweet-alert')
 
 <script>
-$(function () {
-    // Global variables
-    let currentEmployeeId = null;
-    let isEditMode = false;
+// Test jQuery availability before DataTable initialization
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not available in Employee Index');
+        // Try to wait a bit more for jQuery to load
+        setTimeout(function() {
+            if (typeof $ === 'undefined') {
+                console.error('jQuery still not available after timeout in Employee Index');
+            } else {
+                console.log('jQuery became available after timeout in Employee Index, version:', $.fn.jquery);
+            }
+        }, 1000);
+        return;
+    }
+    console.log('jQuery is available in Employee Index, version:', $.fn.jquery);
+});
+</script>
+
+<script>
+// Test jQuery availability with retry mechanism
+function initDataTable() {
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not available in DataTable script, retrying in 500ms...');
+        setTimeout(initDataTable, 500);
+        return;
+    }
     
-    // Setup CSRF token for AJAX
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
+    console.log('jQuery is available in DataTable script, version:', $.fn.jquery);
+    
+    $(function () {
+        // Global variables
+        let currentEmployeeId = null;
+        let isEditMode = false;
+        
+        // Setup CSRF token for AJAX
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
 
     // Initialize DataTable with server-side processing
     var table = $('#employees-table').DataTable({
@@ -162,9 +191,7 @@ $(function () {
 				}
 			}
         ],
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
-        },
+        language: window.DataTablesLanguage,
         responsive: true,
         order: [[2, 'asc']]
     });
@@ -329,6 +356,10 @@ $(function () {
     });
 
     // Session messages sudah ditangani oleh global SwalHelper di layout
-});
+    });
+}
+
+// Start initialization
+initDataTable();
 </script>
 @endpush 

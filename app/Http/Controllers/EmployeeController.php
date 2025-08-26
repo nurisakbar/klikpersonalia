@@ -145,6 +145,15 @@ class EmployeeController extends Controller
             return redirect()->route('employees.index')->with('error', 'Karyawan tidak ditemukan.');
         }
 
+        // Load salary components for the employee
+        $employee->load(['salaryComponents.salaryComponent']);
+
+        // Get available salary components for assignment
+        $salaryComponents = \App\Models\SalaryComponent::where('company_id', auth()->user()->company_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -152,7 +161,7 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return view('employees.show', compact('employee'));
+        return view('employees.show', compact('employee', 'salaryComponents'));
     }
 
     /**
