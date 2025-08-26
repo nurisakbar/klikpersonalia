@@ -34,6 +34,9 @@ return new class extends Migration
 
             $table->index(['company_id', 'employee_id', 'tax_period']);
             $table->index(['company_id', 'tax_period']);
+            
+            // Unique constraint to prevent duplicate tax calculations
+            $table->unique(['company_id', 'employee_id', 'tax_period'], 'unique_tax_calculation');
         });
     }
 

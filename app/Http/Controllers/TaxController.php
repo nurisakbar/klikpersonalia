@@ -307,13 +307,8 @@ class TaxController extends Controller
             'year' => 'required|integer|min:2020',
         ]);
 
-        // Format period to match payroll format (e.g., "Januari 2024")
-        $monthNames = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
-        $period = $monthNames[$request->month] . ' ' . $request->year;
+        // Format period to match existing format (e.g., "2025-01")
+        $period = $request->year . '-' . str_pad($request->month, 2, '0', STR_PAD_LEFT);
         
         // Get all employees for the company
         $employees = Employee::where('company_id', $user->company_id)->get();
@@ -326,10 +321,13 @@ class TaxController extends Controller
 
         foreach ($employees as $employee) {
             try {
-                // Check if tax calculation already exists
+                // Check if tax calculation already exists (check both formats to prevent duplicates)
                 $existingTax = Tax::where('company_id', $user->company_id)
                     ->where('employee_id', $employee->id)
-                    ->where('tax_period', $period)
+                    ->where(function($query) use ($period, $request) {
+                        $query->where('tax_period', $period)
+                              ->orWhere('tax_period', $this->getOldFormatPeriod($request->month, $request->year));
+                    })
                     ->first();
 
                 if ($existingTax) {
@@ -337,10 +335,17 @@ class TaxController extends Controller
                     continue; // Skip if already calculated
                 }
 
-                // Try to get payroll for this period first
+                // Try to get payroll for this period first (check both formats)
+                $monthNames = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+                $payrollPeriod = $monthNames[$request->month] . ' ' . $request->year;
+                
                 $payroll = Payroll::where('company_id', $user->company_id)
                     ->where('employee_id', $employee->id)
-                    ->where('period', $period)
+                    ->where('period', $payrollPeriod)
                     ->first();
 
                 $taxableIncome = 0;
@@ -419,6 +424,19 @@ class TaxController extends Controller
         }
 
         return redirect()->route('taxes.index')->with('success', $message);
+    }
+
+    /**
+     * Get old format period (for backward compatibility check)
+     */
+    private function getOldFormatPeriod($month, $year)
+    {
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        return $monthNames[$month] . ' ' . $year;
     }
 
     /**
