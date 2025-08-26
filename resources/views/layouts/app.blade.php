@@ -323,7 +323,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('taxes.report') }}" class="nav-link {{ request()->routeIs('taxes.report') ? 'active' : '' }}">
+                                    <a href="{{ route('tax-reports.index') }}" class="nav-link {{ request()->routeIs('tax-reports.*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Laporan Pajak</p>
                                     </a>

@@ -14,6 +14,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\BenefitController;
 use App\Http\Controllers\TaxController;
+use App\Http\Controllers\TaxReportController;
 use App\Http\Controllers\BpjsController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BankAccountController;
@@ -200,8 +201,8 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
 
     // Tax Management
     Route::get('/taxes/data', [TaxController::class, 'data'])->name('taxes.data');
-Route::get('/taxes/search', [TaxController::class, 'search'])->name('taxes.search');
-Route::resource('taxes', TaxController::class);
+    Route::get('/taxes/search', [TaxController::class, 'search'])->name('taxes.search');
+    Route::resource('taxes', TaxController::class);
     Route::post('/taxes/calculate-for-payroll', [TaxController::class, 'calculateForPayroll'])->name('taxes.calculate-for-payroll');
     Route::get('/taxes/report', [TaxController::class, 'report'])->name('taxes.report');
     Route::get('/taxes/export', [TaxController::class, 'export'])->name('taxes.export');
@@ -213,6 +214,13 @@ Route::resource('taxes', TaxController::class);
     Route::get('/taxes/certificate-report', [TaxController::class, 'taxCertificateReport'])->name('taxes.certificate-report');
     Route::get('/taxes/compliance-report', [TaxController::class, 'taxComplianceReport'])->name('taxes.compliance-report');
     Route::get('/taxes/audit-trail', [TaxController::class, 'taxAuditTrail'])->name('taxes.audit-trail');
+
+    // Tax Report Management
+    Route::get('/tax-reports', [TaxReportController::class, 'index'])->name('tax-reports.index');
+    Route::get('/tax-reports/data', [TaxController::class, 'data'])->name('tax-reports.data');
+    Route::post('/tax-reports/generate', [TaxReportController::class, 'generate'])->name('tax-reports.generate');
+    Route::post('/tax-reports/export-pdf', [TaxReportController::class, 'exportPdf'])->name('tax-reports.export-pdf');
+    Route::post('/tax-reports/export-excel', [TaxReportController::class, 'exportExcel'])->name('tax-reports.export-excel');
 
     // BPJS Management
     Route::resource('bpjs', BpjsController::class);

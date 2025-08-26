@@ -101,22 +101,12 @@ class Tax extends Model
         // Calculate taxable base
         $taxableBase = max(0, $taxableIncome - $ptkpAmount);
 
-        // Calculate tax amount
+        // Calculate tax amount based on brackets
         $taxAmount = 0;
-        $taxBracket = null;
-        $taxRate = 0;
-
         foreach (self::TAX_BRACKETS as $bracket) {
             if ($taxableBase > $bracket['min']) {
-                $bracketMax = $bracket['max'] ?? PHP_INT_MAX;
-                $bracketAmount = min($taxableBase, $bracketMax) - $bracket['min'];
+                $bracketAmount = $bracket['max'] ? min($taxableBase, $bracket['max']) - $bracket['min'] : $taxableBase - $bracket['min'];
                 $taxAmount += $bracketAmount * $bracket['rate'];
-                
-                if ($taxableBase <= $bracketMax) {
-                    $taxBracket = $bracket['min'] . ' - ' . ($bracket['max'] ?? '∞');
-                    $taxRate = $bracket['rate'];
-                    break;
-                }
             }
         }
 
@@ -125,9 +115,19 @@ class Tax extends Model
             'ptkp_amount' => $ptkpAmount,
             'taxable_base' => $taxableBase,
             'tax_amount' => $taxAmount,
-            'tax_bracket' => $taxBracket,
-            'tax_rate' => $taxRate,
+            'tax_rate' => $taxableBase > 0 ? ($taxAmount / $taxableBase) * 100 : 0
         ];
+    }
+
+    /**
+     * Scope a query to only include taxes from current company.
+     */
+    public function scopeCurrentCompany($query)
+    {
+        if (auth()->check() && auth()->user()->company_id) {
+            return $query->where('company_id', auth()->user()->company_id);
+        }
+        return $query;
     }
 
     /**
