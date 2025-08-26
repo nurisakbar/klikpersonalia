@@ -14,6 +14,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\BenefitController;
 use App\Http\Controllers\TaxController;
+use App\Http\Controllers\TaxReportController;
 use App\Http\Controllers\BpjsController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BankAccountController;
@@ -200,6 +201,7 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
 
     // Tax Management
     Route::get('/taxes/data', [TaxController::class, 'data'])->name('taxes.data');
+    Route::get('/taxes/search', [TaxController::class, 'search'])->name('taxes.search');
     Route::resource('taxes', TaxController::class);
     Route::post('/taxes/calculate-for-payroll', [TaxController::class, 'calculateForPayroll'])->name('taxes.calculate-for-payroll');
     Route::get('/taxes/report', [TaxController::class, 'report'])->name('taxes.report');
@@ -212,6 +214,13 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
     Route::get('/taxes/certificate-report', [TaxController::class, 'taxCertificateReport'])->name('taxes.certificate-report');
     Route::get('/taxes/compliance-report', [TaxController::class, 'taxComplianceReport'])->name('taxes.compliance-report');
     Route::get('/taxes/audit-trail', [TaxController::class, 'taxAuditTrail'])->name('taxes.audit-trail');
+
+    // Tax Report Management
+    Route::get('/tax-reports', [TaxReportController::class, 'index'])->name('tax-reports.index');
+    Route::get('/tax-reports/data', [TaxController::class, 'data'])->name('tax-reports.data');
+    Route::post('/tax-reports/generate', [TaxReportController::class, 'generate'])->name('tax-reports.generate');
+    Route::post('/tax-reports/export-pdf', [TaxReportController::class, 'exportPdf'])->name('tax-reports.export-pdf');
+    Route::post('/tax-reports/export-excel', [TaxReportController::class, 'exportExcel'])->name('tax-reports.export-excel');
 
     // BPJS Management
     Route::resource('bpjs', BpjsController::class);
@@ -258,4 +267,33 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
     Route::post('/import/attendance', [DataImportController::class, 'importAttendance'])->name('import.attendance');
     Route::get('/import/template/{type}', [DataImportController::class, 'downloadTemplate'])->name('import.template');
     Route::post('/import/validate', [DataImportController::class, 'validateImport'])->name('import.validate');
+
+    // Salary Components Management
+    Route::middleware('ensure.company')->group(function () {
+        Route::get('/salary-components-data', [App\Http\Controllers\SalaryComponentController::class, 'data'])->name('salary-components.data');
+        Route::post('/salary-components/{salaryComponent}/toggle-status', [App\Http\Controllers\SalaryComponentController::class, 'toggleStatus'])->name('salary-components.toggle-status');
+        Route::post('/salary-components/update-sort-order', [App\Http\Controllers\SalaryComponentController::class, 'updateSortOrder'])->name('salary-components.update-sort-order');
+        Route::post('/salary-components/bulk-toggle-status', [App\Http\Controllers\SalaryComponentController::class, 'bulkToggleStatus'])->name('salary-components.bulk-toggle-status');
+        Route::post('/salary-components/bulk-delete', [App\Http\Controllers\SalaryComponentController::class, 'bulkDelete'])->name('salary-components.bulk-delete');
+        Route::get('/salary-components-test', function() { return view('salary-components.test'); })->name('salary-components.test');
+        Route::get('/salary-components-debug', function() { return view('salary-components.debug'); })->name('salary-components.debug');
+        Route::resource('salary-components', App\Http\Controllers\SalaryComponentController::class);
+    });
+
+    // Employee Salary Components Management (Embedded in Employee Detail)
+    Route::middleware('ensure.company')->group(function () {
+        Route::post('/employees/{employee}/salary-components', [App\Http\Controllers\EmployeeSalaryComponentController::class, 'store'])->name('employee-salary-components.store');
+        Route::post('/employees/{employee}/salary-components/{employeeSalaryComponent}', [App\Http\Controllers\EmployeeSalaryComponentController::class, 'update'])->name('employee-salary-components.update');
+        Route::delete('/employees/{employee}/salary-components/{employeeSalaryComponent}', [App\Http\Controllers\EmployeeSalaryComponentController::class, 'destroy'])->name('employee-salary-components.destroy');
+        Route::post('/employees/{employee}/salary-components/{employeeSalaryComponent}/toggle-status', [App\Http\Controllers\EmployeeSalaryComponentController::class, 'toggleStatus'])->name('employee-salary-components.toggle-status');
+        Route::get('/employees/{employee}/salary-components/{employeeSalaryComponent}', [App\Http\Controllers\EmployeeSalaryComponentController::class, 'show'])->name('employee-salary-components.show');
+        Route::get('/employees/{employee}/salary-components/{employeeSalaryComponent}/edit', [App\Http\Controllers\EmployeeSalaryComponentController::class, 'edit'])->name('employee-salary-components.edit');
+    });
+
+    // Employee Salary Component Management (Standalone Module)
+    Route::middleware('ensure.company')->group(function () {
+        Route::resource('employee-salary-component-management', App\Http\Controllers\EmployeeSalaryComponentManagementController::class);
+        Route::post('/employee-salary-component-management/bulk-assign', [App\Http\Controllers\EmployeeSalaryComponentManagementController::class, 'bulkAssign'])->name('employee-salary-component-management.bulk-assign');
+        Route::post('/employee-salary-component-management/{employeeSalaryComponent}/toggle-status', [App\Http\Controllers\EmployeeSalaryComponentManagementController::class, 'toggleStatus'])->name('employee-salary-component-management.toggle-status');
+    });
 });

@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             OvertimeSeeder::class,
             TaxSeeder::class,
             BpjsSeeder::class,
+            SalaryComponentSeeder::class,
         ]);
     }
 }

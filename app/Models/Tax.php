@@ -101,22 +101,24 @@ class Tax extends Model
         // Calculate taxable base
         $taxableBase = max(0, $taxableIncome - $ptkpAmount);
 
-        // Calculate tax amount
+        // Calculate tax amount based on brackets
         $taxAmount = 0;
-        $taxBracket = null;
-        $taxRate = 0;
-
         foreach (self::TAX_BRACKETS as $bracket) {
             if ($taxableBase > $bracket['min']) {
-                $bracketMax = $bracket['max'] ?? PHP_INT_MAX;
-                $bracketAmount = min($taxableBase, $bracketMax) - $bracket['min'];
+                $bracketAmount = $bracket['max'] ? min($taxableBase, $bracket['max']) - $bracket['min'] : $taxableBase - $bracket['min'];
                 $taxAmount += $bracketAmount * $bracket['rate'];
-                
-                if ($taxableBase <= $bracketMax) {
-                    $taxBracket = $bracket['min'] . ' - ' . ($bracket['max'] ?? '∞');
-                    $taxRate = $bracket['rate'];
-                    break;
-                }
+            }
+        }
+
+        // Determine bracket for display and rate (decimal, e.g., 0.05)
+        $currentBracket = self::getTaxBracket($taxableBase);
+        $taxRateDecimal = $currentBracket['rate'] ?? 0;
+        $taxBracketLabel = null;
+        if ($currentBracket) {
+            if ($currentBracket['max'] === null) {
+                $taxBracketLabel = '>' . number_format($currentBracket['min'], 0, ',', '.');
+            } else {
+                $taxBracketLabel = number_format($currentBracket['min'], 0, ',', '.') . ' - ' . number_format($currentBracket['max'], 0, ',', '.');
             }
         }
 
@@ -125,9 +127,20 @@ class Tax extends Model
             'ptkp_amount' => $ptkpAmount,
             'taxable_base' => $taxableBase,
             'tax_amount' => $taxAmount,
-            'tax_bracket' => $taxBracket,
-            'tax_rate' => $taxRate,
+            'tax_bracket' => $taxBracketLabel,
+            'tax_rate' => $taxRateDecimal,
         ];
+    }
+
+    /**
+     * Scope a query to only include taxes from current company.
+     */
+    public function scopeCurrentCompany($query)
+    {
+        if (auth()->check() && auth()->user()->company_id) {
+            return $query->where('company_id', auth()->user()->company_id);
+        }
+        return $query;
     }
 
     /**
@@ -149,5 +162,70 @@ class Tax extends Model
     public static function getPtkpAmount($status)
     {
         return self::PTKP_AMOUNTS[$status] ?? self::PTKP_AMOUNTS['TK/0'];
+    }
+
+    // Accessors for formatted data
+    public function getTaxPeriodFormattedAttribute()
+    {
+        if (!$this->tax_period) {
+            return '-';
+        }
+        
+        try {
+            return \Carbon\Carbon::createFromFormat('Y-m', $this->tax_period)->format('F Y');
+        } catch (\Exception $e) {
+            return $this->tax_period;
+        }
+    }
+
+    public function getTaxableIncomeFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->taxable_income ?? 0, 0, ',', '.');
+    }
+
+    public function getPtkpAmountFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->ptkp_amount ?? 0, 0, ',', '.');
+    }
+
+    public function getTaxableBaseFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->taxable_base ?? 0, 0, ',', '.');
+    }
+
+    public function getTaxAmountFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->tax_amount ?? 0, 0, ',', '.');
+    }
+
+    public function getTaxRateFormattedAttribute()
+    {
+        return number_format(($this->tax_rate ?? 0) * 100, 1) . '%';
+    }
+
+    public function getCreatedAtFormattedAttribute()
+    {
+        return $this->created_at ? $this->created_at->format('d/m/Y H:i') : '-';
+    }
+
+    public function getUpdatedAtFormattedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->format('d/m/Y H:i') : '-';
+    }
+
+    public function getStatusBadgeAttribute()
+    {
+        switch ($this->status) {
+            case 'pending':
+                return '<span class="badge badge-secondary">Menunggu</span>';
+            case 'calculated':
+                return '<span class="badge badge-info">Dihitung</span>';
+            case 'paid':
+                return '<span class="badge badge-success">Dibayar</span>';
+            case 'verified':
+                return '<span class="badge badge-primary">Terverifikasi</span>';
+            default:
+                return '<span class="badge badge-secondary">' . ucfirst($this->status) . '</span>';
+        }
     }
 } 

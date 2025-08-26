@@ -101,6 +101,38 @@ class Employee extends Model
     }
 
     /**
+     * Get the salary components assigned to the employee.
+     */
+    public function salaryComponents()
+    {
+        return $this->hasMany(EmployeeSalaryComponent::class);
+    }
+
+    /**
+     * Get the active salary components for the employee.
+     */
+    public function activeSalaryComponents()
+    {
+        return $this->hasMany(EmployeeSalaryComponent::class)->active();
+    }
+
+    /**
+     * Get the earning components for the employee.
+     */
+    public function earningComponents()
+    {
+        return $this->hasMany(EmployeeSalaryComponent::class)->earnings();
+    }
+
+    /**
+     * Get the deduction components for the employee.
+     */
+    public function deductionComponents()
+    {
+        return $this->hasMany(EmployeeSalaryComponent::class)->deductions();
+    }
+
+    /**
      * Get the taxes for the employee.
      */
     public function taxes()
