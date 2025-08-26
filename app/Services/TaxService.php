@@ -50,7 +50,7 @@ class TaxService
     /**
      * Get tax by ID
      */
-    public function getTaxById(int $id)
+    public function getTaxById(string $id)
     {
         try {
             $tax = $this->taxRepository->findById($id);
@@ -120,7 +120,7 @@ class TaxService
     /**
      * Update tax
      */
-    public function updateTax(int $id, array $data)
+    public function updateTax(string $id, array $data)
     {
         try {
             DB::beginTransaction();

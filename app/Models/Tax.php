@@ -150,4 +150,69 @@ class Tax extends Model
     {
         return self::PTKP_AMOUNTS[$status] ?? self::PTKP_AMOUNTS['TK/0'];
     }
+
+    // Accessors for formatted data
+    public function getTaxPeriodFormattedAttribute()
+    {
+        if (!$this->tax_period) {
+            return '-';
+        }
+        
+        try {
+            return \Carbon\Carbon::createFromFormat('Y-m', $this->tax_period)->format('F Y');
+        } catch (\Exception $e) {
+            return $this->tax_period;
+        }
+    }
+
+    public function getTaxableIncomeFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->taxable_income ?? 0, 0, ',', '.');
+    }
+
+    public function getPtkpAmountFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->ptkp_amount ?? 0, 0, ',', '.');
+    }
+
+    public function getTaxableBaseFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->taxable_base ?? 0, 0, ',', '.');
+    }
+
+    public function getTaxAmountFormattedAttribute()
+    {
+        return 'Rp ' . number_format($this->tax_amount ?? 0, 0, ',', '.');
+    }
+
+    public function getTaxRateFormattedAttribute()
+    {
+        return number_format(($this->tax_rate ?? 0) * 100, 1) . '%';
+    }
+
+    public function getCreatedAtFormattedAttribute()
+    {
+        return $this->created_at ? $this->created_at->format('d/m/Y H:i') : '-';
+    }
+
+    public function getUpdatedAtFormattedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->format('d/m/Y H:i') : '-';
+    }
+
+    public function getStatusBadgeAttribute()
+    {
+        switch ($this->status) {
+            case 'pending':
+                return '<span class="badge badge-secondary">Menunggu</span>';
+            case 'calculated':
+                return '<span class="badge badge-info">Dihitung</span>';
+            case 'paid':
+                return '<span class="badge badge-success">Dibayar</span>';
+            case 'verified':
+                return '<span class="badge badge-primary">Terverifikasi</span>';
+            default:
+                return '<span class="badge badge-secondary">' . ucfirst($this->status) . '</span>';
+        }
+    }
 } 

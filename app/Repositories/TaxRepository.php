@@ -72,7 +72,7 @@ class TaxRepository
     /**
      * Find tax by ID
      */
-    public function findById(int $id)
+    public function findById(string $id)
     {
         $user = Auth::user();
         
@@ -95,7 +95,7 @@ class TaxRepository
     /**
      * Update tax
      */
-    public function update(int $id, array $data)
+    public function update(string $id, array $data)
     {
         $user = Auth::user();
         
@@ -110,7 +110,7 @@ class TaxRepository
     /**
      * Delete tax
      */
-    public function delete(int $id)
+    public function delete(string $id)
     {
         $user = Auth::user();
         

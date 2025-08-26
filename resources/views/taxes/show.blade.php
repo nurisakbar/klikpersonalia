@@ -11,180 +11,234 @@
 @section('content')
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-4">
-            <!-- Profile Image -->
-            <div class="card card-primary card-outline">
-                <div class="card-body box-profile">
-                    <div class="text-center">
-                        <i class="fas fa-calculator fa-4x text-primary"></i>
-                    </div>
-
-                    <h3 class="profile-username text-center">{{ $tax->employee->name }}</h3>
-
-                    <p class="text-muted text-center">{{ $tax->employee->position }}</p>
-
-                    <ul class="list-group list-group-unbordered mb-3">
-                        <li class="list-group-item">
-                            <b>ID Karyawan</b> <a class="float-right">{{ $tax->employee->employee_id }}</a>
-                        </li>
-                        <li class="list-group-item">
-                            <b>Departemen</b> <a class="float-right">{{ $tax->employee->department }}</a>
-                        </li>
-                        <li class="list-group-item">
-                            <b>Status Pajak</b> <a class="float-right">
-                                @if($tax->status == 'pending')
-                                    <span class="badge badge-secondary">Menunggu</span>
-                                @elseif($tax->status == 'calculated')
-                                    <span class="badge badge-info">Dihitung</span>
-                                @elseif($tax->status == 'paid')
-                                    <span class="badge badge-success">Dibayar</span>
-                                @elseif($tax->status == 'verified')
-                                    <span class="badge badge-primary">Terverifikasi</span>
-                                @else
-                                    <span class="badge badge-secondary">{{ ucfirst($tax->status) }}</span>
-                                @endif
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <!-- Tax Calculation Summary -->
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">
-                        <i class="fas fa-calculator"></i> Ringkasan Perhitungan Pajak
+                        <i class="fas fa-eye mr-2"></i>
+                        Rincian Pajak
                     </h3>
+                    <div class="card-tools">
+                        <a href="{{ route('taxes.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                        <a href="{{ route('taxes.edit', $tax->id) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
+                        <!-- Informasi Karyawan -->
                         <div class="col-md-6">
-                            <div class="info-box">
-                                <span class="info-box-icon bg-info">
-                                    <i class="fas fa-money-bill"></i>
-                                </span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Pendapatan Kena Pajak</span>
-                                    <span class="info-box-number">Rp {{ number_format($tax->taxable_income ?? 0, 0, ',', '.') }}</span>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-user mr-2"></i>
+                                        Informasi Karyawan
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td width="30%"><strong>Nama:</strong></td>
+                                            <td>{{ $tax->employee->name ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ID Karyawan:</strong></td>
+                                            <td>{{ $tax->employee->employee_id ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Jabatan:</strong></td>
+                                            <td>{{ $tax->employee->position ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Departemen:</strong></td>
+                                            <td>{{ $tax->employee->department ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Email:</strong></td>
+                                            <td>{{ $tax->employee->email ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Telepon:</strong></td>
+                                            <td>{{ $tax->employee->phone ?? '-' }}</td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="info-box">
-                                <span class="info-box-icon bg-warning">
-                                    <i class="fas fa-shield-alt"></i>
-                                </span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">PTKP</span>
-                                    <span class="info-box-number">Rp {{ number_format($tax->ptkp_amount ?? 0, 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-box">
-                                <span class="info-box-icon bg-danger">
-                                    <i class="fas fa-percentage"></i>
-                                </span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Tarif Pajak</span>
-                                    <span class="info-box-number">{{ number_format(($tax->tax_rate ?? 0) * 100, 1) }}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-box">
-                                <span class="info-box-icon bg-success">
-                                    <i class="fas fa-coins"></i>
-                                </span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Jumlah Pajak</span>
-                                    <span class="info-box-number">Rp {{ number_format($tax->tax_amount ?? 0, 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Rincianed Information -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-info-circle"></i> Informasi Rincian
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
+                        <!-- Informasi Pajak -->
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-calendar mr-1"></i> Periode Pajak</label>
-                                <p class="form-control-static">
-                                    @if($tax->tax_period)
-                                        {{ \Carbon\Carbon::createFromFormat('Y-m', $tax->tax_period)->format('F Y') }}
-                                    @else
-                                        -
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-user mr-1"></i> Status PTKP</label>
-                                <p class="form-control-static">{{ $tax->ptkp_status ?? '-' }}</p>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-calculator mr-2"></i>
+                                        Informasi Pajak
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td width="30%"><strong>Periode Pajak:</strong></td>
+                                            <td>{{ $tax->tax_period_formatted }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Status PTKP:</strong></td>
+                                            <td>{{ $tax->ptkp_status ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Status Pajak:</strong></td>
+                                            <td>{!! $tax->status_badge !!}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Tanggal Dibuat:</strong></td>
+                                            <td>{{ $tax->created_at_formatted }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Terakhir Diupdate:</strong></td>
+                                            <td>{{ $tax->updated_at_formatted }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Sumber Data:</strong></td>
+                                            <td>
+                                                @if($tax->payroll)
+                                                    <span class="badge badge-info">Data Payroll</span>
+                                                @else
+                                                    <span class="badge badge-warning">Gaji Pokok</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-layer-group mr-1"></i> Lapisan Pajak</label>
-                                <p class="form-control-static">{{ $tax->tax_bracket ?? '-' }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-calculator mr-1"></i> Dasar Pengenaan Pajak</label>
-                                <p class="form-control-static">Rp {{ number_format($tax->taxable_base ?? 0, 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label><i class="fas fa-sticky-note mr-1"></i> Catatan</label>
-                                <p class="form-control-static">{{ $tax->notes ?? 'Tidak ada catatan' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- History Information -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-history"></i> Riwayat
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-calendar-plus mr-1"></i> Dibuat Pada</label>
-                                <p class="form-control-static">{{ $tax->created_at ? $tax->created_at->format('d/m/Y H:i') : '-' }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-calendar-check mr-1"></i> Diperbarui Pada</label>
-                                <p class="form-control-static">{{ $tax->updated_at ? $tax->updated_at->format('d/m/Y H:i') : '-' }}</p>
+                    <!-- Rincian Perhitungan Pajak -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-chart-line mr-2"></i>
+                                        Rincian Perhitungan Pajak
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th width="40%">Komponen</th>
+                                                    <th class="text-right">Jumlah</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>Pendapatan Kena Pajak</strong></td>
+                                                    <td class="text-right">{{ $tax->taxable_income_formatted }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Jumlah PTKP ({{ $tax->ptkp_status ?? '-' }})</strong></td>
+                                                    <td class="text-right text-success">- {{ $tax->ptkp_amount_formatted }}</td>
+                                                </tr>
+                                                <tr class="table-info">
+                                                    <td><strong>Dasar Pengenaan Pajak</strong></td>
+                                                    <td class="text-right"><strong>{{ $tax->taxable_base_formatted }}</strong></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Tarif Pajak</strong></td>
+                                                    <td class="text-right">{{ $tax->tax_rate_formatted }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Bracket Pajak</strong></td>
+                                                    <td class="text-right">{{ $tax->tax_bracket ?? '-' }}</td>
+                                                </tr>
+                                                <tr class="table-warning">
+                                                    <td><strong>Jumlah Pajak</strong></td>
+                                                    <td class="text-right"><strong>{{ $tax->tax_amount_formatted }}</strong></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    @if($tax->notes)
+                    <!-- Catatan -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-sticky-note mr-2"></i>
+                                        Catatan
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        {{ $tax->notes }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($tax->payroll)
+                    <!-- Data Payroll Terkait -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-file-invoice mr-2"></i>
+                                        Data Payroll Terkait
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th width="40%">Komponen</th>
+                                                    <th class="text-right">Jumlah</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Gaji Pokok</td>
+                                                    <td class="text-right">{{ number_format($tax->payroll->basic_salary ?? 0, 0, ',', '.') }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Tunjangan</td>
+                                                    <td class="text-right text-success">+ {{ number_format($tax->payroll->allowances ?? 0, 0, ',', '.') }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Lembur</td>
+                                                    <td class="text-right text-success">+ {{ number_format($tax->payroll->overtime ?? 0, 0, ',', '.') }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Bonus</td>
+                                                    <td class="text-right text-success">+ {{ number_format($tax->payroll->bonus ?? 0, 0, ',', '.') }}</td>
+                                                </tr>
+                                                <tr class="table-success">
+                                                    <td><strong>Total Pendapatan</strong></td>
+                                                    <td class="text-right"><strong>{{ number_format(($tax->payroll->basic_salary ?? 0) + ($tax->payroll->allowances ?? 0) + ($tax->payroll->overtime ?? 0) + ($tax->payroll->bonus ?? 0), 0, ',', '.') }}</strong></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
