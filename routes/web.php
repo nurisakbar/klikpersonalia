@@ -200,7 +200,8 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
 
     // Tax Management
     Route::get('/taxes/data', [TaxController::class, 'data'])->name('taxes.data');
-    Route::resource('taxes', TaxController::class);
+Route::get('/taxes/search', [TaxController::class, 'search'])->name('taxes.search');
+Route::resource('taxes', TaxController::class);
     Route::post('/taxes/calculate-for-payroll', [TaxController::class, 'calculateForPayroll'])->name('taxes.calculate-for-payroll');
     Route::get('/taxes/report', [TaxController::class, 'report'])->name('taxes.report');
     Route::get('/taxes/export', [TaxController::class, 'export'])->name('taxes.export');

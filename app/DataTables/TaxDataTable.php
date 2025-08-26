@@ -94,7 +94,9 @@ class TaxDataTable extends DataTable
     {
         $user = Auth::user();
         
-        return $model->with(['employee'])
+
+        
+        $query = $model->with(['employee'])
             ->where('company_id', $user->company_id)
             ->select([
                 'taxes.id',
@@ -106,6 +108,27 @@ class TaxDataTable extends DataTable
                 'taxes.tax_rate',
                 'taxes.status'
             ]);
+
+        // Apply filters if provided (for minifiedAjax, use 'columns' parameter)
+        $columns = request('columns', []);
+        $search = request('search', []);
+        
+        // Apply period filter
+        if (request()->filled('period_filter')) {
+            $query->where('tax_period', request('period_filter'));
+        }
+
+        // Apply employee filter
+        if (request()->filled('employee_filter')) {
+            $query->where('employee_id', request('employee_filter'));
+        }
+
+        // Apply status filter
+        if (request()->filled('status_filter')) {
+            $query->where('status', request('status_filter'));
+        }
+
+        return $query;
     }
 
     /**
@@ -116,20 +139,32 @@ class TaxDataTable extends DataTable
         return $this->builder()
                     ->setTableId('taxes-table')
                     ->columns($this->getColumns())
-                    ->minifiedAjax()
+                    ->ajax([
+                        'url' => route('taxes.data'),
+                        'type' => 'GET',
+                        'data' => 'function(d) {
+                            d.period_filter = $("#period_filter").val();
+                            d.employee_filter = $("#employee_filter").val();
+                            d.status_filter = $("#status_filter").val();
+                        }'
+                    ])
                     ->dom('Bfrtip')
                     ->orderBy(1)
                     ->selectStyleSingle()
-                    ->buttons([
-                        Button::make('excel'),
-                        Button::make('csv'),
-                        Button::make('pdf'),
-                        Button::make('print'),
-                        Button::make('reset'),
-                        Button::make('reload')
-                    ])
                     ->language([
-                        'url' => '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+                        'sProcessing' => 'Sedang memproses...',
+                        'sLengthMenu' => 'Tampilkan _MENU_ entri',
+                        'sZeroRecords' => 'Tidak ditemukan data yang sesuai',
+                        'sInfo' => 'Menampilkan _START_ sampai _END_ dari _TOTAL_ entri',
+                        'sInfoEmpty' => 'Menampilkan 0 sampai 0 dari 0 entri',
+                        'sInfoFiltered' => '(disaring dari _MAX_ entri keseluruhan)',
+                        'sSearch' => 'Cari:',
+                        'oPaginate' => [
+                            'sFirst' => 'Pertama',
+                            'sPrevious' => 'Sebelumnya',
+                            'sNext' => 'Selanjutnya',
+                            'sLast' => 'Terakhir'
+                        ]
                     ]);
     }
 

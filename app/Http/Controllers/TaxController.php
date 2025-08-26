@@ -8,8 +8,10 @@ use App\Models\Payroll;
 use App\Models\Company;
 use App\Services\TaxService;
 use App\Http\Resources\DetailTaxResource;
+use App\Http\Requests\TaxRequest;
 use App\DataTables\TaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -17,71 +19,69 @@ use Carbon\Carbon;
 
 class TaxController extends Controller
 {
-    protected $taxService;
-
-    public function __construct(TaxService $taxService)
-    {
-        $this->taxService = $taxService;
-    }
+    public function __construct(
+        private TaxService $taxService
+    ) {}
 
     /**
      * Display a listing of taxes.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $user = Auth::user();
-        $employees = Employee::where('company_id', $user->company_id)->get();
+        return view('taxes.index');
+    }
 
-        return view('taxes.index', compact('employees'));
+    /**
+     * Search taxes for AJAX select
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $query = trim((string)$request->get('q', ''));
+        $results = $query === ''
+            ? $this->taxService->getDefaultTaxesForSelect(20)
+            : $this->taxService->searchTaxes($query)->take(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $results->map(function ($tax) {
+                return [
+                    'id' => $tax->id,
+                    'text' => $tax->employee->name . ' - ' . $tax->tax_period . ' (Rp ' . number_format($tax->tax_amount, 0, ',', '.') . ')',
+                    'tax_amount' => $tax->tax_amount,
+                ];
+            }),
+        ]);
     }
 
     /**
      * Get taxes data for DataTable
      */
-    public function data(Request $request)
+    public function data(): JsonResponse
     {
         try {
-            $user = Auth::user();
-            
-            $taxes = Tax::with(['employee'])
-                ->where('company_id', $user->company_id)
-                ->select([
-                    'taxes.id',
-                    'taxes.employee_id',
-                    'taxes.tax_period',
-                    'taxes.taxable_income',
-                    'taxes.ptkp_amount',
-                    'taxes.tax_amount',
-                    'taxes.tax_rate',
-                    'taxes.status'
-                ]);
+            $filters = [
+                'month' => request('filter_month'),
+                'year' => request('filter_year'),
+                'status' => request('status_filter'),
+            ];
 
-            // Apply filters
-            if ($request->filled('period_filter')) {
-                $taxes->where('tax_period', $request->period_filter);
-            }
-
-            if ($request->filled('employee_filter')) {
-                $taxes->where('employee_id', $request->employee_filter);
-            }
-
-            if ($request->filled('status_filter')) {
-                $taxes->where('status', $request->status_filter);
-            }
+            $taxes = $this->taxService->getTaxesForDataTable($filters);
 
             return DataTables::of($taxes)
                 ->addColumn('action', function ($tax) {
-                    return '<div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $tax->id . '" title="Detail">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <a href="' . route('taxes.edit', $tax->id) . '" class="btn btn-sm btn-warning" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                                                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="' . ($tax->employee ? $tax->employee->name : 'Unknown') . '" title="Hapus">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>';
+                    return '
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $tax->id . '" title="Detail">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="' . $tax->id . '" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $tax->id . '" data-name="' . htmlspecialchars($tax->employee ? $tax->employee->name : 'Unknown') . '" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    ';
                 })
                 ->addColumn('employee_name', function ($tax) {
                     return $tax->employee ? $tax->employee->name : '-';
@@ -141,7 +141,7 @@ class TaxController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
-                'draw' => intval($request->get('draw')),
+                'draw' => intval(request('draw')),
                 'recordsTotal' => 0,
                 'recordsFiltered' => 0,
                 'data' => [],
@@ -155,84 +155,41 @@ class TaxController extends Controller
      */
     public function create()
     {
-        $user = Auth::user();
-        $employees = Employee::where('company_id', $user->company_id)->get();
-        $ptkpStatuses = Tax::PTKP_STATUSES;
-
-        return view('taxes.create', compact('employees', 'ptkpStatuses'));
+        $formData = $this->taxService->getFormData();
+        
+        return view('taxes.create', [
+            'employees' => $formData['employees'],
+            'ptkpStatuses' => $formData['ptkpStatuses']
+        ]);
     }
 
     /**
      * Store a newly created tax calculation.
      */
-    public function store(Request $request)
+    public function store(TaxRequest $request)
     {
-        $user = Auth::user();
-        
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'tax_period' => 'required|date_format:Y-m',
-            'taxable_income' => 'required|numeric|min:1000000',
-            'ptkp_status' => 'required|in:' . implode(',', array_keys(Tax::PTKP_STATUSES)),
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $result = $this->taxService->createTax($request->validated());
 
-        $employee = Employee::findOrFail($request->employee_id);
-        
-        // Check if employee belongs to user's company
-        if ($employee->company_id !== $user->company_id) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Karyawan tidak ditemukan'
-                ], 404);
+                    'success' => true,
+                    'message' => 'Data pajak berhasil dibuat',
+                    'data' => new DetailTaxResource($result)
+                ]);
             }
-            return redirect()->back()->withErrors(['employee_id' => 'Karyawan tidak ditemukan.']);
-        }
 
-        // Check if tax calculation already exists for this period
-        $existingTax = Tax::where('company_id', $user->company_id)
-            ->where('employee_id', $request->employee_id)
-            ->where('tax_period', $request->tax_period)
-            ->first();
-
-        if ($existingTax) {
+            return redirect()->route('taxes.show', $result)->with('success', 'Data pajak berhasil dibuat.');
+        } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Perhitungan pajak sudah ada untuk periode ini'
+                    'message' => $e->getMessage()
                 ], 422);
             }
-            return redirect()->back()->withErrors(['tax_period' => 'Perhitungan pajak sudah ada untuk periode ini.']);
+
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
-
-        // Calculate tax
-        $taxCalculation = Tax::calculatePPh21($employee, $request->taxable_income);
-
-        // Create tax record
-        $tax = Tax::create([
-            'company_id' => $user->company_id,
-            'employee_id' => $request->employee_id,
-            'tax_period' => $request->tax_period,
-            'taxable_income' => $request->taxable_income,
-            'ptkp_status' => $request->ptkp_status,
-            'ptkp_amount' => $taxCalculation['ptkp_amount'],
-            'taxable_base' => $taxCalculation['taxable_base'],
-            'tax_amount' => $taxCalculation['tax_amount'],
-            'tax_bracket' => $taxCalculation['tax_bracket'],
-            'tax_rate' => $taxCalculation['tax_rate'],
-            'status' => Tax::STATUS_CALCULATED,
-            'notes' => $request->notes,
-        ]);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Data pajak berhasil dibuat'
-            ]);
-        }
-
-        return redirect()->route('taxes.show', $tax)->with('success', 'Data pajak berhasil dibuat.');
     }
 
     /**
@@ -241,8 +198,7 @@ class TaxController extends Controller
     public function show(Request $request, $id)
     {
         try {
-        $user = Auth::user();
-            $tax = Tax::with(['employee'])->where('company_id', $user->company_id)->findOrFail($id);
+            $tax = $this->taxService->getTaxById($id);
             
             if ($request->expectsJson()) {
                 return response()->json([
@@ -256,11 +212,11 @@ class TaxController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data pajak tidak ditemukan'
+                    'message' => $e->getMessage()
                 ], 404);
             }
             
-            return redirect()->route('taxes.index')->with('error', 'Data pajak tidak ditemukan');
+            return redirect()->route('taxes.index')->with('error', $e->getMessage());
         }
     }
 
@@ -269,68 +225,46 @@ class TaxController extends Controller
      */
     public function edit(Tax $tax)
     {
-        $user = Auth::user();
-        
-        // Check if tax belongs to user's company
-        if ($tax->company_id !== $user->company_id) {
+        try {
+            $tax = $this->taxService->getTaxById($tax->id);
+            $formData = $this->taxService->getFormData();
+            
+            return view('taxes.edit', [
+                'tax' => $tax,
+                'ptkpStatuses' => $formData['ptkpStatuses']
+            ]);
+        } catch (\Exception $e) {
             abort(404);
         }
-
-        $ptkpStatuses = Tax::PTKP_STATUSES;
-        
-        return view('taxes.edit', compact('tax', 'ptkpStatuses'));
     }
 
     /**
      * Update the specified tax calculation.
      */
-    public function update(Request $request, Tax $tax)
+    public function update(TaxRequest $request, Tax $tax)
     {
-        $user = Auth::user();
-        
-        // Check if tax belongs to user's company
-        if ($tax->company_id !== $user->company_id) {
+        try {
+            $result = $this->taxService->updateTax($tax->id, $request->validated());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data pajak berhasil diperbarui',
+                    'data' => new DetailTaxResource($result)
+                ]);
+            }
+
+            return redirect()->route('taxes.show', $result)->with('success', 'Data pajak berhasil diperbarui.');
+        } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data pajak tidak ditemukan'
-                ], 404);
+                    'message' => $e->getMessage()
+                ], 422);
             }
-            abort(404);
+
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
-
-        $request->validate([
-            'taxable_income' => 'required|numeric|min:1000000',
-            'ptkp_status' => 'required|in:' . implode(',', array_keys(Tax::PTKP_STATUSES)),
-            'status' => 'required|in:' . implode(',', [Tax::STATUS_PENDING, Tax::STATUS_CALCULATED, Tax::STATUS_PAID, Tax::STATUS_VERIFIED]),
-            'notes' => 'nullable|string',
-        ]);
-
-        $employee = $tax->employee;
-        
-        // Recalculate tax
-        $taxCalculation = Tax::calculatePPh21($employee, $request->taxable_income);
-
-        $tax->update([
-            'taxable_income' => $request->taxable_income,
-            'ptkp_status' => $request->ptkp_status,
-            'ptkp_amount' => $taxCalculation['ptkp_amount'],
-            'taxable_base' => $taxCalculation['taxable_base'],
-            'tax_amount' => $taxCalculation['tax_amount'],
-            'tax_bracket' => $taxCalculation['tax_bracket'],
-            'tax_rate' => $taxCalculation['tax_rate'],
-            'status' => $request->status,
-            'notes' => $request->notes,
-        ]);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Data pajak berhasil diperbarui'
-            ]);
-        }
-
-        return redirect()->route('taxes.show', $tax)->with('success', 'Data pajak berhasil diperbarui.');
     }
 
     /**
@@ -338,13 +272,8 @@ class TaxController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $user = Auth::user();
-        
         try {
-            // Find tax by UUID and check if it belongs to user's company
-            $tax = Tax::where('company_id', $user->company_id)->findOrFail($id);
-            
-            $tax->delete();
+            $this->taxService->deleteTax($id);
             
             if ($request->expectsJson()) {
                 return response()->json([
@@ -358,11 +287,11 @@ class TaxController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data pajak tidak ditemukan'
+                    'message' => $e->getMessage()
                 ], 404);
             }
             
-            return redirect()->route('taxes.index')->with('error', 'Data pajak tidak ditemukan');
+            return redirect()->route('taxes.index')->with('error', $e->getMessage());
         }
     }
 
@@ -389,18 +318,11 @@ class TaxController extends Controller
         // Get all employees for the company
         $employees = Employee::where('company_id', $user->company_id)->get();
         
-        // Check if there are any payrolls for this period
-        $payrollsExist = Payroll::where('company_id', $user->company_id)
-            ->where('period', $period)
-            ->exists();
-            
-        if (!$payrollsExist) {
-            return redirect()->route('taxes.index')
-                ->with('error', "Tidak ada data payroll untuk periode {$period}. Silakan generate payroll terlebih dahulu.");
-        }
-        
         $calculatedCount = 0;
-        $errors = [];
+        $skippedCount = 0;
+        $payrollCount = 0;
+        $basicSalaryCount = 0;
+        $errorCount = 0;
 
         foreach ($employees as $employee) {
             try {
@@ -411,25 +333,32 @@ class TaxController extends Controller
                     ->first();
 
                 if ($existingTax) {
+                    $skippedCount++;
                     continue; // Skip if already calculated
                 }
 
-                // Get payroll for this period
+                // Try to get payroll for this period first
                 $payroll = Payroll::where('company_id', $user->company_id)
                     ->where('employee_id', $employee->id)
                     ->where('period', $period)
                     ->first();
 
-                if (!$payroll) {
-                    $errors[] = "Tidak ada payroll untuk {$employee->name} pada periode {$period}";
-                    continue;
-                }
+                $taxableIncome = 0;
+                $payrollId = null;
 
-                // Calculate taxable income (basic salary + allowances + overtime + bonus)
-                $taxableIncome = $payroll->basic_salary + 
-                               $payroll->allowances + 
-                               $payroll->overtime + 
-                               $payroll->bonus;
+                if ($payroll) {
+                    // Use payroll data if available
+                    $taxableIncome = $payroll->basic_salary + 
+                                   $payroll->allowances + 
+                                   $payroll->overtime + 
+                                   $payroll->bonus;
+                    $payrollId = $payroll->id;
+                    $payrollCount++;
+                } else {
+                    // Use basic salary as fallback
+                    $taxableIncome = $employee->basic_salary;
+                    $basicSalaryCount++;
+                }
 
                 // Calculate tax
                 $taxCalculation = Tax::calculatePPh21($employee, $taxableIncome);
@@ -438,7 +367,7 @@ class TaxController extends Controller
                 Tax::create([
                     'company_id' => $user->company_id,
                     'employee_id' => $employee->id,
-                    'payroll_id' => $payroll->id,
+                    'payroll_id' => $payrollId,
                     'tax_period' => $period,
                     'taxable_income' => $taxableIncome,
                     'ptkp_status' => $employee->ptkp_status ?? 'TK/0',
@@ -452,13 +381,41 @@ class TaxController extends Controller
 
                 $calculatedCount++;
             } catch (\Exception $e) {
-                $errors[] = "Error calculating tax for {$employee->name}: " . $e->getMessage();
+                $errorCount++;
             }
         }
 
-        $message = "Berhasil menghitung pajak untuk {$calculatedCount} karyawan.";
-        if (!empty($errors)) {
-            $message .= " Error: " . implode(', ', $errors);
+        // Build professional message
+        $message = "✅ Berhasil menghitung pajak untuk {$calculatedCount} karyawan";
+        
+        if ($skippedCount > 0) {
+            $message .= "\n⏭️ {$skippedCount} karyawan sudah memiliki perhitungan pajak";
+        }
+        
+        if ($payrollCount > 0) {
+            $message .= "\n📊 {$payrollCount} karyawan menggunakan data payroll";
+        }
+        
+        if ($basicSalaryCount > 0) {
+            $message .= "\n💰 {$basicSalaryCount} karyawan menggunakan gaji pokok (tidak ada payroll)";
+        }
+        
+        if ($errorCount > 0) {
+            $message .= "\n❌ {$errorCount} karyawan gagal dihitung";
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'calculated_count' => $calculatedCount,
+                    'skipped_count' => $skippedCount,
+                    'payroll_count' => $payrollCount,
+                    'basic_salary_count' => $basicSalaryCount,
+                    'error_count' => $errorCount
+                ]
+            ]);
         }
 
         return redirect()->route('taxes.index')->with('success', $message);

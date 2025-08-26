@@ -19,7 +19,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('taxes.calculate-for-payroll') }}" method="POST" class="form-inline">
+                    <form id="calculateTaxForm" action="{{ route('taxes.calculate-for-payroll') }}" method="POST" class="form-inline">
                         @csrf
                         <div class="form-group mr-3">
                             <label for="month" class="mr-2">Bulan:</label>
@@ -37,7 +37,7 @@
                                 @endfor
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-success btn-sm">
+                        <button type="submit" class="btn btn-success btn-sm" id="calculateTaxBtn">
                             <i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan
                         </button>
                     </form>
@@ -51,33 +51,21 @@
                     <!-- Filter Section -->
                     <div class="row mb-3">
                         <div class="col-md-3">
-                            <label for="period_filter">Periode Pajak:</label>
-                            <select id="period_filter" class="form-control form-control-sm">
-                                <option value="">Semua Periode</option>
-                                @php
-                                    $currentYear = date('Y');
-                                    $currentMonth = date('m');
-                                @endphp
-                                @for($year = $currentYear - 2; $year <= $currentYear + 1; $year++)
-                                    @for($month = 1; $month <= 12; $month++)
-                                        @php
-                                            $periodValue = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
-                                            $periodLabel = date('F Y', mktime(0, 0, 0, $month, 1, $year));
-                                        @endphp
-                                        <option value="{{ $periodValue }}" {{ $currentYear . '-' . $currentMonth == $periodValue ? 'selected' : '' }}>
-                                            {{ $periodLabel }}
-                                        </option>
-                                    @endfor
+                            <label for="filter_month">Bulan:</label>
+                            <select id="filter_month" class="form-control form-control-sm">
+                                <option value="">Semua Bulan</option>
+                                @for($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
                                 @endfor
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label for="employee_filter">Karyawan:</label>
-                            <select id="employee_filter" class="form-control form-control-sm">
-                                <option value="">Semua Karyawan</option>
-                                @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
-                                @endforeach
+                            <label for="filter_year">Tahun:</label>
+                            <select id="filter_year" class="form-control form-control-sm">
+                                <option value="">Semua Tahun</option>
+                                @for($i = date('Y'); $i >= date('Y') - 5; $i--)
+                                    <option value="{{ $i }}">{{ $i }}</option>
+                                @endfor
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -94,10 +82,10 @@
                             <label>&nbsp;</label>
                             <div>
                                 <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-filter"></i> Filter
+                                    <i class="fas fa-filter mr-1"></i> Filter
                                 </button>
                                 <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-undo"></i> Reset
+                                    <i class="fas fa-undo mr-1"></i> Reset
                                 </button>
                             </div>
                         </div>
@@ -105,21 +93,21 @@
 
                     <!-- DataTable -->
                     <table class="table table-bordered table-striped" id="taxes-table" style="width: 100%;">
-                            <thead>
-                                <tr>
+                        <thead>
+                            <tr>
                                 <th>Nomor</th>
                                 <th>Nama Karyawan</th>
                                 <th>ID Karyawan</th>
-                                    <th>Periode Pajak</th>
-                                    <th>Pendapatan Kena Pajak</th>
+                                <th>Periode Pajak</th>
+                                <th>Pendapatan Kena Pajak</th>
                                 <th>PTKP</th>
                                 <th>Jumlah Pajak</th>
                                 <th>Tarif Pajak</th>
-                                    <th>Status</th>
+                                <th>Status</th>
                                 <th>Aksi</th>
-                                </tr>
-                            </thead>
-                        </table>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
                 
@@ -127,7 +115,25 @@
     </div>
 </div>
 
-
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Detail Pajak</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- Detail content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- CSRF Token for AJAX -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -156,7 +162,17 @@
 @include('components.sweet-alert')
 
 <script>
-$(document).ready(function () {
+// Test jQuery availability with retry mechanism
+function initDataTable() {
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not available in DataTable script, retrying in 500ms...');
+        setTimeout(initDataTable, 500);
+        return;
+    }
+    
+    console.log('jQuery is available in DataTable script, version:', $.fn.jquery);
+    
+    $(function () {
     // Global variables
     let currentTaxId = null;
     let isEditMode = false;
@@ -176,12 +192,15 @@ $(document).ready(function () {
             url: '{{ route("taxes.data") }}',
             type: 'GET',
             data: function(d) {
-                d.period_filter = $('#period_filter').val();
-                d.employee_filter = $('#employee_filter').val();
+                d.filter_month = $('#filter_month').val();
+                d.filter_year = $('#filter_year').val();
                 d.status_filter = $('#status_filter').val();
             },
             error: function(xhr, error, thrown) {
-                SwalHelper.error('Error', 'Gagal memuat data pajak: ' + (xhr.responseJSON ? xhr.responseJSON.error : error));
+                // Handle DataTable errors silently or show a user-friendly message
+                console.log('DataTable error:', error);
+                // You can show a toast notification here if needed
+                // SwalHelper.toastError('Gagal memuat data pajak');
             }
         },
         columns: [
@@ -235,23 +254,7 @@ $(document).ready(function () {
                 }
             }
         ],
-        language: {
-            "sProcessing":   "Sedang memproses...",
-            "sLengthMenu":   "Tampilkan _MENU_ entri",
-            "sZeroRecords":  "Tidak ditemukan data yang sesuai",
-            "sInfo":         "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-            "sInfoEmpty":    "Menampilkan 0 sampai 0 dari 0 entri",
-            "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
-            "sInfoPostFix":  "",
-            "sSearch":       "Cari:",
-            "sUrl":          "",
-            "oPaginate": {
-                "sFirst":    "Pertama",
-                "sPrevious": "Sebelumnya",
-                "sNext":     "Selanjutnya",
-                "sLast":     "Terakhir"
-            }
-        },
+        language: window.DataTablesLanguage,
         responsive: true,
         order: [[1, 'asc']]
     });
@@ -264,21 +267,47 @@ $(document).ready(function () {
 
     // Apply filter
     $('#apply_filter').on('click', function() {
-        table.ajax.reload();
+        var $btn = $(this);
+        var originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Memproses...');
+        $btn.prop('disabled', true);
+        
+        table.ajax.reload(function() {
+            // Restore button state
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+        });
     });
 
     // Reset filter
     $('#reset_filter').on('click', function() {
-        $('#period_filter').val('');
-        $('#employee_filter').val('');
+        var $btn = $(this);
+        var originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Reset...');
+        $btn.prop('disabled', true);
+        
+        // Reset filter values
+        $('#filter_month').val('');
+        $('#filter_year').val('');
         $('#status_filter').val('');
-        table.ajax.reload();
+        
+        table.ajax.reload(function() {
+            // Restore button state
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+        });
     });
+
+
 
     // Handle view button click
     $(document).on('click', '.view-btn', function() {
         var id = $(this).data('id');
-        window.location.href = '/taxes/' + id;
+        loadTaxDetail(id);
     });
 
     // Handle edit button click
@@ -286,6 +315,116 @@ $(document).ready(function () {
         var id = $(this).data('id');
         window.location.href = '/taxes/' + id + '/edit';
     });
+
+    // Load tax detail
+    function loadTaxDetail(id) {
+        $('#detailModal').modal('show');
+        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>');
+        
+        $.ajax({
+            url: '/taxes/' + id,
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success && response.data) {
+                    var tax = response.data;
+                    var detailHtml = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Nama Karyawan:</strong></td>
+                                        <td>${tax.employee.name}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ID Karyawan:</strong></td>
+                                        <td>${tax.employee.employee_id}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jabatan:</strong></td>
+                                        <td>${tax.employee.position}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Departemen:</strong></td>
+                                        <td>${tax.employee.department}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Periode Pajak:</strong></td>
+                                        <td>${tax.tax_period_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status PTKP:</strong></td>
+                                        <td>${tax.ptkp_status}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>${tax.status_badge}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tanggal Dibuat:</strong></td>
+                                        <td>${tax.created_at_formatted}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="mt-3">Detail Perhitungan Pajak</h6>
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td><strong>Pendapatan Kena Pajak:</strong></td>
+                                        <td>${tax.taxable_income_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jumlah PTKP:</strong></td>
+                                        <td>${tax.ptkp_amount_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Dasar Pengenaan Pajak:</strong></td>
+                                        <td>${tax.taxable_base_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jumlah Pajak:</strong></td>
+                                        <td>${tax.tax_amount_formatted}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tarif Pajak:</strong></td>
+                                        <td>${tax.tax_rate_formatted}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        ${tax.notes ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <strong>Catatan:</strong><br>
+                                <p>${tax.notes}</p>
+                            </div>
+                        </div>
+                        ` : ''}
+                    `;
+                    $('#detailContent').html(detailHtml);
+                } else {
+                    $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                    SwalHelper.error('Error!', response.message);
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat memuat detail pajak';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                SwalHelper.error('Error!', message);
+            }
+        });
+    }
 
 
 
@@ -331,7 +470,75 @@ $(document).ready(function () {
 
 
 
+    // Handle tax calculation form submission
+    $('#calculateTaxForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        var month = $('#month').val();
+        var year = $('#year').val();
+        var monthName = $('#month option:selected').text();
+        
+        // Show confirmation dialog
+        SwalHelper.confirm(
+            'Konfirmasi Perhitungan Pajak',
+            `Apakah Anda yakin ingin menghitung pajak untuk periode ${monthName} ${year}?`,
+            function(result) {
+                if (result.isConfirmed) {
+                    // Show loading
+                    SwalHelper.loading('Menghitung pajak...');
+                    
+                    // Disable button
+                    $('#calculateTaxBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menghitung...');
+                    
+                    // Submit form using AJAX
+                    $.ajax({
+                        url: $('#calculateTaxForm').attr('action'),
+                        type: 'POST',
+                        data: $('#calculateTaxForm').serialize(),
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        success: function(response) {
+                            // Re-enable button
+                            $('#calculateTaxBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan');
+                            
+                            // Close loading
+                            SwalHelper.closeLoading();
+                            
+                            // Show success message
+                            SwalHelper.success('Berhasil!', response.message);
+                            
+                            // Reload DataTable
+                            setTimeout(function() {
+                                table.ajax.reload();
+                            }, 1000);
+                        },
+                        error: function(xhr) {
+                            // Re-enable button
+                            $('#calculateTaxBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Hitung Pajak untuk Semua Karyawan');
+                            
+                            // Close loading
+                            SwalHelper.closeLoading();
+                            
+                            // Show error message
+                            var message = 'Terjadi kesalahan saat menghitung pajak';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            SwalHelper.error('Error!', message);
+                        }
+                    });
+                }
+            }
+        );
+    });
+
     // Session messages sudah ditangani oleh global SwalHelper di layout
-});
+    });
+}
+
+// Start initialization
+initDataTable();
 </script>
 @endpush 

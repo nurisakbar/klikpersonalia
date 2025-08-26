@@ -8,6 +8,7 @@ use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Collection;
 
 class TaxService
 {
@@ -37,7 +38,9 @@ class TaxService
     public function getTaxesForDataTable(array $filters = [])
     {
         try {
-            return $this->taxRepository->getAllForDataTable($filters);
+            $result = $this->taxRepository->getAllForDataTable($filters);
+            
+            return $result;
         } catch (\Exception $e) {
             Log::error('Error getting taxes for DataTable: ' . $e->getMessage());
             throw new \Exception('Gagal mengambil data pajak untuk DataTable');
@@ -314,6 +317,41 @@ class TaxService
             Log::error('Error exporting tax data: ' . $e->getMessage());
             throw new \Exception('Gagal mengekspor data pajak');
         }
+    }
+
+    /**
+     * Get form data (employees, ptkp statuses, etc.).
+     */
+    public function getFormData(): array
+    {
+        return [
+            'employees' => $this->taxRepository->getEmployeesForTaxCalculation(),
+            'ptkpStatuses' => Tax::PTKP_STATUSES,
+        ];
+    }
+
+    /**
+     * Get employees for select dropdown
+     */
+    public function getEmployeesForSelect()
+    {
+        return $this->taxRepository->getEmployeesForTaxCalculation();
+    }
+
+    /**
+     * Search taxes.
+     */
+    public function searchTaxes(string $query): Collection
+    {
+        return $this->taxRepository->search($query);
+    }
+
+    /**
+     * Default list for select (no query), capped.
+     */
+    public function getDefaultTaxesForSelect(int $limit = 20): Collection
+    {
+        return $this->taxRepository->getForSelect($limit);
     }
 
     /**

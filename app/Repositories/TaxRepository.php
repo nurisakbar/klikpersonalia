@@ -53,12 +53,13 @@ class TaxRepository
             ->where('company_id', $user->company_id);
 
         // Apply filters
-        if (!empty($filters['period'])) {
-            $query->where('tax_period', $filters['period']);
+        if (!empty($filters['month'])) {
+            $month = str_pad($filters['month'], 2, '0', STR_PAD_LEFT);
+            $query->where('tax_period', 'LIKE', '%-' . $month);
         }
 
-        if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
+        if (!empty($filters['year'])) {
+            $query->where('tax_period', 'LIKE', $filters['year'] . '-%');
         }
 
         if (!empty($filters['status'])) {
@@ -279,5 +280,37 @@ class TaxRepository
             'calculated_count' => $calculatedCount,
             'errors' => $errors,
         ];
+    }
+
+    /**
+     * Search taxes by employee name or tax period
+     */
+    public function search(string $query)
+    {
+        $user = Auth::user();
+        
+        return $this->model->with(['employee'])
+            ->where('company_id', $user->company_id)
+            ->whereHas('employee', function ($q) use ($query) {
+                $q->where('name', 'like', '%' . $query . '%')
+                  ->orWhere('employee_id', 'like', '%' . $query . '%');
+            })
+            ->orWhere('tax_period', 'like', '%' . $query . '%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get taxes for select dropdown
+     */
+    public function getForSelect(int $limit = 20)
+    {
+        $user = Auth::user();
+        
+        return $this->model->with(['employee'])
+            ->where('company_id', $user->company_id)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
     }
 }
