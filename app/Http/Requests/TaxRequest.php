@@ -22,16 +22,23 @@ class TaxRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Default rules for both create and update
         $rules = [
-            'employee_id' => 'required|exists:employees,id',
-            'tax_period' => 'required|date_format:Y-m',
             'taxable_income' => 'required|numeric|min:1000000',
             'ptkp_status' => 'required|in:' . implode(',', array_keys(Tax::PTKP_STATUSES)),
             'notes' => 'nullable|string|max:1000',
         ];
 
-        // Add status validation for updates
+        // On create, require employee and period
+        if ($this->isMethod('POST')) {
+            $rules['employee_id'] = 'required|exists:employees,id';
+            $rules['tax_period'] = 'required|date_format:Y-m';
+        }
+
+        // On update, employee and period are immutable; accept if present but not required
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $rules['employee_id'] = 'sometimes|exists:employees,id';
+            $rules['tax_period'] = 'sometimes|date_format:Y-m';
             $rules['status'] = 'required|in:' . implode(',', [
                 Tax::STATUS_PENDING,
                 Tax::STATUS_CALCULATED,

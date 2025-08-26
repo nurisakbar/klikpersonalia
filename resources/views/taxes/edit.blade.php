@@ -22,6 +22,7 @@
                                 <div class="form-group">
                                     <label for="employee_id">Karyawan <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" value="{{ $tax->employee->name }} ({{ $tax->employee->employee_id }})" readonly>
+                                    <input type="hidden" name="employee_id" value="{{ $tax->employee->id }}">
                                     <small class="form-text text-muted">Karyawan tidak dapat diubah</small>
                                 </div>
                             </div>
@@ -29,6 +30,7 @@
                                 <div class="form-group">
                                     <label for="tax_period">Periode Pajak <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" value="{{ \Carbon\Carbon::createFromFormat('Y-m', $tax->tax_period)->format('F Y') }}" readonly>
+                                    <input type="hidden" name="tax_period" value="{{ $tax->tax_period }}">
                                     <small class="form-text text-muted">Periode pajak tidak dapat diubah</small>
                                 </div>
                             </div>
@@ -93,66 +95,7 @@
                             </div>
                         </div>
 
-                        <!-- Tax Calculation Preview -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title">
-                                            <i class="fas fa-calculator"></i> Preview Perhitungan Pajak
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-info">
-                                                        <i class="fas fa-shield-alt"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">PTKP</span>
-                                                        <span class="info-box-number" id="ptkp_amount">Rp {{ number_format($tax->ptkp_amount, 0, ',', '.') }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-warning">
-                                                        <i class="fas fa-calculator"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">Dasar Pengenaan</span>
-                                                        <span class="info-box-number" id="taxable_base">Rp {{ number_format($tax->taxable_base, 0, ',', '.') }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-danger">
-                                                        <i class="fas fa-percentage"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">Tarif Pajak</span>
-                                                        <span class="info-box-number" id="tax_rate">{{ number_format($tax->tax_rate * 100, 1) }}%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="info-box">
-                                                    <span class="info-box-icon bg-success">
-                                                        <i class="fas fa-coins"></i>
-                                                    </span>
-                                                    <div class="info-box-content">
-                                                        <span class="info-box-text">Jumlah Pajak</span>
-                                                        <span class="info-box-number" id="tax_amount">Rp {{ number_format($tax->tax_amount, 0, ',', '.') }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -232,7 +175,7 @@ $(function () {
                     }, 2000);
                 } else {
                     SwalHelper.error('Gagal!', response.message);
-                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Update');
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Perbarui');
                 }
             },
             error: function(xhr) {
@@ -249,7 +192,7 @@ $(function () {
                 }
                 
                 SwalHelper.error('Error!', message);
-                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Update');
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Perbarui');
             }
         });
     });

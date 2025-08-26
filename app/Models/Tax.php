@@ -110,12 +110,25 @@ class Tax extends Model
             }
         }
 
+        // Determine bracket for display and rate (decimal, e.g., 0.05)
+        $currentBracket = self::getTaxBracket($taxableBase);
+        $taxRateDecimal = $currentBracket['rate'] ?? 0;
+        $taxBracketLabel = null;
+        if ($currentBracket) {
+            if ($currentBracket['max'] === null) {
+                $taxBracketLabel = '>' . number_format($currentBracket['min'], 0, ',', '.');
+            } else {
+                $taxBracketLabel = number_format($currentBracket['min'], 0, ',', '.') . ' - ' . number_format($currentBracket['max'], 0, ',', '.');
+            }
+        }
+
         return [
             'ptkp_status' => $ptkpStatus,
             'ptkp_amount' => $ptkpAmount,
             'taxable_base' => $taxableBase,
             'tax_amount' => $taxAmount,
-            'tax_rate' => $taxableBase > 0 ? ($taxAmount / $taxableBase) * 100 : 0
+            'tax_bracket' => $taxBracketLabel,
+            'tax_rate' => $taxRateDecimal,
         ];
     }
 

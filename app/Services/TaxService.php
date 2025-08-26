@@ -165,7 +165,7 @@ class TaxService
     /**
      * Delete tax
      */
-    public function deleteTax(int $id)
+    public function deleteTax(string $id)
     {
         try {
             DB::beginTransaction();

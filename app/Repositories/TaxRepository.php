@@ -208,7 +208,7 @@ class TaxRepository
     /**
      * Check if tax calculation exists for employee and period
      */
-    public function existsForEmployeeAndPeriod(int $employeeId, string $period)
+    public function existsForEmployeeAndPeriod(string $employeeId, string $period)
     {
         $user = Auth::user();
         
