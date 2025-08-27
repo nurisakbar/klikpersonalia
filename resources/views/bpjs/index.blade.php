@@ -270,6 +270,7 @@ $(document).ready(function() {
         $.ajax({
             url: '/bpjs/' + id,
             type: 'GET',
+            errorHandled: true, // Mark as manually handled
             headers: {
                 'Accept': 'application/json'
             },
@@ -300,10 +301,16 @@ $(document).ready(function() {
                     $('#detailContent').html(detailHtml);
                 } else {
                     $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                    SwalHelper.error('Error!', response.message);
                 }
             },
             error: function(xhr) {
+                let message = 'Terjadi kesalahan saat memuat detail BPJS';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
                 $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                SwalHelper.error('Error!', message);
             }
         });
     }
@@ -313,53 +320,102 @@ $(document).ready(function() {
         var id = $(this).data('id');
         var name = $(this).data('name');
         
-        if (confirm('Apakah Anda yakin ingin menghapus data BPJS "' + name + '" ?')) {
-            $.ajax({
-                url: '/bpjs/' + id,
-                type: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.success) {
-                        alert('Data berhasil dihapus');
-                        table.ajax.reload();
-                    } else {
-                        alert('Gagal menghapus data');
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus data BPJS "' + name + '" ?', function(result) {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Menghapus...');
+
+                // Send delete request
+                $.ajax({
+                    url: '/bpjs/' + id,
+                    type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menghapus data';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.error('Error!', message);
                     }
-                },
-                error: function(xhr) {
-                    alert('Terjadi kesalahan saat menghapus data');
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
     // Handle bulk calculation form
     $('#bulkCalculationForm').on('submit', function(e) {
         e.preventDefault();
         
-        var form = $(this);
-        var submitBtn = $('#calculateBtn');
-        var originalText = submitBtn.html();
+        var payrollPeriod = $('#payroll_period').val();
+        var bpjsType = $('#bpjs_type option:selected').text();
         
-        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menghitung...');
-        
-        $.ajax({
-            url: form.attr('action'),
-            type: 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                alert('Perhitungan BPJS berhasil diselesaikan');
-                table.ajax.reload();
-            },
-            error: function(xhr) {
-                alert('Terjadi kesalahan saat menghitung BPJS');
-            },
-            complete: function() {
-                submitBtn.prop('disabled', false).html(originalText);
+        // Show confirmation dialog
+        SwalHelper.confirm(
+            'Konfirmasi Perhitungan BPJS',
+            `Apakah Anda yakin ingin menghitung BPJS ${bpjsType} untuk periode ${payrollPeriod}?`,
+            function(result) {
+                if (result.isConfirmed) {
+                    // Show loading
+                    SwalHelper.loading('Menghitung BPJS...');
+                    
+                    // Disable button
+                    $('#calculateBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menghitung...');
+                    
+                    // Submit form using AJAX
+                    $.ajax({
+                        url: $('#bulkCalculationForm').attr('action'),
+                        type: 'POST',
+                        data: $('#bulkCalculationForm').serialize(),
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        success: function(response) {
+                            // Re-enable button
+                            $('#calculateBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Calculate BPJS for All Employees');
+                            
+                            // Close loading
+                            SwalHelper.closeLoading();
+                            
+                            // Show success message
+                            SwalHelper.success('Berhasil!', response.message || 'Perhitungan BPJS berhasil diselesaikan');
+                            
+                            // Reload DataTable
+                            setTimeout(function() {
+                                table.ajax.reload();
+                            }, 1000);
+                        },
+                        error: function(xhr) {
+                            // Re-enable button
+                            $('#calculateBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Calculate BPJS for All Employees');
+                            
+                            // Close loading
+                            SwalHelper.closeLoading();
+                            
+                            // Show error message
+                            var message = 'Terjadi kesalahan saat menghitung BPJS';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            SwalHelper.error('Error!', message);
+                        }
+                    });
+                }
             }
-        });
+        );
     });
 });
 </script>
