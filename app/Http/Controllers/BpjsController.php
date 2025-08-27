@@ -35,11 +35,25 @@ class BpjsController extends Controller
     /**
      * Get BPJS data for DataTables.
      */
-    public function data(): JsonResponse
+    public function data(Request $request): JsonResponse
     {
         $companyId = Auth::user()->company_id;
         $query = Bpjs::with(['employee'])
             ->forCompany($companyId);
+
+        // Apply filters
+        if ($request->filled('month')) {
+            $month = str_pad($request->month, 2, '0', STR_PAD_LEFT);
+            $query->where('bpjs_period', 'LIKE', '%-' . $month);
+        }
+
+        if ($request->filled('year')) {
+            $query->where('bpjs_period', 'LIKE', $request->year . '-%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         return DataTables::of($query)
             ->addColumn('employee_name', function ($bpjs) {

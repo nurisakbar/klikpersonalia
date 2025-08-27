@@ -54,6 +54,50 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                    <!-- Filter Section -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="filter_month">Bulan:</label>
+                            <select id="filter_month" class="form-control form-control-sm">
+                                <option value="">Semua Bulan</option>
+                                @for($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter_year">Tahun:</label>
+                            <select id="filter_year" class="form-control form-control-sm">
+                                <option value="">Semua Tahun</option>
+                                @for($i = date('Y'); $i >= date('Y') - 5; $i--)
+                                    <option value="{{ $i }}">{{ $i }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status_filter">Status:</label>
+                            <select id="status_filter" class="form-control form-control-sm">
+                                <option value="">Semua Status</option>
+                                <option value="pending">Menunggu</option>
+                                <option value="calculated">Dihitung</option>
+                                <option value="paid">Dibayar</option>
+                                <option value="verified">Diverifikasi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>&nbsp;</label>
+                            <div>
+                                <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-filter mr-1"></i> Filter
+                                </button>
+                                <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-undo mr-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DataTable -->
                     <table class="table table-bordered table-striped" id="bpjs-table" style="width: 100%;">
                         <thead>
                             <tr>
@@ -251,6 +295,38 @@ $(document).ready(function() {
             }
         },
         order: [[4, 'desc']]
+    });
+
+    // Filter functionality
+    $('#apply_filter').on('click', function() {
+        var month = $('#filter_month').val();
+        var year = $('#filter_year').val();
+        var status = $('#status_filter').val();
+        
+        // Build filter URL
+        var filterUrl = '{{ route("bpjs.data") }}?';
+        var params = [];
+        
+        if (month) params.push('month=' + month);
+        if (year) params.push('year=' + year);
+        if (status) params.push('status=' + status);
+        
+        if (params.length > 0) {
+            filterUrl += params.join('&');
+        }
+        
+        // Reload DataTable with filters
+        table.ajax.url(filterUrl).load();
+    });
+
+    // Reset filter
+    $('#reset_filter').on('click', function() {
+        $('#filter_month').val('');
+        $('#filter_year').val('');
+        $('#status_filter').val('');
+        
+        // Reload DataTable without filters
+        table.ajax.url('{{ route("bpjs.data") }}').load();
     });
 
     // Handle view button
