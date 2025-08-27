@@ -1,288 +1,500 @@
 @extends('layouts.app')
 
-@section('title', 'BPJS Management')
+@section('title', 'Kelola BPJS- Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola BPJS')
 
-@section('content')
-<div class="content-wrapper">
-    <!-- Content Header -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>BPJS Management</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">BPJS Management</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main content -->
-    <section class="content">
-        <div class="container-fluid">
-            <!-- Info boxes -->
-            <div class="row">
-                <div class="col-12 col-sm-6 col-md-3">
-                    <div class="info-box">
-                        <span class="info-box-icon bg-info"><i class="fas fa-heartbeat"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text">BPJS Kesehatan</span>
-                            <span class="info-box-number">{{ $bpjsRecords->where('bpjs_type', 'kesehatan')->count() }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                    <div class="info-box">
-                        <span class="info-box-icon bg-success"><i class="fas fa-briefcase"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text">BPJS Ketenagakerjaan</span>
-                            <span class="info-box-number">{{ $bpjsRecords->where('bpjs_type', 'ketenagakerjaan')->count() }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                    <div class="info-box">
-                        <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text">Pending</span>
-                            <span class="info-box-number">{{ $bpjsRecords->where('status', 'pending')->count() }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                    <div class="info-box">
-                        <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text">Paid</span>
-                            <span class="info-box-number">{{ $bpjsRecords->where('status', 'paid')->count() }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">BPJS Records</h3>
-                            <div class="card-tools">
-                                <a href="{{ route('bpjs.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-plus"></i> New BPJS Record
-                                </a>
-                                <a href="{{ route('bpjs.report') }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-chart-bar"></i> Reports
-                                </a>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <!-- Filters -->
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <form method="GET" action="{{ route('bpjs.index') }}" class="form-inline">
-                                        <div class="form-group mr-2">
-                                            <label for="period" class="mr-1">Period:</label>
-                                            <select name="period" id="period" class="form-control form-control-sm">
-                                                <option value="">All Periods</option>
-                                                @foreach($periods as $period)
-                                                    <option value="{{ $period }}" {{ request('period') == $period ? 'selected' : '' }}>
-                                                        {{ \Carbon\Carbon::parse($period)->format('F Y') }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="form-group mr-2">
-                                            <label for="type" class="mr-1">Type:</label>
-                                            <select name="type" id="type" class="form-control form-control-sm">
-                                                <option value="">All Types</option>
-                                                <option value="kesehatan" {{ request('type') == 'kesehatan' ? 'selected' : '' }}>BPJS Kesehatan</option>
-                                                <option value="ketenagakerjaan" {{ request('type') == 'ketenagakerjaan' ? 'selected' : '' }}>BPJS Ketenagakerjaan</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group mr-2">
-                                            <label for="status" class="mr-1">Status:</label>
-                                            <select name="status" id="status" class="form-control form-control-sm">
-                                                <option value="">All Status</option>
-                                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                                <option value="calculated" {{ request('status') == 'calculated' ? 'selected' : '' }}>Calculated</option>
-                                                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                                                <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group mr-2">
-                                            <label for="employee_id" class="mr-1">Employee:</label>
-                                            <select name="employee_id" id="employee_id" class="form-control form-control-sm">
-                                                <option value="">All Employees</option>
-                                                @foreach($employees as $employee)
-                                                    <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>
-                                                        {{ $employee->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary btn-sm mr-2">
-                                            <i class="fas fa-search"></i> Filter
-                                        </button>
-                                        <a href="{{ route('bpjs.index') }}" class="btn btn-secondary btn-sm">
-                                            <i class="fas fa-times"></i> Clear
-                                        </a>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <!-- Bulk Calculation Form -->
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <div class="card card-outline card-info">
-                                        <div class="card-header">
-                                            <h3 class="card-title">Bulk BPJS Calculation</h3>
-                                        </div>
-                                        <div class="card-body">
-                                            <form method="POST" action="{{ route('bpjs.calculateForPayroll') }}">
-                                                @csrf
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="payroll_period">Payroll Period:</label>
-                                                            <input type="month" name="payroll_period" id="payroll_period" 
-                                                                   class="form-control" value="{{ date('Y-m') }}" required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="bpjs_type">BPJS Type:</label>
-                                                            <select name="bpjs_type" id="bpjs_type" class="form-control" required>
-                                                                <option value="both">Both (Kesehatan & Ketenagakerjaan)</option>
-                                                                <option value="kesehatan">BPJS Kesehatan Only</option>
-                                                                <option value="ketenagakerjaan">BPJS Ketenagakerjaan Only</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label>&nbsp;</label>
-                                                            <button type="submit" class="btn btn-success btn-block">
-                                                                <i class="fas fa-calculator"></i> Calculate BPJS for All Employees
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- BPJS Records Table -->
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Employee</th>
-                                            <th>Type</th>
-                                            <th>Period</th>
-                                            <th>Base Salary</th>
-                                            <th>Employee Contribution</th>
-                                            <th>Company Contribution</th>
-                                            <th>Total</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($bpjsRecords as $bpjs)
-                                            <tr>
-                                                <td>
-                                                    <strong>{{ $bpjs->employee->name }}</strong><br>
-                                                    <small class="text-muted">{{ $bpjs->employee->employee_id }}</small>
-                                                </td>
-                                                <td>
-                                                    @if($bpjs->bpjs_type === 'kesehatan')
-                                                        <span class="badge badge-info">
-                                                            <i class="fas fa-heartbeat"></i> Kesehatan
-                                                        </span>
-                                                    @else
-                                                        <span class="badge badge-success">
-                                                            <i class="fas fa-briefcase"></i> Ketenagakerjaan
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ \Carbon\Carbon::parse($bpjs->bpjs_period)->format('F Y') }}</td>
-                                                <td>Rp {{ number_format($bpjs->base_salary, 0, ',', '.') }}</td>
-                                                <td>Rp {{ number_format($bpjs->employee_contribution, 0, ',', '.') }}</td>
-                                                <td>Rp {{ number_format($bpjs->company_contribution, 0, ',', '.') }}</td>
-                                                <td>
-                                                    <strong>Rp {{ number_format($bpjs->total_contribution, 0, ',', '.') }}</strong>
-                                                </td>
-                                                <td>
-                                                    @switch($bpjs->status)
-                                                        @case('pending')
-                                                            <span class="badge badge-warning">Pending</span>
-                                                            @break
-                                                        @case('calculated')
-                                                            <span class="badge badge-info">Calculated</span>
-                                                            @break
-                                                        @case('paid')
-                                                            <span class="badge badge-success">Paid</span>
-                                                            @break
-                                                        @case('verified')
-                                                            <span class="badge badge-primary">Verified</span>
-                                                            @break
-                                                    @endswitch
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group">
-                                                        <a href="{{ route('bpjs.show', $bpjs) }}" 
-                                                           class="btn btn-sm btn-info" title="View">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                        <a href="{{ route('bpjs.edit', $bpjs) }}" 
-                                                           class="btn btn-sm btn-warning" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <form method="POST" action="{{ route('bpjs.destroy', $bpjs) }}" 
-                                                              style="display: inline;" 
-                                                              onsubmit="return confirm('Are you sure you want to delete this BPJS record?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="9" class="text-center">No BPJS records found.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Pagination -->
-                            <div class="d-flex justify-content-center">
-                                {{ $bpjsRecords->appends(request()->query())->links() }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
+@section('breadcrumb')
+<li class="breadcrumb-item active">Kelola BPJS</li>
 @endsection
 
-@push('scripts')
+@section('content')
+<div class="container-fluid">
+    <!-- Info boxes -->
+    <div class="row">
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-info"><i class="fas fa-heartbeat"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">BPJS Kesehatan</span>
+                    <span class="info-box-number">{{ $summary['kesehatan_count'] ?? 0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-success"><i class="fas fa-briefcase"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">BPJS Ketenagakerjaan</span>
+                    <span class="info-box-number">{{ $summary['ketenagakerjaan_count'] ?? 0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Pending</span>
+                    <span class="info-box-number">{{ $summary['pending_count'] ?? 0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Paid</span>
+                    <span class="info-box-number">{{ $summary['paid_count'] ?? 0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BPJS Records Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Filter Section -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="filter_month">Bulan:</label>
+                            <select id="filter_month" class="form-control form-control-sm">
+                                <option value="">Semua Bulan</option>
+                                @for($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter_year">Tahun:</label>
+                            <select id="filter_year" class="form-control form-control-sm">
+                                <option value="">Semua Tahun</option>
+                                @for($i = date('Y'); $i >= date('Y') - 5; $i--)
+                                    <option value="{{ $i }}">{{ $i }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status_filter">Status:</label>
+                            <select id="status_filter" class="form-control form-control-sm">
+                                <option value="">Semua Status</option>
+                                <option value="pending">Menunggu</option>
+                                <option value="calculated">Dihitung</option>
+                                <option value="paid">Dibayar</option>
+                                <option value="verified">Diverifikasi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>&nbsp;</label>
+                            <div>
+                                <button type="button" id="apply_filter" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-filter mr-1"></i> Filter
+                                </button>
+                                <button type="button" id="reset_filter" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-undo mr-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DataTable -->
+                    <table class="table table-bordered table-striped" id="bpjs-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Karyawan</th>
+                                <th>ID Karyawan</th>
+                                <th>Jenis BPJS</th>
+                                <th>Periode</th>
+                                <th>Gaji Pokok</th>
+                                <th>Kontribusi Karyawan</th>
+                                <th>Kontribusi Perusahaan</th>
+                                <th>Total Kontribusi</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Calculation Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-outline card-info">
+                <div class="card-header">
+                    <h3 class="card-title">Bulk BPJS Calculation</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('bpjs.calculateForPayroll') }}" id="bulkCalculationForm">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="payroll_period">Payroll Period:</label>
+                                    <input type="month" name="payroll_period" id="payroll_period" 
+                                           class="form-control" value="{{ date('Y-m') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="bpjs_type">BPJS Type:</label>
+                                    <select name="bpjs_type" id="bpjs_type" class="form-control" required>
+                                        <option value="both">Both (Kesehatan & Ketenagakerjaan)</option>
+                                        <option value="kesehatan">BPJS Kesehatan Only</option>
+                                        <option value="ketenagakerjaan">BPJS Ketenagakerjaan Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-success btn-block" id="calculateBtn">
+                                        <i class="fas fa-calculator"></i> Calculate BPJS for All Employees
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Detail BPJS</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- Detail content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token for AJAX -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
+@push('css')
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+@endpush
+
+@push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
+<!-- DataTables & Plugins -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
+
 <script>
 $(document).ready(function() {
-    // Auto-submit form when filters change
-    $('#period, #type, #status, #employee_id').change(function() {
-        $(this).closest('form').submit();
+    console.log('Document ready, jQuery version:', $.fn.jquery);
+    
+    // Check if DataTable is available
+    if (typeof $.fn.DataTable === 'undefined') {
+        console.error('DataTable is not available!');
+        return;
+    }
+    
+    console.log('DataTable is available');
+    
+    // Setup CSRF token for AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    // Initialize DataTable
+    var table = $('#bpjs-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("bpjs.data") }}',
+            type: 'GET'
+        },
+        columns: [
+            {data: null, name: 'row_number', orderable: false, searchable: false, 
+             render: function (data, type, row, meta) {
+                 return meta.row + meta.settings._iDisplayStart + 1;
+             }},
+            {data: 'employee_name', name: 'employee_name'},
+            {data: 'employee_id', name: 'employee_id'},
+            {data: 'bpjs_type_badge', name: 'bpjs_type'},
+            {data: 'period_formatted', name: 'bpjs_period'},
+            {data: 'base_salary_formatted', name: 'base_salary'},
+            {data: 'employee_contribution_formatted', name: 'employee_contribution'},
+            {data: 'company_contribution_formatted', name: 'company_contribution'},
+            {data: 'total_contribution_formatted', name: 'total_contribution'},
+            {data: 'status_badge', name: 'status'},
+            {data: 'action', name: 'action', orderable: false, searchable: false}
+        ],
+        scrollX: true,
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                text: '<i class="fas fa-plus"></i> Tambah',
+                className: 'btn btn-primary btn-sm mr-2',
+                action: function () {
+                    window.location.href = '{{ route("bpjs.create") }}';
+                }
+            },
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm'
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm'
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print',
+                className: 'btn btn-info btn-sm'
+            }
+        ],
+        language: {
+            'sProcessing': 'Memproses...',
+            'sLengthMenu': 'Tampilkan _MENU_ entri',
+            'sZeroRecords': 'Tidak ditemukan data yang sesuai',
+            'sInfo': 'Menampilkan _START_ sampai _END_ dari _TOTAL_ entri',
+            'sInfoEmpty': 'Menampilkan 0 sampai 0 dari 0 entri',
+            'sInfoFiltered': '(disaring dari _MAX_ entri keseluruhan)',
+            'sSearch': 'Cari:',
+            'oPaginate': {
+                'sFirst': 'Pertama',
+                'sPrevious': 'Sebelumnya',
+                'sNext': 'Selanjutnya',
+                'sLast': 'Terakhir'
+            }
+        },
+        order: [[4, 'desc']]
+    });
+
+    // Filter functionality
+    $('#apply_filter').on('click', function() {
+        var month = $('#filter_month').val();
+        var year = $('#filter_year').val();
+        var status = $('#status_filter').val();
+        
+        // Build filter URL
+        var filterUrl = '{{ route("bpjs.data") }}?';
+        var params = [];
+        
+        if (month) params.push('month=' + month);
+        if (year) params.push('year=' + year);
+        if (status) params.push('status=' + status);
+        
+        if (params.length > 0) {
+            filterUrl += params.join('&');
+        }
+        
+        // Reload DataTable with filters
+        table.ajax.url(filterUrl).load();
+    });
+
+    // Reset filter
+    $('#reset_filter').on('click', function() {
+        $('#filter_month').val('');
+        $('#filter_year').val('');
+        $('#status_filter').val('');
+        
+        // Reload DataTable without filters
+        table.ajax.url('{{ route("bpjs.data") }}').load();
+    });
+
+    // Handle view button
+    $(document).on('click', '.view-btn', function() {
+        var id = $(this).data('id');
+        loadBpjsDetail(id);
+    });
+
+    // Handle edit button
+    $(document).on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        window.location.href = '/bpjs/' + id + '/edit';
+    });
+
+    // Load BPJS detail
+    function loadBpjsDetail(id) {
+        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+        $('#detailModal').modal('show');
+
+        $.ajax({
+            url: '/bpjs/' + id,
+            type: 'GET',
+            errorHandled: true, // Mark as manually handled
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    let bpjs = response.data;
+                    let detailHtml = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr><td><strong>Karyawan:</strong></td><td>${bpjs.employee_name}</td></tr>
+                                    <tr><td><strong>ID Karyawan:</strong></td><td>${bpjs.employee_id}</td></tr>
+                                    <tr><td><strong>Jenis BPJS:</strong></td><td>${bpjs.bpjs_type_badge}</td></tr>
+                                    <tr><td><strong>Periode:</strong></td><td>${bpjs.period_formatted}</td></tr>
+                                    <tr><td><strong>Gaji Pokok:</strong></td><td>${bpjs.base_salary_formatted}</td></tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr><td><strong>Kontribusi Karyawan:</strong></td><td>${bpjs.employee_contribution_formatted}</td></tr>
+                                    <tr><td><strong>Kontribusi Perusahaan:</strong></td><td>${bpjs.company_contribution_formatted}</td></tr>
+                                    <tr><td><strong>Total Kontribusi:</strong></td><td>${bpjs.total_contribution_formatted}</td></tr>
+                                    <tr><td><strong>Status:</strong></td><td>${bpjs.status_badge}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    $('#detailContent').html(detailHtml);
+                } else {
+                    $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                    SwalHelper.error('Error!', response.message);
+                }
+            },
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat memuat detail BPJS';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                SwalHelper.error('Error!', message);
+            }
+        });
+    }
+
+    // Handle delete button
+    $(document).on('click', '.delete-btn', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus data BPJS "' + name + '" ?', function(result) {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Menghapus...');
+
+                // Send delete request
+                $.ajax({
+                    url: '/bpjs/' + id,
+                    type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menghapus data';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.error('Error!', message);
+                    }
+                });
+            }
+        });
+    });
+
+    // Handle bulk calculation form
+    $('#bulkCalculationForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        var payrollPeriod = $('#payroll_period').val();
+        var bpjsType = $('#bpjs_type option:selected').text();
+        
+        // Show confirmation dialog
+        SwalHelper.confirm(
+            'Konfirmasi Perhitungan BPJS',
+            `Apakah Anda yakin ingin menghitung BPJS ${bpjsType} untuk periode ${payrollPeriod}?`,
+            function(result) {
+                if (result.isConfirmed) {
+                    // Show loading
+                    SwalHelper.loading('Menghitung BPJS...');
+                    
+                    // Disable button
+                    $('#calculateBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menghitung...');
+                    
+                    // Submit form using AJAX
+                    $.ajax({
+                        url: $('#bulkCalculationForm').attr('action'),
+                        type: 'POST',
+                        data: $('#bulkCalculationForm').serialize(),
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        success: function(response) {
+                            // Re-enable button
+                            $('#calculateBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Calculate BPJS for All Employees');
+                            
+                            // Close loading
+                            SwalHelper.closeLoading();
+                            
+                            // Show success message
+                            SwalHelper.success('Berhasil!', response.message || 'Perhitungan BPJS berhasil diselesaikan');
+                            
+                            // Reload DataTable
+                            setTimeout(function() {
+                                table.ajax.reload();
+                            }, 1000);
+                        },
+                        error: function(xhr) {
+                            // Re-enable button
+                            $('#calculateBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Calculate BPJS for All Employees');
+                            
+                            // Close loading
+                            SwalHelper.closeLoading();
+                            
+                            // Show error message
+                            var message = 'Terjadi kesalahan saat menghitung BPJS';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            SwalHelper.error('Error!', message);
+                        }
+                    });
+                }
+            }
+        );
     });
 });
 </script>

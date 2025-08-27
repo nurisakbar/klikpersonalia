@@ -2,58 +2,122 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\BpjsDataTable;
 use App\Models\Bpjs;
 use App\Models\Employee;
-use App\Models\Payroll;
+use App\Services\BpjsService;
+use App\Http\Requests\BpjsRequest;
+use App\Http\Resources\BpjsResource;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Yajra\DataTables\Facades\DataTables;
 
 class BpjsController extends Controller
 {
+    public function __construct(
+        private BpjsService $bpjsService
+    ) {}
+
     /**
      * Display a listing of BPJS records
      */
-    public function index(Request $request)
+    public function index(BpjsDataTable $dataTable)
     {
         $companyId = Auth::user()->company_id;
-        
-        $query = Bpjs::with(['employee', 'payroll'])
+        $employees = Employee::forCompany($companyId)->get();
+        $periods = $this->bpjsService->getBpjsPeriods();
+        $summary = $this->bpjsService->getBpjsSummary();
+
+        return view('bpjs.index', compact('employees', 'periods', 'summary'));
+    }
+
+    /**
+     * Get BPJS data for DataTables.
+     */
+    public function data(Request $request): JsonResponse
+    {
+        $companyId = Auth::user()->company_id;
+        $query = Bpjs::with(['employee'])
             ->forCompany($companyId);
 
-        // Filter by period
-        if ($request->filled('period')) {
-            $query->forPeriod($request->period);
+        // Apply filters
+        if ($request->filled('month')) {
+            $month = str_pad($request->month, 2, '0', STR_PAD_LEFT);
+            $query->where('bpjs_period', 'LIKE', '%-' . $month);
         }
 
-        // Filter by type
-        if ($request->filled('type')) {
-            $query->forType($request->type);
+        if ($request->filled('year')) {
+            $query->where('bpjs_period', 'LIKE', $request->year . '-%');
         }
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by employee
-        if ($request->filled('employee_id')) {
-            $query->where('employee_id', $request->employee_id);
-        }
-
-        $bpjsRecords = $query->orderBy('bpjs_period', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        $employees = Employee::forCompany($companyId)->get();
-        $periods = Bpjs::forCompany($companyId)
-            ->distinct()
-            ->pluck('bpjs_period')
-            ->sort()
-            ->reverse();
-
-        return view('bpjs.index', compact('bpjsRecords', 'employees', 'periods'));
+        return DataTables::of($query)
+            ->addColumn('employee_name', function ($bpjs) {
+                return $bpjs->employee->name;
+            })
+            ->addColumn('employee_id', function ($bpjs) {
+                return $bpjs->employee->employee_id;
+            })
+            ->addColumn('bpjs_type_badge', function ($bpjs) {
+                if ($bpjs->bpjs_type === 'kesehatan') {
+                    return '<span class="badge badge-info"><i class="fas fa-heartbeat"></i> Kesehatan</span>';
+                } else {
+                    return '<span class="badge badge-success"><i class="fas fa-briefcase"></i> Ketenagakerjaan</span>';
+                }
+            })
+            ->addColumn('period_formatted', function ($bpjs) {
+                return \Carbon\Carbon::parse($bpjs->bpjs_period)->format('F Y');
+            })
+            ->addColumn('base_salary_formatted', function ($bpjs) {
+                return 'Rp ' . number_format($bpjs->base_salary, 0, ',', '.');
+            })
+            ->addColumn('employee_contribution_formatted', function ($bpjs) {
+                return 'Rp ' . number_format($bpjs->employee_contribution, 0, ',', '.');
+            })
+            ->addColumn('company_contribution_formatted', function ($bpjs) {
+                return 'Rp ' . number_format($bpjs->company_contribution, 0, ',', '.');
+            })
+            ->addColumn('total_contribution_formatted', function ($bpjs) {
+                return 'Rp ' . number_format($bpjs->total_contribution, 0, ',', '.');
+            })
+            ->addColumn('status_badge', function ($bpjs) {
+                $statusClass = [
+                    'pending' => 'badge badge-warning',
+                    'calculated' => 'badge badge-info',
+                    'paid' => 'badge badge-success',
+                    'verified' => 'badge badge-primary'
+                ];
+                
+                $statusText = [
+                    'pending' => 'Menunggu',
+                    'calculated' => 'Dihitung',
+                    'paid' => 'Dibayar',
+                    'verified' => 'Diverifikasi'
+                ];
+                
+                return '<span class="' . $statusClass[$bpjs->status] . '">' . $statusText[$bpjs->status] . '</span>';
+            })
+            ->addColumn('action', function ($bpjs) {
+                return '
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $bpjs->id . '">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <a href="' . route('bpjs.edit', $bpjs->id) . '" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $bpjs->id . '" data-name="' . htmlspecialchars($bpjs->employee->name) . '">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ';
+            })
+            ->rawColumns(['action', 'bpjs_type_badge', 'status_badge'])
+            ->make(true);
     }
 
     /**
@@ -73,65 +137,48 @@ class BpjsController extends Controller
     /**
      * Store a newly created BPJS record
      */
-    public function store(Request $request)
+    public function store(BpjsRequest $request)
     {
-        $companyId = Auth::user()->company_id;
+        $result = $this->bpjsService->createBpjsRecord($request->validated());
 
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'bpjs_period' => 'required|date_format:Y-m',
-            'bpjs_type' => ['required', Rule::in(['kesehatan', 'ketenagakerjaan'])],
-            'base_salary' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        if ($request->ajax()) {
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'data' => new BpjsResource($result['data']),
+                    'redirect' => route('bpjs.index')
+                ]);
+            }
 
-        // Check if BPJS record already exists for this employee, period, and type
-        $existingBpjs = Bpjs::forCompany($companyId)
-            ->where('employee_id', $request->employee_id)
-            ->where('bpjs_period', $request->bpjs_period)
-            ->where('bpjs_type', $request->bpjs_type)
-            ->first();
-
-        if ($existingBpjs) {
-            return back()->withErrors(['bpjs_period' => 'BPJS record already exists for this employee, period, and type.']);
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
         }
 
-        $employee = Employee::findOrFail($request->employee_id);
-
-        // Calculate BPJS contribution
-        if ($request->bpjs_type === 'kesehatan') {
-            $calculation = Bpjs::calculateKesehatan($employee, $request->base_salary, $request->bpjs_period);
-        } else {
-            $calculation = Bpjs::calculateKetenagakerjaan($employee, $request->base_salary, $request->bpjs_period);
+        if ($result['success']) {
+            return redirect()->route('bpjs.index')
+                ->with('success', $result['message']);
         }
 
-        $bpjs = Bpjs::create([
-            'company_id' => $companyId,
-            'employee_id' => $request->employee_id,
-            'bpjs_period' => $request->bpjs_period,
-            'bpjs_type' => $request->bpjs_type,
-            'employee_contribution' => $calculation['employee_contribution'],
-            'company_contribution' => $calculation['company_contribution'],
-            'total_contribution' => $calculation['total_contribution'],
-            'base_salary' => $calculation['base_salary'],
-            'contribution_rate_employee' => $calculation['contribution_rate_employee'],
-            'contribution_rate_company' => $calculation['contribution_rate_company'],
-            'status' => Bpjs::STATUS_CALCULATED,
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('bpjs.show', $bpjs)
-            ->with('success', 'BPJS record created successfully.');
+        return back()->withErrors(['error' => $result['message']]);
     }
 
     /**
      * Display the specified BPJS record
      */
-    public function show(Bpjs $bpjs)
+    public function show($id)
     {
-        $this->authorize('view', $bpjs);
-        
+        $bpjs = Bpjs::findOrFail($id);
         $bpjs->load(['employee', 'payroll']);
+        
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'data' => new BpjsResource($bpjs)
+            ]);
+        }
         
         return view('bpjs.show', compact('bpjs'));
     }
@@ -139,10 +186,9 @@ class BpjsController extends Controller
     /**
      * Show the form for editing the specified BPJS record
      */
-    public function edit(Bpjs $bpjs)
+    public function edit($id)
     {
-        $this->authorize('update', $bpjs);
-        
+        $bpjs = Bpjs::findOrFail($id);
         $companyId = Auth::user()->company_id;
         $employees = Employee::forCompany($companyId)->get();
         
@@ -152,59 +198,63 @@ class BpjsController extends Controller
     /**
      * Update the specified BPJS record
      */
-    public function update(Request $request, Bpjs $bpjs)
+    public function update(BpjsRequest $request, $id)
     {
-        $this->authorize('update', $bpjs);
+        $bpjs = Bpjs::findOrFail($id);
+        $result = $this->bpjsService->updateBpjsRecord($bpjs, $request->validated());
 
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'bpjs_period' => 'required|date_format:Y-m',
-            'bpjs_type' => ['required', Rule::in(['kesehatan', 'ketenagakerjaan'])],
-            'base_salary' => 'required|numeric|min:0',
-            'status' => ['required', Rule::in(['pending', 'calculated', 'paid', 'verified'])],
-            'payment_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-        ]);
+        if ($request->ajax()) {
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'data' => new BpjsResource($result['data']),
+                    'redirect' => route('bpjs.index')
+                ]);
+            }
 
-        $employee = Employee::findOrFail($request->employee_id);
-
-        // Calculate BPJS contribution
-        if ($request->bpjs_type === 'kesehatan') {
-            $calculation = Bpjs::calculateKesehatan($employee, $request->base_salary, $request->bpjs_period);
-        } else {
-            $calculation = Bpjs::calculateKetenagakerjaan($employee, $request->base_salary, $request->bpjs_period);
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
         }
 
-        $bpjs->update([
-            'employee_id' => $request->employee_id,
-            'bpjs_period' => $request->bpjs_period,
-            'bpjs_type' => $request->bpjs_type,
-            'employee_contribution' => $calculation['employee_contribution'],
-            'company_contribution' => $calculation['company_contribution'],
-            'total_contribution' => $calculation['total_contribution'],
-            'base_salary' => $calculation['base_salary'],
-            'contribution_rate_employee' => $calculation['contribution_rate_employee'],
-            'contribution_rate_company' => $calculation['contribution_rate_company'],
-            'status' => $request->status,
-            'payment_date' => $request->payment_date,
-            'notes' => $request->notes,
-        ]);
+        if ($result['success']) {
+            return redirect()->route('bpjs.index')
+                ->with('success', $result['message']);
+        }
 
-        return redirect()->route('bpjs.show', $bpjs)
-            ->with('success', 'BPJS record updated successfully.');
+        return back()->withErrors(['error' => $result['message']]);
     }
 
     /**
      * Remove the specified BPJS record
      */
-    public function destroy(Bpjs $bpjs)
+    public function destroy($id)
     {
-        $this->authorize('delete', $bpjs);
+        $bpjs = Bpjs::findOrFail($id);
+        $result = $this->bpjsService->deleteBpjsRecord($bpjs);
         
-        $bpjs->delete();
+        if ($result['success']) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message']
+                ]);
+            }
+            
+            return redirect()->route('bpjs.index')
+                ->with('success', $result['message']);
+        }
         
-        return redirect()->route('bpjs.index')
-            ->with('success', 'BPJS record deleted successfully.');
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 400);
+        }
+        
+        return back()->withErrors(['error' => $result['message']]);
     }
 
     /**
@@ -212,111 +262,41 @@ class BpjsController extends Controller
      */
     public function calculateForPayroll(Request $request)
     {
-        $companyId = Auth::user()->company_id;
-
         $request->validate([
             'payroll_period' => 'required|date_format:Y-m',
-            'bpjs_type' => ['required', Rule::in(['kesehatan', 'ketenagakerjaan', 'both'])],
+            'bpjs_type' => ['required', \Illuminate\Validation\Rule::in(['kesehatan', 'ketenagakerjaan', 'both'])],
         ]);
 
-        $employees = Employee::forCompany($companyId)->get();
-        $payrolls = Payroll::forCompany($companyId)
-            ->forPeriod($request->payroll_period)
-            ->get();
+        $result = $this->bpjsService->calculateBpjsForAllEmployees($request->payroll_period, $request->bpjs_type);
 
-        $createdCount = 0;
-        $errors = [];
-
-        DB::beginTransaction();
-        try {
-            foreach ($employees as $employee) {
-                // Check if employee is active for BPJS
-                if ($request->bpjs_type === 'kesehatan' && !$employee->bpjs_kesehatan_active) {
-                    continue;
-                }
-                if ($request->bpjs_type === 'ketenagakerjaan' && !$employee->bpjs_ketenagakerjaan_active) {
-                    continue;
-                }
-
-                // Find payroll for this employee
-                $payroll = $payrolls->where('employee_id', $employee->id)->first();
-                if (!$payroll) {
-                    $errors[] = "No payroll found for employee: {$employee->name}";
-                    continue;
-                }
-
-                $baseSalary = $payroll->basic_salary;
-
-                // Calculate and create BPJS records
-                if ($request->bpjs_type === 'kesehatan' || $request->bpjs_type === 'both') {
-                    if ($employee->bpjs_kesehatan_active) {
-                        $this->createBpjsRecord($companyId, $employee, $payroll, $baseSalary, 'kesehatan', $request->payroll_period);
-                        $createdCount++;
-                    }
-                }
-
-                if ($request->bpjs_type === 'ketenagakerjaan' || $request->bpjs_type === 'both') {
-                    if ($employee->bpjs_ketenagakerjaan_active) {
-                        $this->createBpjsRecord($companyId, $employee, $payroll, $baseSalary, 'ketenagakerjaan', $request->payroll_period);
-                        $createdCount++;
-                    }
-                }
+        if ($result['success']) {
+            $message = "Successfully created {$result['created_count']} BPJS records.";
+            if (!empty($result['errors'])) {
+                $message .= " Errors: " . implode(', ', $result['errors']);
             }
 
-            DB::commit();
-
-            $message = "Successfully created {$createdCount} BPJS records.";
-            if (!empty($errors)) {
-                $message .= " Errors: " . implode(', ', $errors);
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
             }
 
             return redirect()->route('bpjs.index')
                 ->with('success', $message);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create BPJS records: ' . $e->getMessage()]);
         }
+
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 400);
+        }
+
+        return back()->withErrors(['error' => $result['message']]);
     }
 
-    /**
-     * Create BPJS record helper method
-     */
-    private function createBpjsRecord($companyId, $employee, $payroll, $baseSalary, $type, $period)
-    {
-        // Check if record already exists
-        $existing = Bpjs::forCompany($companyId)
-            ->where('employee_id', $employee->id)
-            ->where('bpjs_period', $period)
-            ->where('bpjs_type', $type)
-            ->first();
 
-        if ($existing) {
-            return;
-        }
-
-        // Calculate BPJS contribution
-        if ($type === 'kesehatan') {
-            $calculation = Bpjs::calculateKesehatan($employee, $baseSalary, $period);
-        } else {
-            $calculation = Bpjs::calculateKetenagakerjaan($employee, $baseSalary, $period);
-        }
-
-        Bpjs::create([
-            'company_id' => $companyId,
-            'employee_id' => $employee->id,
-            'payroll_id' => $payroll->id,
-            'bpjs_period' => $period,
-            'bpjs_type' => $type,
-            'employee_contribution' => $calculation['employee_contribution'],
-            'company_contribution' => $calculation['company_contribution'],
-            'total_contribution' => $calculation['total_contribution'],
-            'base_salary' => $calculation['base_salary'],
-            'contribution_rate_employee' => $calculation['contribution_rate_employee'],
-            'contribution_rate_company' => $calculation['contribution_rate_company'],
-            'status' => Bpjs::STATUS_CALCULATED,
-        ]);
-    }
 
     /**
      * Display BPJS reports

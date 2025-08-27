@@ -93,18 +93,19 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="fas fa-save mr-1"></i> Perbarui
+                                </button>
+                                <a href="{{ route('taxes.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times mr-1"></i> Batal
+                                </a>
+                            </div>
                         </div>
 
                         
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary" id="submitBtn">
-                            <i class="fas fa-save mr-1"></i> Perbarui
-                        </button>
-                        <a href="{{ route('taxes.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times mr-1"></i> Batal
-                        </a>
-                    </div>
+                    
                 </form>
             </div>
         </div>

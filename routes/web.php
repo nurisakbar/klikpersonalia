@@ -224,9 +224,11 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
 
     // BPJS Management
     Route::resource('bpjs', BpjsController::class);
-    Route::post('/bpjs/calculate-for-payroll', [BpjsController::class, 'calculateForPayroll'])->name('bpjs.calculate-for-payroll');
+    Route::get('/bpjs-data', [BpjsController::class, 'data'])->name('bpjs.data');
+    Route::post('/bpjs/calculate-for-payroll', [BpjsController::class, 'calculateForPayroll'])->name('bpjs.calculateForPayroll');
     Route::get('/bpjs/report', [BpjsController::class, 'report'])->name('bpjs.report');
     Route::get('/bpjs/export', [BpjsController::class, 'export'])->name('bpjs.export');
+    Route::delete('/bpjs/{bpjs}', [BpjsController::class, 'destroy'])->name('bpjs.destroy');
 
     // Export Functionality
     Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
