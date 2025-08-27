@@ -168,6 +168,14 @@ class Employee extends Model
     }
 
     /**
+     * Scope for filtering by company
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+
+    /**
      * Get the employee's full name.
      */
     public function getFullNameAttribute()

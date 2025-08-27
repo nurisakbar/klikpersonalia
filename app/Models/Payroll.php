@@ -151,6 +151,22 @@ class Payroll extends Model
     }
 
     /**
+     * Scope for filtering by company
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+
+    /**
+     * Scope for filtering by period
+     */
+    public function scopeForPeriod($query, $period)
+    {
+        return $query->where('period', $period);
+    }
+
+    /**
      * Get the payroll's formatted basic salary.
      */
     public function getFormattedBasicSalaryAttribute()
