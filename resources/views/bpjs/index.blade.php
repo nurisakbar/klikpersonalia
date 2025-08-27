@@ -151,6 +151,9 @@
 @endpush
 
 @push('js')
+<!-- Global SweetAlert Component -->
+@include('components.sweet-alert')
+
 <!-- DataTables & Plugins -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
@@ -211,7 +214,7 @@ $(document).ready(function() {
         buttons: [
             {
                 text: '<i class="fas fa-plus"></i> Tambah',
-                className: 'btn btn-primary btn-sm',
+                className: 'btn btn-primary btn-sm mr-2',
                 action: function () {
                     window.location.href = '{{ route("bpjs.create") }}';
                 }

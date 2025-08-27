@@ -127,9 +127,25 @@ class BpjsController extends Controller
     {
         $result = $this->bpjsService->createBpjsRecord($request->validated());
 
+        if ($request->ajax()) {
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'data' => new BpjsResource($result['data']),
+                    'redirect' => route('bpjs.index')
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
+        }
+
         if ($result['success']) {
-            return redirect()->route('bpjs.show', $result['data'])
-                ->with('success', 'BPJS record created successfully.');
+            return redirect()->route('bpjs.index')
+                ->with('success', $result['message']);
         }
 
         return back()->withErrors(['error' => $result['message']]);
@@ -138,10 +154,9 @@ class BpjsController extends Controller
     /**
      * Display the specified BPJS record
      */
-    public function show(Bpjs $bpjs)
+    public function show($id)
     {
-        $this->authorize('view', $bpjs);
-        
+        $bpjs = Bpjs::findOrFail($id);
         $bpjs->load(['employee', 'payroll']);
         
         if (request()->ajax()) {
@@ -157,10 +172,9 @@ class BpjsController extends Controller
     /**
      * Show the form for editing the specified BPJS record
      */
-    public function edit(Bpjs $bpjs)
+    public function edit($id)
     {
-        $this->authorize('update', $bpjs);
-        
+        $bpjs = Bpjs::findOrFail($id);
         $companyId = Auth::user()->company_id;
         $employees = Employee::forCompany($companyId)->get();
         
@@ -170,15 +184,30 @@ class BpjsController extends Controller
     /**
      * Update the specified BPJS record
      */
-    public function update(BpjsRequest $request, Bpjs $bpjs)
+    public function update(BpjsRequest $request, $id)
     {
-        $this->authorize('update', $bpjs);
-
+        $bpjs = Bpjs::findOrFail($id);
         $result = $this->bpjsService->updateBpjsRecord($bpjs, $request->validated());
 
+        if ($request->ajax()) {
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'data' => new BpjsResource($result['data']),
+                    'redirect' => route('bpjs.index')
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
+        }
+
         if ($result['success']) {
-            return redirect()->route('bpjs.show', $result['data'])
-                ->with('success', 'BPJS record updated successfully.');
+            return redirect()->route('bpjs.index')
+                ->with('success', $result['message']);
         }
 
         return back()->withErrors(['error' => $result['message']]);
@@ -187,22 +216,21 @@ class BpjsController extends Controller
     /**
      * Remove the specified BPJS record
      */
-    public function destroy(Bpjs $bpjs)
+    public function destroy($id)
     {
-        $this->authorize('delete', $bpjs);
-        
+        $bpjs = Bpjs::findOrFail($id);
         $result = $this->bpjsService->deleteBpjsRecord($bpjs);
         
         if ($result['success']) {
             if (request()->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'BPJS record deleted successfully.'
+                    'message' => $result['message']
                 ]);
             }
             
             return redirect()->route('bpjs.index')
-                ->with('success', 'BPJS record deleted successfully.');
+                ->with('success', $result['message']);
         }
         
         if (request()->ajax()) {

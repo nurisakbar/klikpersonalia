@@ -78,6 +78,8 @@ class Bpjs extends Model
     // Maximum base salary for BPJS calculation (2024)
     const MAX_BASE_SALARY = 12000000; // Rp 12.000.000
 
+
+
     /**
      * Calculate BPJS Kesehatan contribution
      */

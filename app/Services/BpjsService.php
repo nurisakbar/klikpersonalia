@@ -58,7 +58,7 @@ class BpjsService
             )) {
                 return [
                     'success' => false,
-                    'message' => 'BPJS record already exists for this employee, period, and type.',
+                    'message' => 'Data BPJS sudah ada untuk karyawan, periode, dan jenis ini.',
                     'data' => null
                 ];
             }
@@ -96,7 +96,7 @@ class BpjsService
 
             return [
                 'success' => true,
-                'message' => 'BPJS record created successfully.',
+                'message' => 'Data BPJS berhasil dibuat.',
                 'data' => $bpjs
             ];
 
@@ -109,7 +109,7 @@ class BpjsService
 
             return [
                 'success' => false,
-                'message' => 'Failed to create BPJS record: ' . $e->getMessage(),
+                'message' => 'Gagal membuat data BPJS: ' . $e->getMessage(),
                 'data' => null
             ];
         }
@@ -152,7 +152,7 @@ class BpjsService
 
             return [
                 'success' => true,
-                'message' => 'BPJS record updated successfully.',
+                'message' => 'Data BPJS berhasil diperbarui.',
                 'data' => $bpjs->fresh()
             ];
 
@@ -166,7 +166,7 @@ class BpjsService
 
             return [
                 'success' => false,
-                'message' => 'Failed to update BPJS record: ' . $e->getMessage(),
+                'message' => 'Gagal memperbarui data BPJS: ' . $e->getMessage(),
                 'data' => null
             ];
         }
@@ -187,7 +187,7 @@ class BpjsService
 
             return [
                 'success' => true,
-                'message' => 'BPJS record deleted successfully.'
+                'message' => 'Data BPJS berhasil dihapus.'
             ];
 
         } catch (Exception $e) {
@@ -198,7 +198,7 @@ class BpjsService
 
             return [
                 'success' => false,
-                'message' => 'Failed to delete BPJS record: ' . $e->getMessage()
+                'message' => 'Gagal menghapus data BPJS: ' . $e->getMessage()
             ];
         }
     }
