@@ -28,12 +28,41 @@ class SalaryComponentRepository
     }
 
     /**
-     * Get all active salary components for a company.
+     * Get all salary components for current company.
      */
-    public function getActiveComponents(string $companyId): Collection
+    public function getAllForCurrentCompany(): Collection
     {
-        return $this->model
-            ->where('company_id', $companyId)
+        return SalaryComponent::currentCompany()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Get salary components with pagination.
+     */
+    public function getPaginated(int $perPage = 15): LengthAwarePaginator
+    {
+        return SalaryComponent::currentCompany()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->paginate($perPage);
+    }
+
+    /**
+     * Find salary component by ID.
+     */
+    public function findById(string $id): ?SalaryComponent
+    {
+        return SalaryComponent::currentCompany()->find($id);
+    }
+
+    /**
+     * Get all active salary components for current company.
+     */
+    public function getActiveComponents(): Collection
+    {
+        return SalaryComponent::currentCompany()
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -41,12 +70,11 @@ class SalaryComponentRepository
     }
 
     /**
-     * Get earning components for a company.
+     * Get earning components for current company.
      */
-    public function getEarningComponents(string $companyId): Collection
+    public function getEarningComponents(): Collection
     {
-        return $this->model
-            ->where('company_id', $companyId)
+        return SalaryComponent::currentCompany()
             ->where('type', 'earning')
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -55,12 +83,11 @@ class SalaryComponentRepository
     }
 
     /**
-     * Get deduction components for a company.
+     * Get deduction components for current company.
      */
-    public function getDeductionComponents(string $companyId): Collection
+    public function getDeductionComponents(): Collection
     {
-        return $this->model
-            ->where('company_id', $companyId)
+        return SalaryComponent::currentCompany()
             ->where('type', 'deduction')
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -69,12 +96,11 @@ class SalaryComponentRepository
     }
 
     /**
-     * Get taxable components for a company.
+     * Get taxable components for current company.
      */
-    public function getTaxableComponents(string $companyId): Collection
+    public function getTaxableComponents(): Collection
     {
-        return $this->model
-            ->where('company_id', $companyId)
+        return SalaryComponent::currentCompany()
             ->where('is_taxable', true)
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -83,12 +109,11 @@ class SalaryComponentRepository
     }
 
     /**
-     * Get BPJS calculated components for a company.
+     * Get BPJS calculated components for current company.
      */
-    public function getBpjsCalculatedComponents(string $companyId): Collection
+    public function getBpjsCalculatedComponents(): Collection
     {
-        return $this->model
-            ->where('company_id', $companyId)
+        return SalaryComponent::currentCompany()
             ->where('is_bpjs_calculated', true)
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -112,7 +137,17 @@ class SalaryComponentRepository
      */
     public function create(array $data): SalaryComponent
     {
-        return $this->model->create($data);
+        // Add company_id to data
+        if (!isset($data['company_id'])) {
+            $data['company_id'] = auth()->user()->company_id;
+        }
+        
+        // Validate company_id
+        if (!$data['company_id']) {
+            throw new \Exception('Company ID tidak ditemukan. Pastikan user sudah terautentikasi dan memiliki company.');
+        }
+        
+        return SalaryComponent::create($data);
     }
 
     /**

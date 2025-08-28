@@ -95,6 +95,15 @@ class SalaryComponent extends Model
     }
 
     /**
+     * Scope to filter by current company.
+     */
+    public function scopeCurrentCompany($query)
+    {
+        $companyId = auth()->user()->company_id ?? session('company_id');
+        return $query->where('company_id', $companyId);
+    }
+
+    /**
      * Get the type text.
      */
     public function getTypeTextAttribute()
