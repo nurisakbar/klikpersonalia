@@ -24,10 +24,18 @@ class BpjsReportService
      */
     public function getSummary(string $period, string $type = 'both'): array
     {
+        try {
+            $parsedPeriod = Carbon::parse($period);
+        } catch (\Exception $e) {
+            // If period parsing fails, use current month
+            $parsedPeriod = now();
+            \Log::warning('Invalid period format provided: ' . $period . ', using current month instead');
+        }
+
         $query = Bpjs::with('employee')
             ->currentCompany()
-            ->whereYear('created_at', Carbon::parse($period)->year)
-            ->whereMonth('created_at', Carbon::parse($period)->month);
+            ->whereYear('created_at', $parsedPeriod->year)
+            ->whereMonth('created_at', $parsedPeriod->month);
 
         if ($type !== 'both') {
             $query->where('bpjs_type', $type);
@@ -57,10 +65,18 @@ class BpjsReportService
      */
     public function getReportData(string $period, string $type = 'both'): Collection
     {
+        try {
+            $parsedPeriod = Carbon::parse($period);
+        } catch (\Exception $e) {
+            // If period parsing fails, use current month
+            $parsedPeriod = now();
+            \Log::warning('Invalid period format provided: ' . $period . ', using current month instead');
+        }
+
         $query = Bpjs::with('employee')
             ->currentCompany()
-            ->whereYear('created_at', Carbon::parse($period)->year)
-            ->whereMonth('created_at', Carbon::parse($period)->month);
+            ->whereYear('created_at', $parsedPeriod->year)
+            ->whereMonth('created_at', $parsedPeriod->month);
 
         if ($type !== 'both') {
             $query->where('bpjs_type', $type);
