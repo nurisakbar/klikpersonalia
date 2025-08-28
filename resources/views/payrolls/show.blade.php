@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Payroll - Aplikasi Payroll KlikMedis')
-@section('page-title', 'Detail Payroll')
+@section('title', 'Rincian Payroll - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Rincian Payroll')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('payrolls.index') }}">Payroll</a></li>
-<li class="breadcrumb-item active">Detail</li>
+<li class="breadcrumb-item active">Rincian</li>
 @endsection
 
 @section('content')
