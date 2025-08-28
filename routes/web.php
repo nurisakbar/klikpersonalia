@@ -16,6 +16,7 @@ use App\Http\Controllers\BenefitController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TaxReportController;
 use App\Http\Controllers\BpjsController;
+use App\Http\Controllers\BpjsReportController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\SalaryTransferController;
@@ -226,9 +227,17 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
     Route::resource('bpjs', BpjsController::class);
     Route::get('/bpjs-data', [BpjsController::class, 'data'])->name('bpjs.data');
     Route::post('/bpjs/calculate-for-payroll', [BpjsController::class, 'calculateForPayroll'])->name('bpjs.calculateForPayroll');
-    Route::get('/bpjs/report', [BpjsController::class, 'report'])->name('bpjs.report');
-    Route::get('/bpjs/export', [BpjsController::class, 'export'])->name('bpjs.export');
     Route::delete('/bpjs/{bpjs}', [BpjsController::class, 'destroy'])->name('bpjs.destroy');
+
+    // BPJS Report Management (Separate from BPJS index)
+    Route::prefix('bpjs-report')->group(function () {
+    Route::get('/', [BpjsReportController::class, 'index'])->name('bpjs-report.index');
+    Route::get('/data', [BpjsReportController::class, 'getData'])->name('bpjs-report.data');
+    Route::get('/summary', [BpjsReportController::class, 'getSummary'])->name('bpjs-report.summary');
+    Route::get('/export', [BpjsReportController::class, 'export'])->name('bpjs-report.export');
+    Route::get('/chart-data', [BpjsReportController::class, 'getChartData'])->name('bpjs-report.chart-data');
+    Route::get('/{id}', [BpjsReportController::class, 'show'])->name('bpjs-report.show');
+});
 
     // Export Functionality
     Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
