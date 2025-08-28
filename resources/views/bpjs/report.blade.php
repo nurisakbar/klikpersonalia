@@ -289,7 +289,7 @@ function initDataTable() {
         return;
     }
     
-    console.log('jQuery is available in DataTable script, version:', $.fn.jquery);
+
     
     $(function () {
         // Setup CSRF token for AJAX
@@ -347,7 +347,7 @@ function initDataTable() {
                     d.type = $('#filter_type').val();
                 },
                 error: function(xhr, error, thrown) {
-                    console.log('DataTable error:', error);
+                    // Handle DataTable error silently
                 }
             },
             columns: [
@@ -450,12 +450,6 @@ function initDataTable() {
         });
 
         @if(isset($summary))
-            console.log('Creating charts with data:', {
-                employee_contribution: {{ $summary['total_employee_contribution'] ?? 0 }},
-                company_contribution: {{ $summary['total_company_contribution'] ?? 0 }},
-                kesehatan_count: {{ $summary['kesehatan_count'] ?? 0 }},
-                ketenagakerjaan_count: {{ $summary['ketenagakerjaan_count'] ?? 0 }}
-            });
             
             // Contribution Distribution Chart
             var contributionChartCanvas = $('#contributionChart').get(0).getContext('2d')
@@ -480,7 +474,6 @@ function initDataTable() {
                 data: contributionData,
                 options: contributionOptions
             })
-            console.log('Contribution chart created');
             
             // BPJS Type Distribution Chart
             var typeChartCanvas = $('#typeChart').get(0).getContext('2d')
@@ -505,9 +498,6 @@ function initDataTable() {
                 data: typeData,
                 options: typeOptions
             })
-            console.log('Type chart created');
-        @else
-            console.log('No summary data available for charts');
         @endif
     });
 }

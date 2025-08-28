@@ -40,7 +40,12 @@ class BpjsReportController extends Controller
     public function getData(Request $request): JsonResponse
     {
         $period = $request->get('period', now()->format('Y-m'));
-        $type = $request->get('type', 'both');
+        $type = $request->get('type');
+        
+        // Handle null or empty type values
+        if (empty($type)) {
+            $type = 'both';
+        }
         
         \Log::info('BPJS Report DataTable request', [
             'period' => $period,
@@ -117,7 +122,12 @@ class BpjsReportController extends Controller
     {
         try {
             $period = $request->get('period', now()->format('Y-m'));
-            $type = $request->get('type', 'both');
+            $type = $request->get('type');
+            
+            // Handle null or empty type values
+            if (empty($type)) {
+                $type = 'both';
+            }
             
             $summary = $this->bpjsReportService->getSummary($period, $type);
             
@@ -140,7 +150,12 @@ class BpjsReportController extends Controller
     {
         try {
             $period = $request->get('period', now()->format('Y-m'));
-            $type = $request->get('type', 'both');
+            $type = $request->get('type');
+            
+            // Handle null or empty type values
+            if (empty($type)) {
+                $type = 'both';
+            }
             
             return $this->bpjsReportService->exportToCsv($period, $type);
             
@@ -156,7 +171,12 @@ class BpjsReportController extends Controller
     {
         try {
             $period = $request->get('period', now()->format('Y-m'));
-            $type = $request->get('type', 'both');
+            $type = $request->get('type');
+            
+            // Handle null or empty type values
+            if (empty($type)) {
+                $type = 'both';
+            }
             
             $chartData = $this->bpjsReportService->getChartData($period, $type);
             

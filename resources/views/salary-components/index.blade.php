@@ -1,63 +1,60 @@
 @extends('layouts.app')
 
-@section('title', 'Komponen Gaji')
+@section('title', 'Kelola Komponen Gaji - Aplikasi Payroll KlikMedis')
+@section('page-title', 'Kelola Komponen Gaji')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Komponen Gaji</li>
+@endsection
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="mb-0">Komponen Gaji</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Komponen Gaji</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Daftar Komponen Gaji</h5>
-                        <div>
-                            <a href="{{ route('salary-components.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Tambah Komponen
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="salary-components-table">
-                            <thead>
-                                <tr>
-                                    <th width="30">
-                                        <input type="checkbox" id="select-all">
-                                    </th>
-                                    <th width="80">Urutan</th>
-                                    <th width="200">Nama Komponen</th>
-                                    <th width="100">Tipe</th>
-                                    <th width="150">Nilai Default</th>
-                                    <th width="250">Deskripsi</th>
-                                    <th width="100">Status</th>
-                                    <th width="80">Pajak</th>
-                                    <th width="80">BPJS</th>
-                                    <th width="120">Dibuat</th>
-                                    <th width="150">Aksi</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+				<table class="table table-bordered table-striped" id="salary-components-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Urutan</th>
+                                <th>Nama Komponen</th>
+                                <th>Tipe</th>
+                                <th>Nilai Default</th>
+                                <th>Deskripsi</th>
+                                <th>Status</th>
+                                <th>Pajak</th>
+                                <th>BPJS</th>
+                                <th>Dibuat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+				</table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Detail Komponen Gaji</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- Detail content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token for AJAX -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- Bulk Actions Modal -->
 <div class="modal fade" id="bulkActionsModal" tabindex="-1" aria-labelledby="bulkActionsModalLabel" aria-hidden="true">
@@ -111,10 +108,10 @@
 </div>
 @endsection
 
-@push('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@push('css')
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 <style>
     .sortable-ghost {
         opacity: 0.5;
@@ -133,15 +130,41 @@
     }
     .badge {
         font-size: 0.75em;
+        padding: 0.25em 0.5em;
+        border-radius: 0.25rem;
+    }
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
     }
 </style>
 @endpush
 
 @push('js')
+<!-- jQuery (ensure it's loaded first) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- DataTables & Plugins -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
@@ -154,16 +177,46 @@
 @include('components.sweet-alert')
 
 <script>
-$(function () {
-    // Setup CSRF token for AJAX
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
+// Test jQuery availability before DataTable initialization
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not available in Salary Component Index');
+        // Try to wait a bit more for jQuery to load
+        setTimeout(function() {
+            if (typeof $ === 'undefined') {
+                console.error('jQuery still not available after timeout in Salary Component Index');
+            } else {
+                console.log('jQuery became available after timeout in Salary Component Index, version:', $.fn.jquery);
+            }
+        }, 1000);
+        return;
+    }
+    console.log('jQuery is available in Salary Component Index, version:', $.fn.jquery);
+});
+</script>
+
+<script>
+// Test jQuery availability with retry mechanism
+function initDataTable() {
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not available in DataTable script, retrying in 500ms...');
+        setTimeout(initDataTable, 500);
+        return;
+    }
     
-    console.log('Document ready for salary components');
+    console.log('jQuery is available in DataTable script, version:', $.fn.jquery);
     
+    $(function () {
+        // Global variables
+        let currentComponentId = null;
+        
+        // Setup CSRF token for AJAX
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
     // Initialize DataTable with server-side processing
     var table = $('#salary-components-table').DataTable({
         processing: true,
@@ -172,22 +225,22 @@ $(function () {
             url: '{{ route("salary-components.data") }}',
             type: 'GET',
             error: function(xhr, error, thrown) {
+                // Handle DataTable errors silently or show a user-friendly message
                 console.log('DataTable error:', error);
-                console.log('Response:', xhr.responseText);
-                console.log('Status:', xhr.status);
+                // You can show a toast notification here if needed
+                // SwalHelper.toastError('Gagal memuat data komponen gaji');
             }
         },
         columns: [
-            {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, width: '30px'},
             {data: 'sort_order', name: 'sort_order', width: '80px'},
             {data: 'name', name: 'name', width: '200px'},
-            {data: 'type_badge', name: 'type', orderable: false, searchable: false, width: '100px'},
-            {data: 'formatted_value', name: 'default_value', orderable: false, searchable: false, width: '150px'},
+            {data: 'type_text', name: 'type', width: '100px'},
+            {data: 'formatted_value', name: 'default_value', width: '150px'},
             {data: 'description', name: 'description', width: '250px'},
-            {data: 'status_badge', name: 'is_active', orderable: false, searchable: false, width: '100px'},
-            {data: 'is_taxable', name: 'is_taxable', orderable: false, searchable: false, width: '80px'},
-            {data: 'is_bpjs_calculated', name: 'is_bpjs_calculated', orderable: false, searchable: false, width: '80px'},
-            {data: 'created_at', name: 'created_at', width: '120px'},
+            {data: 'status_text', name: 'is_active', width: '100px'},
+            {data: 'is_taxable_badge', name: 'is_taxable', width: '80px'},
+            {data: 'is_bpjs_calculated_badge', name: 'is_bpjs_calculated', width: '80px'},
+            {data: 'created_at_formatted', name: 'created_at', width: '120px'},
             {data: 'action', name: 'action', orderable: false, searchable: false, width: '150px'}
         ],
         scrollX: true,
@@ -195,272 +248,195 @@ $(function () {
         autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
-            {
-                text: '<i class="fas fa-plus"></i> Tambah Komponen',
-                className: 'btn btn-primary btn-sm',
-                action: function () {
-                    window.location.href = '{{ route("salary-components.create") }}';
-                }
-            },
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                className: 'btn btn-success btn-sm',
-                exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-                }
-            },
-            {
-                extend: 'pdf',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                className: 'btn btn-danger btn-sm',
-                exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="fas fa-print"></i> Print',
-                className: 'btn btn-info btn-sm',
-                exportOptions: {
-                    columns: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-                }
-            },
-            {
-                extend: 'reload',
-                text: '<i class="fas fa-sync-alt"></i> Reload',
-                className: 'btn btn-secondary btn-sm'
-            }
+			{
+				text: '<i class="fas fa-plus"></i> Tambah',
+				className: 'btn btn-primary btn-sm mr-2',
+				action: function () {
+					window.location.href = '{{ route("salary-components.create") }}';
+				}
+			},
+			{
+				extend: 'excel',
+				text: '<i class="fas fa-file-excel"></i> Excel',
+				className: 'btn btn-success btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			},
+			{
+				extend: 'pdf',
+				text: '<i class="fas fa-file-pdf"></i> PDF',
+				className: 'btn btn-danger btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			},
+			{
+				extend: 'print',
+				text: '<i class="fas fa-print"></i> Print',
+				className: 'btn btn-info btn-sm',
+				exportOptions: {
+					columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				}
+			}
         ],
-        order: [[1, 'asc'], [2, 'asc']],
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
-        },
-        responsive: true
+        language: window.DataTablesLanguage,
+        responsive: true,
+        order: [[0, 'asc']]
     });
-    
-    console.log('DataTable initialized for salary components');
-    
-    // Test AJAX call manually
-    $.get('{{ route("salary-components.data") }}')
-        .done(function(response) {
-            console.log('Manual AJAX success:', response);
-        })
-        .fail(function(xhr, status, error) {
-            console.log('Manual AJAX failed:', {xhr, status, error});
-        });
-    
-    // Select all checkbox functionality
-    $('#select-all').on('change', function() {
-        $('.component-checkbox').prop('checked', this.checked);
-        updateSelectedCount();
+
+    // Pastikan tombol Add tidak memakai btn-secondary (force primary)
+    var salaryComponentsButtons = table.buttons().container();
+    salaryComponentsButtons.find('.dt-add-btn').removeClass('btn-secondary').addClass('btn-primary');
+
+    // Layout info/pagination sudah diatur global via CSS
+
+    // Handle view button click
+    $(document).on('click', '.view-btn', function() {
+        var id = $(this).data('id');
+        loadComponentDetail(id);
     });
-    
-    // Individual checkbox change
-    $(document).on('change', '.component-checkbox', function() {
-        updateSelectedCount();
-        updateSelectAllState();
+
+    // Handle edit button click
+    $(document).on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        window.location.href = '/salary-components/' + id + '/edit';
     });
-    
-    // Update selected count
-    function updateSelectedCount() {
-        const selectedCount = $('.component-checkbox:checked').length;
-        $('#selectedCount').text(selectedCount);
-    }
-    
-    // Update select all state
-    function updateSelectAllState() {
-        const totalCheckboxes = $('.component-checkbox').length;
-        const checkedCheckboxes = $('.component-checkbox:checked').length;
-        
-        if (checkedCheckboxes === 0) {
-            $('#select-all').prop('indeterminate', false).prop('checked', false);
-        } else if (checkedCheckboxes === totalCheckboxes) {
-            $('#select-all').prop('indeterminate', false).prop('checked', true);
-        } else {
-            $('#select-all').prop('indeterminate', true);
-        }
-    }
-    
-    // Bulk actions
-    $('#bulkActivate').on('click', function() {
-        const selectedIds = getSelectedIds();
-        if (selectedIds.length > 0) {
-            bulkToggleStatus(selectedIds, true);
-        }
-    });
-    
-    $('#bulkDeactivate').on('click', function() {
-        const selectedIds = getSelectedIds();
-        if (selectedIds.length > 0) {
-            bulkToggleStatus(selectedIds, false);
-        }
-    });
-    
-    $('#bulkDelete').on('click', function() {
-        const selectedIds = getSelectedIds();
-        if (selectedIds.length > 0) {
-            if (confirm('Apakah Anda yakin ingin menghapus komponen yang dipilih?')) {
-                bulkDelete(selectedIds);
-            }
-        }
-    });
-    
-    // Get selected component IDs
-    function getSelectedIds() {
-        return $('.component-checkbox:checked').map(function() {
-            return $(this).val();
-        }).get();
-    }
-    
-    // Bulk toggle status
-    function bulkToggleStatus(ids, status) {
+
+    // Load component detail
+    function loadComponentDetail(id) {
+        // Show loading
+        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+        $('#detailModal').modal('show');
+
         $.ajax({
-            url: '{{ route("salary-components.bulk-toggle-status") }}',
-            method: 'POST',
-            data: {
-                ids: ids,
-                status: status,
-                _token: '{{ csrf_token() }}'
+            url: '/salary-components/' + id,
+            type: 'GET',
+            errorHandled: true, // Mark as manually handled
+            headers: {
+                'Accept': 'application/json'
             },
             success: function(response) {
                 if (response.success) {
-                    table.ajax.reload();
-                    $('#bulkActionsModal').modal('hide');
-                    showAlert('success', response.message);
+                    let component = response.data;
+                    let detailHtml = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Nama Komponen:</strong></td>
+                                        <td>${component.name}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tipe:</strong></td>
+                                        <td>${component.type_text}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nilai Default:</strong></td>
+                                        <td>${component.formatted_default_value}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>${component.status_text}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Urutan:</strong></td>
+                                        <td>${component.sort_order}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Dikenakan Pajak:</strong></td>
+                                        <td>${component.is_taxable ? 'Ya' : 'Tidak'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Dihitung BPJS:</strong></td>
+                                        <td>${component.is_bpjs_calculated ? 'Ya' : 'Tidak'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Dibuat:</strong></td>
+                                        <td>${component.created_at}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Diperbarui:</strong></td>
+                                        <td>${component.updated_at}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        ${component.description ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <strong>Deskripsi:</strong><br>
+                                <p>${component.description}</p>
+                            </div>
+                        </div>
+                        ` : ''}
+                    `;
+                    $('#detailContent').html(detailHtml);
                 } else {
-                    showAlert('error', response.message);
+                    $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                    SwalHelper.error('Error!', response.message);
                 }
             },
-            error: function() {
-                showAlert('error', 'Terjadi kesalahan saat mengubah status komponen.');
-            }
-        });
-    }
-    
-    // Bulk delete
-    function bulkDelete(ids) {
-        $.ajax({
-            url: '{{ route("salary-components.bulk-delete") }}',
-            method: 'POST',
-            data: {
-                ids: ids,
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    table.ajax.reload();
-                    $('#bulkActionsModal').modal('hide');
-                    showAlert('success', response.message);
-                } else {
-                    showAlert('error', response.message);
+            error: function(xhr) {
+                let message = 'Terjadi kesalahan saat memuat detail komponen';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
                 }
-            },
-            error: function() {
-                showAlert('error', 'Terjadi kesalahan saat menghapus komponen.');
+                $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
+                SwalHelper.error('Error!', message);
             }
         });
     }
-    
-    // Show alert
-    function showAlert(type, message) {
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const alertHtml = `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
+
+    // Handle delete button click
+    $(document).on('click', '.delete-btn', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
         
-        $('.card-body').prepend(alertHtml);
-        
-        setTimeout(function() {
-            $('.alert').fadeOut();
-        }, 5000);
-    }
-    
-    // Sort order functionality
-    $('#sortOrderModal').on('show.bs.modal', function() {
-        loadComponentsForSorting();
-    });
-    
-    function loadComponentsForSorting() {
-        $.ajax({
-            url: '{{ route("salary-components.index") }}',
-            method: 'GET',
-            success: function(response) {
-                const components = response.data || [];
-                renderSortableComponents(components);
-            },
-            error: function() {
-                showAlert('error', 'Gagal memuat data komponen untuk pengurutan.');
-            }
-        });
-    }
-    
-    function renderSortableComponents(components) {
-        const container = $('#sortableComponents');
-        container.empty();
-        
-        components.forEach(function(component, index) {
-            const item = `
-                <div class="list-group-item component-item d-flex justify-content-between align-items-center" data-id="${component.id}">
-                    <div>
-                        <strong>${component.name}</strong>
-                        <small class="text-muted d-block">${component.type_text}</small>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-secondary me-2">${component.sort_order}</span>
-                        <i class="fas fa-grip-vertical text-muted"></i>
-                    </div>
-                </div>
-            `;
-            container.append(item);
-        });
-        
-        // Initialize Sortable
-        new Sortable(container[0], {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            dragClass: 'sortable-drag',
-            onEnd: function() {
-                updateSortOrderNumbers();
-            }
-        });
-    }
-    
-    function updateSortOrderNumbers() {
-        $('#sortableComponents .component-item').each(function(index) {
-            $(this).find('.badge').text(index + 1);
-        });
-    }
-    
-    $('#saveSortOrder').on('click', function() {
-        const components = [];
-        $('#sortableComponents .component-item').each(function(index) {
-            components.push({
-                id: $(this).data('id'),
-                sort_order: index + 1
-            });
-        });
-        
-        $.ajax({
-            url: '{{ route("salary-components.update-sort-order") }}',
-            method: 'POST',
-            data: {
-                components: components,
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                $('#sortOrderModal').modal('hide');
-                table.ajax.reload();
-                showAlert('success', 'Urutan komponen berhasil diperbarui.');
-            },
-            error: function() {
-                showAlert('error', 'Gagal memperbarui urutan komponen.');
+        SwalHelper.confirmDelete('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus komponen gaji "' + name + '" ?', function(result) {
+            if (result.isConfirmed) {
+                // Show loading
+                SwalHelper.loading('Menghapus...');
+
+                // Send delete request
+                $.ajax({
+                    url: '/salary-components/' + id,
+                    type: 'DELETE',
+                    errorHandled: true, // Mark as manually handled
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            SwalHelper.success('Berhasil!', response.message, 2000);
+                            // Reload DataTable
+                            table.ajax.reload();
+                        } else {
+                            SwalHelper.error('Gagal!', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Terjadi kesalahan saat menghapus data';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
+                        SwalHelper.error('Error!', message);
+                    }
+                });
             }
         });
     });
-});
+
+    // Session messages sudah ditangani oleh global SwalHelper di layout
+    });
+}
+
+// Start initialization
+initDataTable();
 </script>
 @endpush

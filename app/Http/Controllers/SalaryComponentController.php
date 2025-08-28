@@ -3,64 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Models\SalaryComponent;
+use App\Services\SalaryComponentService;
+use App\Http\Resources\SalaryComponentResource;
+use App\DataTables\SalaryComponentDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class SalaryComponentController extends Controller
 {
+    protected $salaryComponentService;
+
+    public function __construct(SalaryComponentService $salaryComponentService)
+    {
+        $this->salaryComponentService = $salaryComponentService;
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(SalaryComponentDataTable $dataTable): View
     {
-        return view('salary-components.index');
+        return $dataTable->render('salary-components.index');
     }
 
     /**
      * Get data for DataTable.
      */
-    public function data()
+    public function data(SalaryComponentDataTable $dataTable)
     {
-        try {
-            $components = SalaryComponent::where('company_id', Auth::user()->company_id)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get();
-
-            return DataTables::of($components)
-                ->addColumn('checkbox', function ($component) {
-                    return view('salary-components.partials.checkbox', compact('component'))->render();
-                })
-                ->addColumn('type_badge', function ($component) {
-                    return view('salary-components.partials.type-badge', compact('component'))->render();
-                })
-                ->addColumn('status_badge', function ($component) {
-                    return view('salary-components.partials.status-badge', compact('component'))->render();
-                })
-                ->addColumn('formatted_value', function ($component) {
-                    return 'Rp ' . number_format($component->default_value, 0, ',', '.');
-                })
-                ->addColumn('action', function ($component) {
-                    return view('salary-components.partials.actions', compact('component'))->render();
-                })
-                ->addColumn('is_taxable', function ($component) {
-                    return $component->is_taxable ? 
-                        '<span class="badge badge-success">Ya</span>' : 
-                        '<span class="badge badge-secondary">Tidak</span>';
-                })
-                ->addColumn('is_bpjs_calculated', function ($component) {
-                    return $component->is_bpjs_calculated ? 
-                        '<span class="badge badge-info">Ya</span>' : 
-                        '<span class="badge badge-secondary">Tidak</span>';
-                })
-                ->rawColumns(['checkbox', 'type_badge', 'status_badge', 'action', 'is_taxable', 'is_bpjs_calculated'])
-                ->make(true);
-        } catch (\Exception $e) {
-            \Log::error('Error in SalaryComponent data method: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        return $dataTable->ajax();
     }
 
     /**
@@ -87,20 +62,25 @@ class SalaryComponentController extends Controller
             'sort_order' => 'nullable|integer|min:0'
         ]);
 
-        $component = SalaryComponent::create([
-            'company_id' => Auth::user()->company_id,
-            'name' => $request->name,
-            'description' => $request->description,
-            'default_value' => $request->default_value,
-            'type' => $request->type,
-            'is_active' => $request->boolean('is_active'),
-            'is_taxable' => $request->boolean('is_taxable'),
-            'is_bpjs_calculated' => $request->boolean('is_bpjs_calculated'),
-            'sort_order' => $request->sort_order ?? 0
-        ]);
+        try {
+            $data = $request->all();
+            $data['company_id'] = Auth::user()->company_id;
+            
+            $result = $this->salaryComponentService->createComponent($data);
 
-        return redirect()->route('salary-components.index')
-            ->with('success', 'Komponen gaji berhasil ditambahkan.');
+            if ($result['success']) {
+                return redirect()->route('salary-components.index')
+                    ->with('success', $result['message']);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menambahkan komponen gaji: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -108,8 +88,31 @@ class SalaryComponentController extends Controller
      */
     public function show(SalaryComponent $salaryComponent)
     {
-        $this->authorize('view', $salaryComponent);
-        return view('salary-components.show', compact('salaryComponent'));
+        try {
+            $this->authorize('view', $salaryComponent);
+            
+            // If AJAX request, return JSON
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => new SalaryComponentResource($salaryComponent)
+                ]);
+            }
+            
+            // If regular request, return view
+            return view('salary-components.show', compact('salaryComponent'));
+            
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat mengambil data: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('salary-components.index')
+                ->with('error', 'Terjadi kesalahan saat mengambil data: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -139,19 +142,24 @@ class SalaryComponentController extends Controller
             'sort_order' => 'nullable|integer|min:0'
         ]);
 
-        $salaryComponent->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'default_value' => $request->default_value,
-            'type' => $request->type,
-            'is_active' => $request->boolean('is_active'),
-            'is_taxable' => $request->boolean('is_taxable'),
-            'is_bpjs_calculated' => $request->boolean('is_bpjs_calculated'),
-            'sort_order' => $request->sort_order ?? 0
-        ]);
+        try {
+            $data = $request->all();
+            
+            $result = $this->salaryComponentService->updateComponent($salaryComponent->id, $data);
 
-        return redirect()->route('salary-components.index')
-            ->with('success', 'Komponen gaji berhasil diperbarui.');
+            if ($result['success']) {
+                return redirect()->route('salary-components.index')
+                    ->with('success', $result['message']);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui komponen gaji: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -159,18 +167,47 @@ class SalaryComponentController extends Controller
      */
     public function destroy(SalaryComponent $salaryComponent)
     {
-        $this->authorize('delete', $salaryComponent);
+        try {
+            $this->authorize('delete', $salaryComponent);
 
-        // Check if component is being used in payrolls
-        if ($salaryComponent->isUsedInPayrolls()) {
+            // Check if component is being used in payrolls
+            if ($salaryComponent->isUsedInPayrolls()) {
+                if (request()->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Komponen gaji tidak dapat dihapus karena masih digunakan dalam penggajian.'
+                    ], 400);
+                }
+                
+                return redirect()->route('salary-components.index')
+                    ->with('error', 'Komponen gaji tidak dapat dihapus karena masih digunakan dalam penggajian.');
+            }
+
+            $result = $this->salaryComponentService->deleteComponent($salaryComponent->id);
+
+            if (request()->ajax()) {
+                return response()->json($result);
+            }
+
+            if ($result['success']) {
+                return redirect()->route('salary-components.index')
+                    ->with('success', $result['message']);
+            } else {
+                return redirect()->route('salary-components.index')
+                    ->with('error', $result['message']);
+            }
+                
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage()
+                ], 500);
+            }
+            
             return redirect()->route('salary-components.index')
-                ->with('error', 'Komponen gaji tidak dapat dihapus karena masih digunakan dalam penggajian.');
+                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
         }
-
-        $salaryComponent->delete();
-
-        return redirect()->route('salary-components.index')
-            ->with('success', 'Komponen gaji berhasil dihapus.');
     }
 
     /**
@@ -180,13 +217,16 @@ class SalaryComponentController extends Controller
     {
         $this->authorize('update', $salaryComponent);
 
-        $salaryComponent->update([
-            'is_active' => !$salaryComponent->is_active
-        ]);
-
-        $status = $salaryComponent->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return redirect()->route('salary-components.index')
-            ->with('success', "Komponen gaji berhasil {$status}.");
+        try {
+            $toggled = $this->salaryComponentService->toggleComponentStatus($salaryComponent);
+            
+            $status = $salaryComponent->is_active ? 'diaktifkan' : 'dinonaktifkan';
+            return redirect()->route('salary-components.index')
+                ->with('success', "Komponen gaji berhasil {$status}.");
+        } catch (\Exception $e) {
+            return redirect()->route('salary-components.index')
+                ->with('error', 'Terjadi kesalahan saat mengubah status komponen: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -200,13 +240,14 @@ class SalaryComponentController extends Controller
             'components.*.sort_order' => 'required|integer|min:0'
         ]);
 
-        foreach ($request->components as $component) {
-            SalaryComponent::where('id', $component['id'])
-                ->where('company_id', Auth::user()->company_id)
-                ->update(['sort_order' => $component['sort_order']]);
-        }
+        try {
+            $companyId = Auth::user()->company_id;
+            $updated = $this->salaryComponentService->updateComponentsSortOrder($request->components, $companyId);
 
-        return response()->json(['message' => 'Urutan komponen berhasil diperbarui.']);
+            return response()->json(['message' => 'Urutan komponen berhasil diperbarui.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Terjadi kesalahan saat memperbarui urutan: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
