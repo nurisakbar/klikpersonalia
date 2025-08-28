@@ -78,6 +78,15 @@ class Bpjs extends Model
     // Maximum base salary for BPJS calculation (2024)
     const MAX_BASE_SALARY = 12000000; // Rp 12.000.000
 
+    /**
+     * Scope to filter by current company
+     */
+    public function scopeCurrentCompany($query)
+    {
+        $companyId = auth()->user()->company_id ?? session('company_id');
+        return $query->where('company_id', $companyId);
+    }
+
 
 
     /**

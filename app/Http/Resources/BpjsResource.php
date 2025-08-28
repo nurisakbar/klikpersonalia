@@ -56,6 +56,11 @@ class BpjsResource extends JsonResource
                     'email' => $this->employee->email,
                     'department' => $this->employee->department,
                     'position' => $this->employee->position,
+                    'photo' => $this->employee->photo ?? null,
+                    'bpjs_kesehatan_active' => $this->employee->bpjs_kesehatan_active ?? false,
+                    'bpjs_ketenagakerjaan_active' => $this->employee->bpjs_ketenagakerjaan_active ?? false,
+                    'bpjs_kesehatan_number' => $this->employee->bpjs_kesehatan_number ?? null,
+                    'bpjs_ketenagakerjaan_number' => $this->employee->bpjs_ketenagakerjaan_number ?? null,
                 ];
             }),
             
