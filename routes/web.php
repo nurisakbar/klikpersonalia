@@ -251,9 +251,10 @@ Route::get('/benefits/reports', [BenefitController::class, 'reports'])->name('be
 
     // Bank Integration (Phase 5.1)
     Route::resource('bank-accounts', BankAccountController::class);
-    Route::post('/bank-accounts/{bankAccount}/toggle-status', [BankAccountController::class, 'toggleStatus'])->name('bank-accounts.toggle-status');
-    Route::post('/bank-accounts/{bankAccount}/set-primary', [BankAccountController::class, 'setPrimary'])->name('bank-accounts.set-primary');
-    Route::get('/bank-accounts/get-employee-accounts', [BankAccountController::class, 'getEmployeeAccounts'])->name('bank-accounts.get-employee-accounts');
+Route::get('/bank-accounts-data', [BankAccountController::class, 'data'])->name('bank-accounts.data');
+Route::post('/bank-accounts/{bankAccount}/toggle-status', [BankAccountController::class, 'toggleStatus'])->name('bank-accounts.toggle-status');
+Route::post('/bank-accounts/{bankAccount}/set-primary', [BankAccountController::class, 'setPrimary'])->name('bank-accounts.set-primary');
+Route::get('/bank-accounts/get-employee-accounts', [BankAccountController::class, 'getEmployeeAccounts'])->name('bank-accounts.get-employee-accounts');
 
     Route::resource('salary-transfers', SalaryTransferController::class);
     Route::post('/salary-transfers/{salaryTransfer}/process', [SalaryTransferController::class, 'process'])->name('salary-transfers.process');
