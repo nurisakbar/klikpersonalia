@@ -35,8 +35,11 @@
                                     <label for="type">Tipe Komponen <span class="text-danger">*</span></label>
                                     <select class="form-control @error('type') is-invalid @enderror" id="type" name="type" required>
                                         <option value="">Pilih Tipe</option>
-                                        <option value="earning" {{ old('type') == 'earning' ? 'selected' : '' }}>Pendapatan</option>
-                                        <option value="deduction" {{ old('type') == 'deduction' ? 'selected' : '' }}>Potongan</option>
+                                        @foreach(\App\Models\SalaryComponent::getTypeOptions() as $value => $label)
+                                            <option value="{{ $value }}" {{ old('type') == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                     @error('type')
                                         <span class="invalid-feedback">{{ $message }}</span>
@@ -54,14 +57,14 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Rp</span>
                                         </div>
-                                        <input type="text" class="form-control @error('default_value') is-invalid @enderror" 
+                                        <input type="number" class="form-control @error('default_value') is-invalid @enderror" 
                                                id="default_value" name="default_value" value="{{ old('default_value') }}" 
-                                               placeholder="Masukkan nilai default" required>
+                                               placeholder="Masukkan nilai default" min="0" step="0.01" required>
                                     </div>
+                                    <small class="form-text text-muted">Nilai default komponen gaji dalam rupiah (maksimal Rp 999.999.999.999.999.999,99).</small>
                                     @error('default_value')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
-                                    <small class="form-text text-muted">Nilai default komponen gaji dalam rupiah.</small>
                                 </div>
                             </div>
                             
@@ -160,30 +163,28 @@ $(function () {
         }
     });
 
-    // Format input nilai default dengan separator ribuan
-    $('#default_value').on('input', function() {
-        let value = $(this).val().replace(/[^\d]/g, '');
-        if (value) {
-            // Convert to number and format with thousand separators
-            let number = parseInt(value);
-            if (!isNaN(number)) {
-                $(this).val(number.toLocaleString('id-ID'));
-            }
-        }
-    });
-
     // Handle form submission with AJAX
     $('#createComponentForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Get raw numeric value from formatted default_value
+        // Get numeric value from input
         let valueInput = $('#default_value');
-        let formattedValue = valueInput.val();
-        let rawValue = formattedValue.replace(/[^\d]/g, '');
+        let numericValue = parseFloat(valueInput.val());
+        
+        // Debug: log the values
+        console.log('Input Value:', valueInput.val());
+        console.log('Numeric Value:', numericValue);
         
         // Validate minimum value
-        if (parseInt(rawValue) < 0) {
+        if (numericValue < 0) {
             SwalHelper.error('Error!', 'Nilai default tidak boleh negatif');
+            return false;
+        }
+
+        // Validate maximum value (999,999,999,999,999,999)
+        const maxValue = 999999999999999999;
+        if (numericValue > maxValue) {
+            SwalHelper.error('Error!', 'Nilai default maksimal Rp 999.999.999.999.999.999,99');
             return false;
         }
 
@@ -192,7 +193,17 @@ $(function () {
 
         // Prepare form data
         let formData = new FormData(this);
-        formData.set('default_value', rawValue); // Set raw value
+
+        // Handle checkbox values - if not checked, set to 0
+        if (!$('#is_active').is(':checked')) {
+            formData.set('is_active', '0');
+        }
+        if (!$('#is_taxable').is(':checked')) {
+            formData.set('is_taxable', '0');
+        }
+        if (!$('#is_bpjs_calculated').is(':checked')) {
+            formData.set('is_bpjs_calculated', '0');
+        }
 
         // Send AJAX request
         $.ajax({
@@ -231,13 +242,6 @@ $(function () {
             }
         });
     });
-
-    // Format initial value if exists
-    let initialValue = $('#default_value').val();
-    if (initialValue && !isNaN(parseInt(initialValue.replace(/[^\d]/g, '')))) {
-        let value = parseInt(initialValue.replace(/[^\d]/g, ''));
-        $('#default_value').val(value.toLocaleString('id-ID'));
-    }
 });
 </script>
 @endpush

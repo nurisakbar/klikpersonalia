@@ -320,11 +320,11 @@ class SalaryComponentService
             ->where('is_active', true)
             ->count();
         $earningComponents = SalaryComponent::where('company_id', $companyId)
-            ->where('type', 'earning')
+            ->where('type', SalaryComponent::TYPE_EARNING)
             ->where('is_active', true)
             ->count();
         $deductionComponents = SalaryComponent::where('company_id', $companyId)
-            ->where('type', 'deduction')
+            ->where('type', SalaryComponent::TYPE_DEDUCTION)
             ->where('is_active', true)
             ->count();
 

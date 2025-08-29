@@ -25,7 +25,7 @@ class SalaryComponentRequest extends FormRequest
         $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'default_value' => 'required|numeric|min:0',
+            'default_value' => 'required|numeric|min:0|max:999999999999999999.99',
             'type' => ['required', Rule::in(['earning', 'deduction'])],
             'is_active' => 'boolean',
             'is_taxable' => 'boolean',
@@ -68,6 +68,7 @@ class SalaryComponentRequest extends FormRequest
             'default_value.required' => 'Nilai default wajib diisi.',
             'default_value.numeric' => 'Nilai default harus berupa angka.',
             'default_value.min' => 'Nilai default minimal 0.',
+            'default_value.max' => 'Nilai default maksimal Rp 999.999.999.999.999.999,99.',
             'type.required' => 'Tipe komponen wajib dipilih.',
             'type.in' => 'Tipe komponen tidak valid.',
             'sort_order.integer' => 'Urutan harus berupa angka.',

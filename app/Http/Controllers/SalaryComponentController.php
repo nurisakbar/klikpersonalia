@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SalaryComponent;
 use App\Services\SalaryComponentService;
 use App\Http\Resources\SalaryComponentResource;
+use App\Http\Requests\SalaryComponentRequest;
 use App\DataTables\SalaryComponentDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -49,21 +50,10 @@ class SalaryComponentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(SalaryComponentRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'default_value' => 'required|numeric|min:0',
-            'type' => ['required', Rule::in(['earning', 'deduction'])],
-            'is_active' => 'boolean',
-            'is_taxable' => 'boolean',
-            'is_bpjs_calculated' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0'
-        ]);
-
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $data['company_id'] = Auth::user()->company_id;
             
             $result = $this->salaryComponentService->createComponent($data);
@@ -102,7 +92,18 @@ class SalaryComponentController extends Controller
     public function show(SalaryComponent $salaryComponent)
     {
         try {
-            $this->authorize('view', $salaryComponent);
+            // Check if component belongs to current company
+            if ($salaryComponent->company_id !== Auth::user()->company_id) {
+                if (request()->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Komponen gaji tidak ditemukan atau tidak memiliki akses.'
+                    ], 404);
+                }
+                
+                return redirect()->route('salary-components.index')
+                    ->with('error', 'Komponen gaji tidak ditemukan atau tidak memiliki akses.');
+            }
             
             // If AJAX request, return JSON
             if (request()->ajax()) {
@@ -133,32 +134,43 @@ class SalaryComponentController extends Controller
      */
     public function edit(SalaryComponent $salaryComponent)
     {
-        $this->authorize('update', $salaryComponent);
+        // Check if component belongs to current company
+        if ($salaryComponent->company_id !== Auth::user()->company_id) {
+            return redirect()->route('salary-components.index')
+                ->with('error', 'Komponen gaji tidak ditemukan atau tidak memiliki akses.');
+        }
+        
         return view('salary-components.edit', compact('salaryComponent'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, SalaryComponent $salaryComponent)
+    public function update(SalaryComponentRequest $request, SalaryComponent $salaryComponent)
     {
-        $this->authorize('update', $salaryComponent);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'default_value' => 'required|numeric|min:0',
-            'type' => ['required', Rule::in(['earning', 'deduction'])],
-            'is_active' => 'boolean',
-            'is_taxable' => 'boolean',
-            'is_bpjs_calculated' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0'
-        ]);
+        // Check if component belongs to current company
+        if ($salaryComponent->company_id !== Auth::user()->company_id) {
+            $errorMessage = 'Komponen gaji tidak ditemukan atau tidak memiliki akses.';
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 404);
+            }
+            
+            return redirect()->route('salary-components.index')
+                ->with('error', $errorMessage);
+        }
 
         try {
-            $data = $request->all();
+            $data = $request->validated();
             
             $result = $this->salaryComponentService->updateComponent($salaryComponent->id, $data);
+
+            if ($request->expectsJson()) {
+                return response()->json($result);
+            }
 
             if ($result['success']) {
                 return redirect()->route('salary-components.index')
@@ -169,9 +181,18 @@ class SalaryComponentController extends Controller
                     ->with('error', $result['message']);
             }
         } catch (\Exception $e) {
+            $errorMessage = 'Terjadi kesalahan saat memperbarui komponen gaji: ' . $e->getMessage();
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui komponen gaji: ' . $e->getMessage());
+                ->with('error', $errorMessage);
         }
     }
 
@@ -181,7 +202,18 @@ class SalaryComponentController extends Controller
     public function destroy(SalaryComponent $salaryComponent)
     {
         try {
-            $this->authorize('delete', $salaryComponent);
+            // Check if component belongs to current company
+            if ($salaryComponent->company_id !== Auth::user()->company_id) {
+                if (request()->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Komponen gaji tidak ditemukan atau tidak memiliki akses.'
+                    ], 404);
+                }
+                
+                return redirect()->route('salary-components.index')
+                    ->with('error', 'Komponen gaji tidak ditemukan atau tidak memiliki akses.');
+            }
 
             // Check if component is being used in payrolls
             if ($salaryComponent->isUsedInPayrolls()) {
@@ -228,7 +260,11 @@ class SalaryComponentController extends Controller
      */
     public function toggleStatus(SalaryComponent $salaryComponent)
     {
-        $this->authorize('update', $salaryComponent);
+        // Check if component belongs to current company
+        if ($salaryComponent->company_id !== Auth::user()->company_id) {
+            return redirect()->route('salary-components.index')
+                ->with('error', 'Komponen gaji tidak ditemukan atau tidak memiliki akses.');
+        }
 
         try {
             $toggled = $this->salaryComponentService->toggleComponentStatus($salaryComponent);
