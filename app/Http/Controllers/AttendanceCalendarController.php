@@ -19,7 +19,12 @@ class AttendanceCalendarController extends Controller
     {
         $user = Auth::user();
         
-        // Get employee for current user
+        // Jika user adalah admin/pemilik company, izinkan akses tanpa validasi employee
+        if ($user->isAdmin() || $user->isCompanyOwner()) {
+            return view('attendance.calendar');
+        }
+        
+        // Jika user adalah employee, cek employee record
         $employee = Employee::where('user_id', $user->id)->first();
         
         if (!$employee) {
@@ -37,6 +42,53 @@ class AttendanceCalendarController extends Controller
     public function getCalendarData(Request $request)
     {
         $user = Auth::user();
+        
+        // Jika user adalah admin/pemilik company, tampilkan data semua employee
+        if ($user->isAdmin() || $user->isCompanyOwner()) {
+            $startDate = $request->get('start', Carbon::now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->get('end', Carbon::now()->endOfMonth()->format('Y-m-d'));
+            
+            // Get all employees for current company
+            $employees = Employee::where('company_id', $user->company_id)->get();
+            
+            $allEvents = [];
+            $allStatistics = [
+                'present_days' => 0,
+                'late_days' => 0,
+                'absent_days' => 0,
+                'leave_days' => 0,
+                'overtime_hours' => 0,
+                'attendance_rate' => 0
+            ];
+            
+            foreach ($employees as $employee) {
+                $events = $this->generateCalendarEvents($employee->id, $startDate, $endDate);
+                $statistics = $this->getStatisticsForPeriod($employee->id, $startDate, $endDate);
+                
+                $allEvents = array_merge($allEvents, $events);
+                
+                // Aggregate statistics
+                $allStatistics['present_days'] += $statistics['present_days'] ?? 0;
+                $allStatistics['late_days'] += $statistics['late_days'] ?? 0;
+                $allStatistics['absent_days'] += $statistics['absent_days'] ?? 0;
+                $allStatistics['leave_days'] += $statistics['leave_days'] ?? 0;
+                $allStatistics['overtime_hours'] += $statistics['overtime_hours'] ?? 0;
+            }
+            
+            // Calculate average attendance rate
+            $totalEmployees = $employees->count();
+            if ($totalEmployees > 0) {
+                $allStatistics['attendance_rate'] = round($allStatistics['attendance_rate'] / $totalEmployees, 1);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'events' => $allEvents,
+                'statistics' => $allStatistics
+            ]);
+        }
+        
+        // Jika user adalah employee, tampilkan data employee tersebut
         $employee = Employee::where('user_id', $user->id)->first();
         
         if (!$employee) {
@@ -287,12 +339,16 @@ class AttendanceCalendarController extends Controller
     }
 
     /**
-     * Generate calendar events for FullCalendar.
+     * Generate calendar events for a specific employee.
      */
     private function generateCalendarEvents($employeeId, $startDate, $endDate)
     {
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
+        
+        // Get employee name for admin view
+        $employee = Employee::find($employeeId);
+        $employeeName = $employee ? $employee->name : 'Unknown Employee';
         
         $events = [];
         
@@ -304,6 +360,12 @@ class AttendanceCalendarController extends Controller
         foreach ($attendances as $attendance) {
             $status = $attendance->status;
             $title = $this->getStatusText($status);
+            
+            // Add employee name for admin view
+            $user = Auth::user();
+            if ($user->isAdmin() || $user->isCompanyOwner()) {
+                $title = $employeeName . ' - ' . $title;
+            }
             
             $events[] = [
                 'id' => 'attendance_' . $attendance->id,
@@ -335,9 +397,17 @@ class AttendanceCalendarController extends Controller
             $currentDate = $leave->start_date->copy();
             while ($currentDate->lte($leave->end_date) && $currentDate->lte($end)) {
                 if ($currentDate->gte($start)) {
+                    $title = ucfirst($leave->leave_type) . ' Leave';
+                    
+                    // Add employee name for admin view
+                    $user = Auth::user();
+                    if ($user->isAdmin() || $user->isCompanyOwner()) {
+                        $title = $employeeName . ' - ' . $title;
+                    }
+                    
                     $events[] = [
                         'id' => 'leave_' . $leave->id . '_' . $currentDate->format('Y-m-d'),
-                        'title' => ucfirst($leave->leave_type) . ' Leave',
+                        'title' => $title,
                         'date' => $currentDate->format('Y-m-d'),
                         'status' => 'leave',
                         'check_in' => null,
@@ -358,9 +428,17 @@ class AttendanceCalendarController extends Controller
             ->get();
         
         foreach ($overtimes as $overtime) {
+            $title = ucfirst($overtime->overtime_type) . ' Overtime';
+            
+            // Add employee name for admin view
+            $user = Auth::user();
+            if ($user->isAdmin() || $user->isCompanyOwner()) {
+                $title = $employeeName . ' - ' . $title;
+            }
+            
             $events[] = [
                 'id' => 'overtime_' . $overtime->id,
-                'title' => ucfirst($overtime->overtime_type) . ' Overtime',
+                'title' => $title,
                 'date' => $overtime->date->format('Y-m-d'),
                 'status' => 'overtime',
                 'check_in' => $overtime->start_time,
