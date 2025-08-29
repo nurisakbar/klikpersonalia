@@ -75,7 +75,7 @@ class SalaryComponentRepository
     public function getEarningComponents(): Collection
     {
         return SalaryComponent::currentCompany()
-            ->where('type', 'earning')
+            ->where('type', SalaryComponent::TYPE_EARNING)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -88,7 +88,7 @@ class SalaryComponentRepository
     public function getDeductionComponents(): Collection
     {
         return SalaryComponent::currentCompany()
-            ->where('type', 'deduction')
+            ->where('type', SalaryComponent::TYPE_DEDUCTION)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('name')

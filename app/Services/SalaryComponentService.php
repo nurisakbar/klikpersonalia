@@ -74,6 +74,88 @@ class SalaryComponentService
     }
 
     /**
+     * Get component details with usage statistics.
+     */
+    public function getComponentDetails(string $id): array
+    {
+        try {
+            $component = $this->salaryComponentRepository->findById($id);
+            
+            if (!$component) {
+                return [
+                    'success' => false,
+                    'message' => 'Komponen gaji tidak ditemukan.',
+                    'data' => null,
+                    'usage_stats' => []
+                ];
+            }
+
+            // Get usage statistics
+            $usageStats = $this->getComponentUsageStats($component);
+
+            return [
+                'success' => true,
+                'data' => new SalaryComponentResource($component),
+                'usage_stats' => $usageStats
+            ];
+
+        } catch (Exception $e) {
+            Log::error('Failed to get component details', [
+                'component_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Gagal mengambil detail komponen: ' . $e->getMessage(),
+                'data' => null,
+                'usage_stats' => []
+            ];
+        }
+    }
+
+    /**
+     * Get component usage statistics.
+     */
+    protected function getComponentUsageStats(SalaryComponent $component): array
+    {
+        try {
+            // Get employee count using this component
+            $employeeCount = $component->employeeComponents()->count();
+
+            // Get total usage in payrolls (placeholder for future implementation)
+            $totalUsage = 0;
+
+            // Get last usage period (placeholder for future implementation)
+            $lastPeriod = '-';
+
+            // Get average value (placeholder for future implementation)
+            $averageValue = 0;
+
+            return [
+                'total_usage' => $totalUsage,
+                'employee_count' => $employeeCount,
+                'last_period' => $lastPeriod,
+                'average_value' => $averageValue
+            ];
+
+        } catch (Exception $e) {
+            Log::error('Failed to get component usage stats', [
+                'component_id' => $component->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'total_usage' => 0,
+                'employee_count' => 0,
+                'last_period' => '-',
+                'average_value' => 0
+            ];
+        }
+    }
+
+    /**
      * Create a new salary component.
      */
     public function createComponent(array $data): array
@@ -238,7 +320,7 @@ class SalaryComponentService
     public function toggleComponentStatus(SalaryComponent $component): bool
     {
         try {
-            $toggled = $this->repository->toggleStatus($component);
+            $toggled = $this->salaryComponentRepository->toggleStatus($component);
 
             Log::info('Salary component status toggled', [
                 'component_id' => $component->id,
@@ -260,7 +342,7 @@ class SalaryComponentService
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->updateSortOrder($components, $companyId);
+            $updated = $this->salaryComponentRepository->updateSortOrder($components, $companyId);
 
             DB::commit();
             Log::info('Salary components sort order updated', ['company_id' => $companyId]);
@@ -278,7 +360,7 @@ class SalaryComponentService
      */
     public function getComponentsByTypeAndStatus(string $companyId, string $type, bool $isActive = true): Collection
     {
-        return $this->repository->getComponentsByTypeAndStatus($companyId, $type, $isActive);
+        return $this->salaryComponentRepository->getComponentsByTypeAndStatus($companyId, $type, $isActive);
     }
 
     /**
@@ -286,7 +368,7 @@ class SalaryComponentService
      */
     public function searchComponentsByName(string $companyId, string $searchTerm): Collection
     {
-        return $this->repository->searchByName($companyId, $searchTerm);
+        return $this->salaryComponentRepository->searchByName($companyId, $searchTerm);
     }
 
     /**
@@ -320,11 +402,11 @@ class SalaryComponentService
             ->where('is_active', true)
             ->count();
         $earningComponents = SalaryComponent::where('company_id', $companyId)
-            ->where('type', 'earning')
+            ->where('type', SalaryComponent::TYPE_EARNING)
             ->where('is_active', true)
             ->count();
         $deductionComponents = SalaryComponent::where('company_id', $companyId)
-            ->where('type', 'deduction')
+            ->where('type', SalaryComponent::TYPE_DEDUCTION)
             ->where('is_active', true)
             ->count();
 

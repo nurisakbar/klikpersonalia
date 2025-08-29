@@ -30,6 +30,10 @@ class SalaryComponent extends Model
         'sort_order' => 'integer'
     ];
 
+    // Type constants
+    const TYPE_EARNING = 'earning';
+    const TYPE_DEDUCTION = 'deduction';
+
     /**
      * Get the company that owns the salary component.
      */
@@ -51,7 +55,7 @@ class SalaryComponent extends Model
      */
     public function scopeEarnings($query)
     {
-        return $query->where('type', 'earning');
+        return $query->where('type', self::TYPE_EARNING);
     }
 
     /**
@@ -59,7 +63,7 @@ class SalaryComponent extends Model
      */
     public function scopeDeductions($query)
     {
-        return $query->where('type', 'deduction');
+        return $query->where('type', self::TYPE_DEDUCTION);
     }
 
     /**
@@ -108,7 +112,24 @@ class SalaryComponent extends Model
      */
     public function getTypeTextAttribute()
     {
-        return $this->type === 'earning' ? 'Pendapatan' : 'Potongan';
+        return $this->type === self::TYPE_EARNING ? 'Pendapatan' : 'Potongan';
+    }
+
+    /**
+     * Get the type badge.
+     */
+    public function getTypeBadgeAttribute()
+    {
+        $badgeClass = $this->type === self::TYPE_EARNING ? 'badge badge-success' : 'badge badge-danger';
+        return '<span class="' . $badgeClass . '">' . $this->type_text . '</span>';
+    }
+
+    /**
+     * Get the type icon.
+     */
+    public function getTypeIconAttribute()
+    {
+        return $this->type === self::TYPE_EARNING ? 'fas fa-plus-circle' : 'fas fa-minus-circle';
     }
 
     /**
@@ -137,6 +158,14 @@ class SalaryComponent extends Model
     }
 
     /**
+     * Get the can be deleted attribute.
+     */
+    public function getCanBeDeletedAttribute()
+    {
+        return !$this->isUsedInPayrolls();
+    }
+
+    /**
      * Check if component is assigned to a specific employee.
      */
     public function isAssignedToEmployee($employeeId)
@@ -145,5 +174,61 @@ class SalaryComponent extends Model
             ->where('employee_id', $employeeId)
             ->where('is_active', true)
             ->exists();
+    }
+
+    /**
+     * Check if this is an earning component.
+     */
+    public function isEarning(): bool
+    {
+        return $this->type === self::TYPE_EARNING;
+    }
+
+    /**
+     * Check if this is a deduction component.
+     */
+    public function isDeduction(): bool
+    {
+        return $this->type === self::TYPE_DEDUCTION;
+    }
+
+    /**
+     * Get all type options for forms.
+     */
+    public static function getTypeOptions(): array
+    {
+        return [
+            self::TYPE_EARNING => 'Pendapatan',
+            self::TYPE_DEDUCTION => 'Potongan'
+        ];
+    }
+
+    /**
+     * Get action buttons HTML for DataTables.
+     */
+    public function getActionButtons(): string
+    {
+        $buttons = '<div class="btn-group" role="group">';
+        
+        // View button
+        $buttons .= '<a href="' . route('salary-components.show', $this->id) . '" class="btn btn-info btn-sm view-btn" data-id="' . $this->id . '" title="Lihat Detail">';
+        $buttons .= '<i class="fas fa-eye"></i>';
+        $buttons .= '</a>';
+        
+        // Edit button
+        $buttons .= '<a href="' . route('salary-components.edit', $this->id) . '" class="btn btn-warning btn-sm edit-btn" data-id="' . $this->id . '" title="Edit">';
+        $buttons .= '<i class="fas fa-edit"></i>';
+        $buttons .= '</a>';
+        
+        // Delete button
+        if (!$this->isUsedInPayrolls()) {
+            $buttons .= '<button type="button" class="btn btn-danger btn-sm delete-btn" data-id="' . $this->id . '" data-name="' . $this->name . '" title="Hapus">';
+            $buttons .= '<i class="fas fa-trash"></i>';
+            $buttons .= '</button>';
+        }
+        
+        $buttons .= '</div>';
+        
+        return $buttons;
     }
 }

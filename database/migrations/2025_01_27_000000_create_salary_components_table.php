@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('company_id');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('default_value', 15, 2)->default(0);
+            $table->decimal('default_value', 20, 2)->default(0);
             $table->enum('type', ['earning', 'deduction'])->default('earning');
             $table->boolean('is_active')->default(true);
             $table->boolean('is_taxable')->default(false);
