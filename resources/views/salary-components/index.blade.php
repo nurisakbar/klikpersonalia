@@ -33,25 +33,7 @@
     </div>
 </div>
 
-<!-- Detail Modal -->
-<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailModalLabel">Detail Komponen Gaji</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="detailContent">
-                <!-- Detail content will be loaded here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- CSRF Token for AJAX -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -157,9 +139,6 @@
 @endpush
 
 @push('js')
-<!-- jQuery (ensure it's loaded first) -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 <!-- DataTables & Plugins -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
@@ -175,25 +154,6 @@
 
 <!-- Global SweetAlert Component -->
 @include('components.sweet-alert')
-
-<script>
-// Test jQuery availability before DataTable initialization
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof $ === 'undefined') {
-        console.error('jQuery is not available in Salary Component Index');
-        // Try to wait a bit more for jQuery to load
-        setTimeout(function() {
-            if (typeof $ === 'undefined') {
-                console.error('jQuery still not available after timeout in Salary Component Index');
-            } else {
-                console.log('jQuery became available after timeout in Salary Component Index, version:', $.fn.jquery);
-            }
-        }, 1000);
-        return;
-    }
-    console.log('jQuery is available in Salary Component Index, version:', $.fn.jquery);
-});
-</script>
 
 <script>
 // Test jQuery availability with retry mechanism
@@ -294,7 +254,7 @@ function initDataTable() {
     // Handle view button click
     $(document).on('click', '.view-btn', function() {
         var id = $(this).data('id');
-        loadComponentDetail(id);
+        window.location.href = '/salary-components/' + id;
     });
 
     // Handle edit button click
@@ -303,94 +263,7 @@ function initDataTable() {
         window.location.href = '/salary-components/' + id + '/edit';
     });
 
-    // Load component detail
-    function loadComponentDetail(id) {
-        // Show loading
-        $('#detailContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
-        $('#detailModal').modal('show');
 
-        $.ajax({
-            url: '/salary-components/' + id,
-            type: 'GET',
-            errorHandled: true, // Mark as manually handled
-            headers: {
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                if (response.success) {
-                    let component = response.data;
-                    let detailHtml = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Nama Komponen:</strong></td>
-                                        <td>${component.name}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Tipe:</strong></td>
-                                        <td>${component.type_text}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Nilai Default:</strong></td>
-                                        <td>${component.formatted_default_value}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Status:</strong></td>
-                                        <td>${component.status_text}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Urutan:</strong></td>
-                                        <td>${component.sort_order}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Dikenakan Pajak:</strong></td>
-                                        <td>${component.is_taxable ? 'Ya' : 'Tidak'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Dihitung BPJS:</strong></td>
-                                        <td>${component.is_bpjs_calculated ? 'Ya' : 'Tidak'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Dibuat:</strong></td>
-                                        <td>${component.created_at}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Diperbarui:</strong></td>
-                                        <td>${component.updated_at}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                        ${component.description ? `
-                        <div class="row">
-                            <div class="col-12">
-                                <strong>Deskripsi:</strong><br>
-                                <p>${component.description}</p>
-                            </div>
-                        </div>
-                        ` : ''}
-                    `;
-                    $('#detailContent').html(detailHtml);
-                } else {
-                    $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
-                    SwalHelper.error('Error!', response.message);
-                }
-            },
-            error: function(xhr) {
-                let message = 'Terjadi kesalahan saat memuat detail komponen';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                $('#detailContent').html('<div class="text-center text-muted">Data tidak dapat dimuat</div>');
-                SwalHelper.error('Error!', message);
-            }
-        });
-    }
 
     // Handle delete button click
     $(document).on('click', '.delete-btn', function() {

@@ -158,6 +158,14 @@ class SalaryComponent extends Model
     }
 
     /**
+     * Get the can be deleted attribute.
+     */
+    public function getCanBeDeletedAttribute()
+    {
+        return !$this->isUsedInPayrolls();
+    }
+
+    /**
      * Check if component is assigned to a specific employee.
      */
     public function isAssignedToEmployee($employeeId)
@@ -193,5 +201,34 @@ class SalaryComponent extends Model
             self::TYPE_EARNING => 'Pendapatan',
             self::TYPE_DEDUCTION => 'Potongan'
         ];
+    }
+
+    /**
+     * Get action buttons HTML for DataTables.
+     */
+    public function getActionButtons(): string
+    {
+        $buttons = '<div class="btn-group" role="group">';
+        
+        // View button
+        $buttons .= '<a href="' . route('salary-components.show', $this->id) . '" class="btn btn-info btn-sm view-btn" data-id="' . $this->id . '" title="Lihat Detail">';
+        $buttons .= '<i class="fas fa-eye"></i>';
+        $buttons .= '</a>';
+        
+        // Edit button
+        $buttons .= '<a href="' . route('salary-components.edit', $this->id) . '" class="btn btn-warning btn-sm edit-btn" data-id="' . $this->id . '" title="Edit">';
+        $buttons .= '<i class="fas fa-edit"></i>';
+        $buttons .= '</a>';
+        
+        // Delete button
+        if (!$this->isUsedInPayrolls()) {
+            $buttons .= '<button type="button" class="btn btn-danger btn-sm delete-btn" data-id="' . $this->id . '" data-name="' . $this->name . '" title="Hapus">';
+            $buttons .= '<i class="fas fa-trash"></i>';
+            $buttons .= '</button>';
+        }
+        
+        $buttons .= '</div>';
+        
+        return $buttons;
     }
 }
