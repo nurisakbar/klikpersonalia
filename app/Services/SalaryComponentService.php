@@ -238,7 +238,7 @@ class SalaryComponentService
     public function toggleComponentStatus(SalaryComponent $component): bool
     {
         try {
-            $toggled = $this->repository->toggleStatus($component);
+            $toggled = $this->salaryComponentRepository->toggleStatus($component);
 
             Log::info('Salary component status toggled', [
                 'component_id' => $component->id,
@@ -260,7 +260,7 @@ class SalaryComponentService
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->updateSortOrder($components, $companyId);
+            $updated = $this->salaryComponentRepository->updateSortOrder($components, $companyId);
 
             DB::commit();
             Log::info('Salary components sort order updated', ['company_id' => $companyId]);
@@ -278,7 +278,7 @@ class SalaryComponentService
      */
     public function getComponentsByTypeAndStatus(string $companyId, string $type, bool $isActive = true): Collection
     {
-        return $this->repository->getComponentsByTypeAndStatus($companyId, $type, $isActive);
+        return $this->salaryComponentRepository->getComponentsByTypeAndStatus($companyId, $type, $isActive);
     }
 
     /**
@@ -286,7 +286,7 @@ class SalaryComponentService
      */
     public function searchComponentsByName(string $companyId, string $searchTerm): Collection
     {
-        return $this->repository->searchByName($companyId, $searchTerm);
+        return $this->salaryComponentRepository->searchByName($companyId, $searchTerm);
     }
 
     /**

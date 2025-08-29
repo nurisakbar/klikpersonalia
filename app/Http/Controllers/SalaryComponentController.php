@@ -68,6 +68,10 @@ class SalaryComponentController extends Controller
             
             $result = $this->salaryComponentService->createComponent($data);
 
+            if ($request->expectsJson()) {
+                return response()->json($result);
+            }
+
             if ($result['success']) {
                 return redirect()->route('salary-components.index')
                     ->with('success', $result['message']);
@@ -77,9 +81,18 @@ class SalaryComponentController extends Controller
                     ->with('error', $result['message']);
             }
         } catch (\Exception $e) {
+            $errorMessage = 'Terjadi kesalahan saat menambahkan komponen gaji: ' . $e->getMessage();
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menambahkan komponen gaji: ' . $e->getMessage());
+                ->with('error', $errorMessage);
         }
     }
 
