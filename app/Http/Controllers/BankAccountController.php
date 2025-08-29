@@ -4,42 +4,90 @@ namespace App\Http\Controllers;
 
 use App\Models\BankAccount;
 use App\Models\Employee;
+use App\Services\BankAccountService;
+use App\DataTables\BankAccountDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Yajra\DataTables\Facades\DataTables;
 
 class BankAccountController extends Controller
 {
+    protected $bankAccountService;
+
+    public function __construct(BankAccountService $bankAccountService)
+    {
+        $this->bankAccountService = $bankAccountService;
+    }
+
     /**
      * Display a listing of bank accounts.
      */
-    public function index(Request $request)
+    public function index()
     {
         $user = Auth::user();
-        
+        $employees = Employee::where('company_id', $user->company_id)->get();
+
+        return view('bank-accounts.index', compact('employees'));
+    }
+
+    /**
+     * Get bank accounts data for DataTable
+     */
+    public function data()
+    {
+        $user = Auth::user();
         $query = BankAccount::with(['employee'])
             ->where('company_id', $user->company_id);
 
-        // Filter by employee
-        if ($request->filled('employee_id')) {
-            $query->where('employee_id', $request->employee_id);
-        }
-
-        // Filter by bank name
-        if ($request->filled('bank_name')) {
-            $query->where('bank_name', 'LIKE', '%' . $request->bank_name . '%');
-        }
-
-        // Filter by status
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->is_active);
-        }
-
-        $bankAccounts = $query->orderBy('created_at', 'desc')->paginate(15);
-        $employees = Employee::where('company_id', $user->company_id)->get();
-
-        return view('bank-accounts.index', compact('bankAccounts', 'employees'));
+        return DataTables::of($query)
+            ->addColumn('action', function ($bankAccount) {
+                return '
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-info view-btn" data-id="' . $bankAccount->id . '" title="Detail">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <a href="' . route('bank-accounts.edit', $bankAccount->id) . '" class="btn btn-sm btn-warning" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' . $bankAccount->id . '" data-name="' . htmlspecialchars($bankAccount->bank_name . ' - ' . $bankAccount->account_holder_name) . '" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ';
+            })
+            ->addColumn('status_badge', function ($bankAccount) {
+                if ($bankAccount->is_active) {
+                    return '<span class="badge badge-success">Aktif</span>';
+                } else {
+                    return '<span class="badge badge-warning">Tidak Aktif</span>';
+                }
+            })
+            ->addColumn('primary_badge', function ($bankAccount) {
+                if ($bankAccount->is_primary) {
+                    return '<span class="badge badge-primary">Utama</span>';
+                } else {
+                    return '<span class="badge badge-secondary">-</span>';
+                }
+            })
+            ->addColumn('account_number_masked', function ($bankAccount) {
+                return $bankAccount->formatted_account_number;
+            })
+            ->addColumn('account_type_label', function ($bankAccount) {
+                $types = [
+                    'savings' => 'Tabungan',
+                    'current' => 'Giro',
+                    'salary' => 'Gaji'
+                ];
+                return $types[$bankAccount->account_type] ?? $bankAccount->account_type;
+            })
+            ->addColumn('employee.name', function ($bankAccount) {
+                return optional($bankAccount->employee)->name;
+            })
+            ->rawColumns(['action', 'status_badge', 'primary_badge', 'account_number_masked', 'account_type_label'])
+            ->make(true);
     }
 
     /**
@@ -59,49 +107,31 @@ class BankAccountController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'bank_name' => 'required|string|max:255',
-            'account_number' => 'required|string|max:50',
-            'account_holder_name' => 'required|string|max:255',
-            'branch_code' => 'nullable|string|max:20',
-            'swift_code' => 'nullable|string|max:20',
-            'account_type' => ['required', Rule::in(array_keys(BankAccount::ACCOUNT_TYPES))],
-            'is_active' => 'boolean',
-            'is_primary' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $bankAccount = $this->bankAccountService->createBankAccount($request->all());
 
-        // Check if employee belongs to company
-        $employee = Employee::where('id', $request->employee_id)
-            ->where('company_id', $user->company_id)
-            ->firstOrFail();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Rekening bank berhasil dibuat.',
+                    'data' => $bankAccount
+                ]);
+            }
 
-        // If this is primary account, unset other primary accounts for this employee
-        if ($request->is_primary) {
-            BankAccount::where('employee_id', $request->employee_id)
-                ->where('company_id', $user->company_id)
-                ->update(['is_primary' => false]);
+            return redirect()->route('bank-accounts.index')
+                ->with('success', 'Rekening bank berhasil dibuat.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
-
-        $bankAccount = BankAccount::create([
-            'company_id' => $user->company_id,
-            'employee_id' => $request->employee_id,
-            'bank_name' => $request->bank_name,
-            'account_number' => $request->account_number,
-            'account_holder_name' => $request->account_holder_name,
-            'branch_code' => $request->branch_code,
-            'swift_code' => $request->swift_code,
-            'account_type' => $request->account_type,
-            'is_active' => $request->boolean('is_active', true),
-            'is_primary' => $request->boolean('is_primary', false),
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('bank-accounts.index')
-            ->with('success', 'Bank account created successfully.');
     }
 
     /**
@@ -111,9 +141,40 @@ class BankAccountController extends Controller
     {
         $this->authorize('view', $bankAccount);
         
-        $bankAccount->load(['employee', 'salaryTransfers.payroll']);
-        
-        return view('bank-accounts.show', compact('bankAccount'));
+        try {
+            $bankAccount = $this->bankAccountService->getBankAccountById($bankAccount->id);
+            
+            if (!$bankAccount) {
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Rekening bank tidak ditemukan.'
+                    ], 404);
+                }
+                
+                return redirect()->route('bank-accounts.index')
+                    ->with('error', 'Rekening bank tidak ditemukan.');
+            }
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $bankAccount
+                ]);
+            }
+            
+            return view('bank-accounts.show', compact('bankAccount'));
+        } catch (\Exception $e) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('bank-accounts.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -137,47 +198,31 @@ class BankAccountController extends Controller
     {
         $this->authorize('update', $bankAccount);
         
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'bank_name' => 'required|string|max:255',
-            'account_number' => 'required|string|max:50',
-            'account_holder_name' => 'required|string|max:255',
-            'branch_code' => 'nullable|string|max:20',
-            'swift_code' => 'nullable|string|max:20',
-            'account_type' => ['required', Rule::in(array_keys(BankAccount::ACCOUNT_TYPES))],
-            'is_active' => 'boolean',
-            'is_primary' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $result = $this->bankAccountService->updateBankAccount($bankAccount, $request->all());
 
-        // Check if employee belongs to company
-        $employee = Employee::where('id', $request->employee_id)
-            ->where('company_id', $bankAccount->company_id)
-            ->firstOrFail();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Rekening bank berhasil diperbarui.',
+                    'data' => $bankAccount->fresh()
+                ]);
+            }
 
-        // If this is primary account, unset other primary accounts for this employee
-        if ($request->is_primary && !$bankAccount->is_primary) {
-            BankAccount::where('employee_id', $request->employee_id)
-                ->where('company_id', $bankAccount->company_id)
-                ->where('id', '!=', $bankAccount->id)
-                ->update(['is_primary' => false]);
+            return redirect()->route('bank-accounts.index')
+                ->with('success', 'Rekening bank berhasil diperbarui.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
-
-        $bankAccount->update([
-            'employee_id' => $request->employee_id,
-            'bank_name' => $request->bank_name,
-            'account_number' => $request->account_number,
-            'account_holder_name' => $request->account_holder_name,
-            'branch_code' => $request->branch_code,
-            'swift_code' => $request->swift_code,
-            'account_type' => $request->account_type,
-            'is_active' => $request->boolean('is_active', true),
-            'is_primary' => $request->boolean('is_primary', false),
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('bank-accounts.index')
-            ->with('success', 'Bank account updated successfully.');
     }
 
     /**
@@ -187,16 +232,29 @@ class BankAccountController extends Controller
     {
         $this->authorize('delete', $bankAccount);
 
-        // Check if account has any salary transfers
-        if ($bankAccount->salaryTransfers()->exists()) {
+        try {
+            $result = $this->bankAccountService->deleteBankAccount($bankAccount);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Rekening bank berhasil dihapus.'
+                ]);
+            }
+
             return redirect()->route('bank-accounts.index')
-                ->with('error', 'Cannot delete bank account with existing salary transfers.');
+                ->with('success', 'Rekening bank berhasil dihapus.');
+        } catch (\Exception $e) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return redirect()->route('bank-accounts.index')
+                ->with('error', $e->getMessage());
         }
-
-        $bankAccount->delete();
-
-        return redirect()->route('bank-accounts.index')
-            ->with('success', 'Bank account deleted successfully.');
     }
 
     /**
@@ -206,14 +264,31 @@ class BankAccountController extends Controller
     {
         $this->authorize('update', $bankAccount);
 
-        $bankAccount->update([
-            'is_active' => !$bankAccount->is_active
-        ]);
+        try {
+            $result = $this->bankAccountService->toggleStatus($bankAccount);
 
-        $status = $bankAccount->is_active ? 'activated' : 'deactivated';
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status rekening bank berhasil diubah.',
+                    'data' => $bankAccount->fresh()
+                ]);
+            }
 
-        return redirect()->route('bank-accounts.index')
-            ->with('success', "Bank account {$status} successfully.");
+            $status = $bankAccount->is_active ? 'diaktifkan' : 'dinonaktifkan';
+            return redirect()->route('bank-accounts.index')
+                ->with('success', "Rekening bank berhasil {$status}.");
+        } catch (\Exception $e) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return redirect()->route('bank-accounts.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -223,16 +298,30 @@ class BankAccountController extends Controller
     {
         $this->authorize('update', $bankAccount);
 
-        // Unset other primary accounts for this employee
-        BankAccount::where('employee_id', $bankAccount->employee_id)
-            ->where('company_id', $bankAccount->company_id)
-            ->update(['is_primary' => false]);
+        try {
+            $result = $this->bankAccountService->setPrimary($bankAccount);
 
-        // Set this account as primary
-        $bankAccount->update(['is_primary' => true]);
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Rekening bank berhasil diatur sebagai utama.',
+                    'data' => $bankAccount->fresh()
+                ]);
+            }
 
-        return redirect()->route('bank-accounts.index')
-            ->with('success', 'Bank account set as primary successfully.');
+            return redirect()->route('bank-accounts.index')
+                ->with('success', 'Rekening bank berhasil diatur sebagai utama.');
+        } catch (\Exception $e) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return redirect()->route('bank-accounts.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -240,17 +329,19 @@ class BankAccountController extends Controller
      */
     public function getEmployeeAccounts(Request $request)
     {
-        $user = Auth::user();
-        
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id'
-        ]);
+        try {
+            $request->validate([
+                'employee_id' => 'required|exists:employees,id'
+            ]);
 
-        $bankAccounts = BankAccount::where('company_id', $user->company_id)
-            ->where('employee_id', $request->employee_id)
-            ->where('is_active', true)
-            ->get(['id', 'bank_name', 'account_number', 'account_holder_name', 'is_primary']);
+            $bankAccounts = $this->bankAccountService->getActiveAccountsForEmployee($request->employee_id);
 
-        return response()->json($bankAccounts);
+            return response()->json($bankAccounts);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 } 
