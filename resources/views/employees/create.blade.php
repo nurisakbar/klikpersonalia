@@ -119,7 +119,7 @@
                                         </div>
                                         <input type="text" class="form-control @error('basic_salary') is-invalid @enderror" id="basic_salary" name="basic_salary" value="{{ old('basic_salary') }}" placeholder="Masukkan gaji pokok (min: 1.000.000)" required>
                                     </div>
-                                    <small class="form-text text-muted">Minimal Rp 100.000, maksimal Rp 999.999.999.999</small>
+                                    <small class="form-text text-muted">Minimal Rp 1.000.000, maksimal Rp 999.999.999.999</small>
                                     @error('basic_salary')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -227,8 +227,8 @@ $(function () {
         let rawSalary = formattedSalary.replace(/[^\d]/g, '');
         
         // Validate minimum salary
-        if (parseInt(rawSalary) < 100000) {
-            SwalHelper.error('Error!', 'Gaji pokok minimal Rp 100.000');
+        if (parseInt(rawSalary) < 1000000) {
+            SwalHelper.error('Error!', 'Gaji pokok minimal Rp 1.000.000');
             return false;
         }
 
@@ -277,11 +277,14 @@ $(function () {
         });
     });
 
-    // Format initial value if exists
+    // Format initial value if exists - PERBAIKAN: Hanya format jika belum ada separator
     let initialSalary = $('#basic_salary').val();
-    if (initialSalary && !isNaN(parseInt(initialSalary.replace(/[^\d]/g, '')))) {
-        let value = parseInt(initialSalary.replace(/[^\d]/g, ''));
-        $('#basic_salary').val(value.toLocaleString('id-ID'));
+    if (initialSalary && initialSalary.toString().indexOf('.') === -1) {
+        // Hanya format jika belum ada separator ribuan
+        let numericValue = parseInt(initialSalary);
+        if (!isNaN(numericValue)) {
+            $('#basic_salary').val(numericValue.toLocaleString('id-ID'));
+        }
     }
 });
 </script>

@@ -4,138 +4,313 @@ namespace App\Services;
 
 use App\Models\SalaryComponent;
 use App\Repositories\SalaryComponentRepository;
+use App\Http\Resources\SalaryComponentResource;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class SalaryComponentService
 {
-    protected $repository;
+    public function __construct(
+        private SalaryComponentRepository $salaryComponentRepository
+    ) {}
 
-    public function __construct(SalaryComponentRepository $repository)
+    /**
+     * Get all salary components for current company.
+     */
+    public function getAllComponents(): Collection
     {
-        $this->repository = $repository;
+        return $this->salaryComponentRepository->getAllForCurrentCompany();
     }
 
     /**
      * Get paginated salary components.
      */
-    public function getPaginatedComponents(string $companyId, int $perPage = 10): LengthAwarePaginator
+    public function getPaginatedComponents(int $perPage = 15): LengthAwarePaginator
     {
-        return $this->repository->getPaginatedComponents($companyId, $perPage);
+        return $this->salaryComponentRepository->getPaginated($perPage);
     }
 
     /**
      * Get all active salary components.
      */
-    public function getActiveComponents(string $companyId): Collection
+    public function getActiveComponents(): Collection
     {
-        return $this->repository->getActiveComponents($companyId);
+        return $this->salaryComponentRepository->getActiveComponents();
     }
 
     /**
      * Get earning components.
      */
-    public function getEarningComponents(string $companyId): Collection
+    public function getEarningComponents(): Collection
     {
-        return $this->repository->getEarningComponents($companyId);
+        return $this->salaryComponentRepository->getEarningComponents();
     }
 
     /**
      * Get deduction components.
      */
-    public function getDeductionComponents(string $companyId): Collection
+    public function getDeductionComponents(): Collection
     {
-        return $this->repository->getDeductionComponents($companyId);
+        return $this->salaryComponentRepository->getDeductionComponents();
     }
 
     /**
      * Get taxable components.
      */
-    public function getTaxableComponents(string $companyId): Collection
+    public function getTaxableComponents(): Collection
     {
-        return $this->repository->getTaxableComponents($companyId);
+        return $this->salaryComponentRepository->getTaxableComponents();
     }
 
     /**
      * Get BPJS calculated components.
      */
-    public function getBpjsCalculatedComponents(string $companyId): Collection
+    public function getBpjsCalculatedComponents(): Collection
     {
-        return $this->repository->getBpjsCalculatedComponents($companyId);
+        return $this->salaryComponentRepository->getBpjsCalculatedComponents();
+    }
+
+    /**
+     * Get component details with usage statistics.
+     */
+    public function getComponentDetails(string $id): array
+    {
+        try {
+            $component = $this->salaryComponentRepository->findById($id);
+            
+            if (!$component) {
+                return [
+                    'success' => false,
+                    'message' => 'Komponen gaji tidak ditemukan.',
+                    'data' => null,
+                    'usage_stats' => []
+                ];
+            }
+
+            // Get usage statistics
+            $usageStats = $this->getComponentUsageStats($component);
+
+            return [
+                'success' => true,
+                'data' => new SalaryComponentResource($component),
+                'usage_stats' => $usageStats
+            ];
+
+        } catch (Exception $e) {
+            Log::error('Failed to get component details', [
+                'component_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Gagal mengambil detail komponen: ' . $e->getMessage(),
+                'data' => null,
+                'usage_stats' => []
+            ];
+        }
+    }
+
+    /**
+     * Get component usage statistics.
+     */
+    protected function getComponentUsageStats(SalaryComponent $component): array
+    {
+        try {
+            // Get employee count using this component
+            $employeeCount = $component->employeeComponents()->count();
+
+            // Get total usage in payrolls (placeholder for future implementation)
+            $totalUsage = 0;
+
+            // Get last usage period (placeholder for future implementation)
+            $lastPeriod = '-';
+
+            // Get average value (placeholder for future implementation)
+            $averageValue = 0;
+
+            return [
+                'total_usage' => $totalUsage,
+                'employee_count' => $employeeCount,
+                'last_period' => $lastPeriod,
+                'average_value' => $averageValue
+            ];
+
+        } catch (Exception $e) {
+            Log::error('Failed to get component usage stats', [
+                'component_id' => $component->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'total_usage' => 0,
+                'employee_count' => 0,
+                'last_period' => '-',
+                'average_value' => 0
+            ];
+        }
     }
 
     /**
      * Create a new salary component.
      */
-    public function createComponent(array $data): SalaryComponent
+    public function createComponent(array $data): array
     {
         try {
             DB::beginTransaction();
 
             // Set default sort order if not provided
             if (!isset($data['sort_order'])) {
-                $data['sort_order'] = $this->getNextSortOrder($data['company_id']);
+                $data['sort_order'] = $this->getNextSortOrder();
             }
 
-            $component = $this->repository->create($data);
+            $component = $this->salaryComponentRepository->create($data);
 
             DB::commit();
-            Log::info('Salary component created successfully', ['component_id' => $component->id]);
 
-            return $component;
-        } catch (\Exception $e) {
+            Log::info('Salary component created successfully', [
+                'component_id' => $component->id,
+                'name' => $component->name,
+                'created_by' => auth()->id()
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Komponen gaji berhasil ditambahkan!',
+                'data' => new SalaryComponentResource($component)
+            ];
+
+        } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Failed to create salary component', ['error' => $e->getMessage()]);
-            throw $e;
+            
+            Log::error('Failed to create salary component', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+                'user_id' => auth()->id()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Gagal menambahkan komponen gaji: ' . $e->getMessage(),
+                'data' => null
+            ];
         }
     }
 
     /**
      * Update a salary component.
      */
-    public function updateComponent(SalaryComponent $component, array $data): bool
+    public function updateComponent(string $id, array $data): array
     {
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->update($component, $data);
+            $component = $this->salaryComponentRepository->findById($id);
+            
+            if (!$component) {
+                return [
+                    'success' => false,
+                    'message' => 'Komponen gaji tidak ditemukan.',
+                    'data' => null
+                ];
+            }
+
+            $this->salaryComponentRepository->update($component, $data);
 
             DB::commit();
-            Log::info('Salary component updated successfully', ['component_id' => $component->id]);
 
-            return $updated;
-        } catch (\Exception $e) {
+            Log::info('Salary component updated successfully', [
+                'component_id' => $component->id,
+                'name' => $component->name,
+                'updated_by' => auth()->id()
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Komponen gaji berhasil diperbarui!',
+                'data' => new SalaryComponentResource($component->fresh())
+            ];
+
+        } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update salary component', ['error' => $e->getMessage()]);
-            throw $e;
+            
+            Log::error('Failed to update salary component', [
+                'component_id' => $id,
+                'error' => $e->getMessage(),
+                'data' => $data,
+                'user_id' => auth()->id()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Gagal memperbarui komponen gaji: ' . $e->getMessage(),
+                'data' => null
+            ];
         }
     }
 
     /**
      * Delete a salary component.
      */
-    public function deleteComponent(SalaryComponent $component): bool
+    public function deleteComponent(string $id): array
     {
         try {
             DB::beginTransaction();
 
-            // Check if component can be deleted
-            if ($this->isComponentInUse($component)) {
-                throw new \Exception('Komponen gaji tidak dapat dihapus karena masih digunakan.');
+            $component = $this->salaryComponentRepository->findById($id);
+            
+            if (!$component) {
+                return [
+                    'success' => false,
+                    'message' => 'Komponen gaji tidak ditemukan.',
+                    'data' => null
+                ];
             }
 
-            $deleted = $this->repository->delete($component);
+            // Check if component can be deleted
+            if ($this->isComponentInUse($component)) {
+                return [
+                    'success' => false,
+                    'message' => 'Komponen gaji tidak dapat dihapus karena masih digunakan dalam penggajian.',
+                    'data' => null
+                ];
+            }
+
+            $componentName = $component->name;
+            $this->salaryComponentRepository->delete($component);
 
             DB::commit();
-            Log::info('Salary component deleted successfully', ['component_id' => $component->id]);
 
-            return $deleted;
-        } catch (\Exception $e) {
+            Log::info('Salary component deleted successfully', [
+                'component_id' => $id,
+                'name' => $componentName,
+                'deleted_by' => auth()->id()
+            ]);
+
+            return [
+                'success' => true,
+                'message' => "Komponen gaji {$componentName} berhasil dihapus!",
+                'data' => null
+            ];
+
+        } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Failed to delete salary component', ['error' => $e->getMessage()]);
-            throw $e;
+            
+            Log::error('Failed to delete salary component', [
+                'component_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Gagal menghapus komponen gaji: ' . $e->getMessage(),
+                'data' => null
+            ];
         }
     }
 
@@ -145,7 +320,7 @@ class SalaryComponentService
     public function toggleComponentStatus(SalaryComponent $component): bool
     {
         try {
-            $toggled = $this->repository->toggleStatus($component);
+            $toggled = $this->salaryComponentRepository->toggleStatus($component);
 
             Log::info('Salary component status toggled', [
                 'component_id' => $component->id,
@@ -167,7 +342,7 @@ class SalaryComponentService
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->updateSortOrder($components, $companyId);
+            $updated = $this->salaryComponentRepository->updateSortOrder($components, $companyId);
 
             DB::commit();
             Log::info('Salary components sort order updated', ['company_id' => $companyId]);
@@ -185,7 +360,7 @@ class SalaryComponentService
      */
     public function getComponentsByTypeAndStatus(string $companyId, string $type, bool $isActive = true): Collection
     {
-        return $this->repository->getComponentsByTypeAndStatus($companyId, $type, $isActive);
+        return $this->salaryComponentRepository->getComponentsByTypeAndStatus($companyId, $type, $isActive);
     }
 
     /**
@@ -193,15 +368,15 @@ class SalaryComponentService
      */
     public function searchComponentsByName(string $companyId, string $searchTerm): Collection
     {
-        return $this->repository->searchByName($companyId, $searchTerm);
+        return $this->salaryComponentRepository->searchByName($companyId, $searchTerm);
     }
 
     /**
-     * Get next sort order for a company.
+     * Get next sort order for current company.
      */
-    protected function getNextSortOrder(string $companyId): int
+    protected function getNextSortOrder(): int
     {
-        $maxOrder = SalaryComponent::where('company_id', $companyId)
+        $maxOrder = SalaryComponent::currentCompany()
             ->max('sort_order');
 
         return ($maxOrder ?? 0) + 1;
@@ -227,11 +402,11 @@ class SalaryComponentService
             ->where('is_active', true)
             ->count();
         $earningComponents = SalaryComponent::where('company_id', $companyId)
-            ->where('type', 'earning')
+            ->where('type', SalaryComponent::TYPE_EARNING)
             ->where('is_active', true)
             ->count();
         $deductionComponents = SalaryComponent::where('company_id', $companyId)
-            ->where('type', 'deduction')
+            ->where('type', SalaryComponent::TYPE_DEDUCTION)
             ->where('is_active', true)
             ->count();
 

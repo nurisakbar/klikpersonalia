@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             PositionSeeder::class,
             EmployeeSeeder::class,
+            BankAccountSeeder::class,
             PayrollSeeder::class,
             AttendanceSeeder::class,
             LeaveSeeder::class,
