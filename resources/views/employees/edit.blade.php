@@ -284,11 +284,14 @@ $(function () {
         });
     });
 
-    // Format initial value if exists
+    // Format initial value if exists - PERBAIKAN: Hanya format jika belum ada separator
     let initialSalary = $('#basic_salary').val();
-    if (initialSalary && !isNaN(parseInt(initialSalary.replace(/[^\d]/g, '')))) {
-        let value = parseInt(initialSalary.replace(/[^\d]/g, ''));
-        $('#basic_salary').val(value.toLocaleString('id-ID'));
+    if (initialSalary && initialSalary.toString().indexOf('.') === -1) {
+        // Hanya format jika belum ada separator ribuan
+        let numericValue = parseInt(initialSalary);
+        if (!isNaN(numericValue)) {
+            $('#basic_salary').val(numericValue.toLocaleString('id-ID'));
+        }
     }
 });
 </script>
